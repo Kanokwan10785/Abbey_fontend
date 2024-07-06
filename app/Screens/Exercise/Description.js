@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../Shared/Colors'
 
 const Description = ({ navigation }) => {
   return (
@@ -25,15 +26,17 @@ const Description = ({ navigation }) => {
         style={styles.muscleImage}
       />
       <View style={styles.navigation}>
-        <TouchableOpacity style={styles.navButton}>
+        <View style={styles.buttonnav}>
+         <TouchableOpacity style={styles.navButton}>
           <Icon name="chevron-left" size={30} color="#FFA500" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.closeButton}>
-          <Text style={styles.closeText}>1</Text>
+        <TouchableOpacity>
+          <Text style={styles.textpage}>1</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton}>
           <Icon name="chevron-right" size={30} color="#FFA500" />
-        </TouchableOpacity>
+        </TouchableOpacity> 
+        </View>     
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
           <Text style={styles.closeText}>ปิด</Text>
         </TouchableOpacity>
@@ -53,7 +56,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     width: '95%',
     height: 200,
-    marginTop: 50,
+    marginTop: 40,
     alignSelf: 'center',
   },
   header: {
@@ -63,9 +66,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
     color: '#333',
+    fontFamily: 'appfont_02',
   },
   timerContainer: {
     marginVertical: 20,
@@ -74,19 +77,21 @@ const styles = StyleSheet.create({
   },
   timerText: {
     marginLeft: 4,
-    fontSize: 16,
+    fontSize: 18,
     color: '#FFA500',
+    fontFamily: 'appfont_01',
   },
   description: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#555',
     marginBottom: 16,
+    fontFamily: 'appfont_01',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 22,
     color: '#333',
     marginVertical: 8,
+    fontFamily: 'appfont_02',
   },
   muscleImage: {
     borderRadius: 20,
@@ -116,12 +121,23 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 14,
     color: '#333',
+    fontFamily: 'appfont_01',
   },
   navigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 16,
+  },
+  buttonnav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textpage: {
+    fontSize: 18,
+    marginHorizontal: 16,
+    color: Colors.yellow,
+    fontFamily: 'appfont_01',
   },
   navButton: {
     padding: 8,
@@ -133,8 +149,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   closeText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#FFF',
+    fontFamily: 'appfont_01',
   },
 });
 
