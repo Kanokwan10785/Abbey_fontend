@@ -1,9 +1,33 @@
-import { View, Text, StyleSheet, Image, TextInput } from 'react-native'
-import React from 'react'
+import { View, Text, StyleSheet, Image, TextInput,Alert, TouchableOpacity } from 'react-native'
+import React, { useState } from 'react'
 import Colors from '../Shared/Colors'
 import login from '../../assets/image/login.png'
+import { useNavigation } from '@react-navigation/native';
+import { register } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Register({ navigation }) {
+export default function Register() {
+    const navigation = useNavigation();
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = React.useState('');
+    const [password, setPassword] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
+    const handleRegister = async () => {
+        if (password !== confirmPassword) {
+          console.error('Passwords do not match');
+          return;
+        }
+      
+        try {
+          const response = await register(username, email, password);
+          console.log('Registration successful:', response);
+          await AsyncStorage.setItem('jwt', response.jwt);
+          navigation.navigate('Question');
+        } catch (error) {
+          Alert.alert('Registration failed', error.response ? error.response.data.message : error.message);
+        }
+      };
+
     return (
         <View style={{
             alignItems: 'center',
@@ -31,32 +55,40 @@ export default function Register({ navigation }) {
                 <TextInput
                     style={styles.input}
                     placeholder="ชื่อผู้ใช้"
+                    value={username}
+                    onChangeText={setUsername}
                 />
 
                 <TextInput
                     style={styles.input}
                     placeholder="อีเมล"
+                    value={email}
+                    onChangeText={setEmail}
                 />
 
                 <TextInput
                     style={styles.input}
                     placeholder="รหัสผ่าน"
                     secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
                 />
 
                 <TextInput
                     style={styles.input}
                     placeholder="ยืนยันรหัสผ่าน"
                     secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
                 />
 
-                <View style={styles.buttonlogin}>
+                <TouchableOpacity style={styles.buttonlogin} onPress={handleRegister}>
                     <Text style={{
                         fontSize: 20,
                         color: Colors.while,
                         padding: 2,
                     }}>เข้าสู่ระบบ</Text>
-                </View>
+                </TouchableOpacity>
                 <View style={{ flexDirection: 'row',marginTop: 20 }}>
                 <Text style={{marginRight: 50 }}>มีบัญชีอยู่แล้ว?</Text>
                 <Text style={{color:Colors.yellow}}

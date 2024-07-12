@@ -53,7 +53,7 @@ const ExerciseScreen = () => {
           <Text style={styles.statText}>15 ท่า</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.startButton}><Text style={styles.startButtonText}>เริ่ม</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.startButton} onPress={() => navigation.navigate('Exercise4')}><Text style={styles.startButtonText}>เริ่ม</Text></TouchableOpacity>
       <FlatList
         data={exercises}
         renderItem={renderItem}

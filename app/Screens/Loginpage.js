@@ -1,9 +1,26 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity } from 'react-native'
-import React from 'react'
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity,Alert } from 'react-native'
+import React, { useState } from 'react'
 import Colors from '../Shared/Colors'
-import login from '../../assets/image/login.png'
+import loginImage from '../../assets/image/login.png'
+import {login} from './api'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Loginpage() {  
+    const navigation = useNavigation();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const handleLogin = async () => {
+        try {
+          const response = await login(username, password);
+          console.log('Login successful', response);
+          await AsyncStorage.setItem('jwt', response.jwt);
+          navigation.navigate('HomeScreen');
+
+        } catch (error) {
+          Alert.alert('Login failed', error.response ? error.response.data.message : error.message);
+        }
+      };
     return (
         <View style={{
             alignItems: 'center',
@@ -21,7 +38,7 @@ export default function Loginpage() {
                 height: '94%',
             }}>
 
-                <Image source={login} style={{
+                <Image source={loginImage} style={{
                     width: 300,
                     height: 250,
                     // marginTop: 60,
@@ -30,14 +47,18 @@ export default function Loginpage() {
                 <TextInput
                     style={styles.input}
                     placeholder="ชื่อผู้ใช้"
+                    value={username}
+                    onChangeText={setUsername}
                 />
 
                 <TextInput
                     style={styles.input}
                     placeholder="รหัสผ่าน"
                     secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
                 />
-                <TouchableOpacity style={styles.buttonlogin}>
+                <TouchableOpacity style={styles.buttonlogin} onPress={handleLogin}>
 
                     <Text style={{
                         fontSize: 20,
@@ -48,7 +69,7 @@ export default function Loginpage() {
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row',marginTop: 20 }}>
                 <Text style={{marginRight: 50, fontFamily: 'appfont_01',  }}>ยังไม่มีบัญชีใช่หรือไม่?</Text>
-                <Text style={{color:Colors.yellow, fontFamily: 'appfont_01', }}>สร้างบัญชี</Text>
+                <Text style={{color:Colors.yellow, fontFamily: 'appfont_01', }}  onPress={() => navigation.navigate('Register')}>สร้างบัญชี</Text>
                 </View>
             </View>
         </View>

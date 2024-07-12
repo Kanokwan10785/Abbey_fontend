@@ -143,10 +143,12 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   closeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFA500',
-    borderRadius: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    backgroundColor: '#F6A444',
+    padding: 10,
+    marginHorizontal: 20,
+    borderRadius: 50,
   },
   closeText: {
     fontSize: 18,
