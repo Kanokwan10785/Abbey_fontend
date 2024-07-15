@@ -1,19 +1,58 @@
+// Question.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { register } from './api';
 
 const Question = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { username, email, password } = route.params;
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [age, setAge] = useState('');
   const [selectedGender, setSelectedGender] = useState(null);
-  const [selectedAnimal, setSelectedAnimal] = useState(null);
+  const [selectPet, setselectPet] = useState(null);
+
+  const handleSubmit = async () => {
+    if (!height || !weight || !age || !selectedGender || !selectPet) {
+      Alert.alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+
+    try {
+      const response = await register(username, email, password,height, weight,age,selectedGender,selectPet);
+      console.log('Registration successful:', response);
+      navigation.navigate('HomeScreen');
+    } catch (error) {
+      Alert.alert('Registration failed', error.response ? error.response.data.message : error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>ข้อมูลส่วนตัว</Text>
       <Text style={styles.subtitle}>ทำให้เรารู้จักกับคุณมากขึ้น</Text>
-      <TextInput style={styles.input} placeholder="ชื่อ :" />
-      <TextInput style={styles.input} placeholder="ส่วนสูง :" />
-      <TextInput style={styles.input} placeholder="น้ำหนักปัจจุบัน :" />
-      <TextInput style={styles.input} placeholder="วันเกิด : วว/ดด/ปปปป" />
+
+      <TextInput 
+      style={styles.input} 
+      placeholder="ส่วนสูง :"
+      value={height} 
+      onChangeText={setHeight}
+       />
+      <TextInput 
+      style={styles.input} 
+      placeholder="น้ำหนักปัจจุบัน :"
+      value={weight} 
+      onChangeText={setWeight}
+       />
+      <TextInput 
+      style={styles.input} 
+      placeholder="อายุ : "
+      value={age} 
+      onChangeText={setAge}
+       />
 
       <View style={styles.genderContainer}>
         <TouchableOpacity
@@ -32,20 +71,23 @@ const Question = () => {
 
       <View style={styles.animalContainer}>
         <TouchableOpacity
-          style={[styles.animalButton, selectedAnimal === 'cat' && styles.selectedAnimalButton]}
-          onPress={() => setSelectedAnimal('cat')}
+          style={[styles.animalButton, selectPet === 'cat' && styles.selectPetButton]}
+          onPress={() => setselectPet('cat')}
         >
-          <Image source={require('../../assets/image/cat.png')} style={styles.animalIcon} tintColor={selectedAnimal === 'cat' ? '#FFF' : '#FFA500'} />
+          <Image source={require('../../assets/image/cat.png')} style={styles.animalIcon} tintColor={selectPet === 'cat' ? '#FFF' : '#FFA500'} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.animalButton, selectedAnimal === 'dog' && styles.selectedAnimalButton]}
-          onPress={() => setSelectedAnimal('dog')}
+          style={[styles.animalButton, selectPet === 'dog' && styles.selectPetButton]}
+          onPress={() => setselectPet('dog')}
         >
-          <Image source={require('../../assets/image/dog.png')} style={styles.animalIcon} tintColor={selectedAnimal === 'dog' ? '#FFF' : '#FFA500'} />
+          <Image source={require('../../assets/image/dog.png')} style={styles.animalIcon} tintColor={selectPet === 'dog' ? '#FFF' : '#FFA500'} />
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.startButton}>
+      <TouchableOpacity 
+      style={styles.startButton}
+      onPress={handleSubmit}
+      >
         <Text style={styles.startButtonText}>เริ่มต้น</Text>
       </TouchableOpacity>
     </View>
@@ -117,7 +159,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 140,
   },
-  selectedAnimalButton: {
+  selectPetButton: {
     backgroundColor: '#FFA500',
   },
   animalIcon: {

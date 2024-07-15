@@ -9,9 +9,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function Register() {
     const navigation = useNavigation();
     const [username, setUsername] = useState('');
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
     const handleRegister = async () => {
         if (password !== confirmPassword) {
           console.error('Passwords do not match');
@@ -19,12 +20,9 @@ export default function Register() {
         }
       
         try {
-          const response = await register(username, email, password);
-          console.log('Registration successful:', response);
-          await AsyncStorage.setItem('jwt', response.jwt);
-          navigation.navigate('Question');
+          navigation.navigate('Question', { username, email, password });
         } catch (error) {
-          Alert.alert('Registration failed', error.response ? error.response.data.message : error.message);
+          Alert.alert('Registration failed//', error.response ? error.response.data.message : error.message);
         }
       };
 
@@ -48,7 +46,7 @@ export default function Register() {
                 <Image source={login} style={{
                     width: 200,
                     height: 180,
-                    // marginTop: 60,
+
                 }} />
                 <Text style={styles.header}>ลงทะเบียน</Text>
                 <Text style={styles.description}>สร้างบัญชีของคุณ</Text>
