@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from "react-native";
-import BottomBar from "./BottomBar";
-import ProfileButton from "./Profile.js";
-import DollarIcon from "./Dollar.js";
-import wardrobe from "../../assets/image/bar-02.png";
-import gym from "../../assets/image/Background-Theme/gym-02.gif";
-import shirtIcon from "../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png";
-import pantsIcon from "../../assets/image/Clothing-Icon/Pant/pant-icon-02.png";
-import skinIcon from "../../assets/image/Clothing-Icon/Skin/skin-icon-02.png";
-import empty from "../../assets/image/Clothing-Icon/empty-icon-01.png";
-import cross from "../../assets/image/Clothing-Icon/cross-icon-01.png";
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
+import BottomBar from './BottomBar';
+import ProfileButton from './Profile.js';
+import DollarIcon from './Dollar.js';
+import { ClothingContext } from './ClothingContext';
+import wardrobe from '../../assets/image/bar-02.png';
+import gym from '../../assets/image/Background-Theme/gym-02.gif';
+import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
+import pantsIcon from '../../assets/image/Clothing-Icon/Pant/pant-icon-02.png';
+import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
+import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
+import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 
 const itemsData = {
   shirt: [
@@ -50,17 +51,11 @@ const petImages = {
   S02P01K01: require('../../assets/image/Clothing-Pet/S02P01K01.png'),
   S02P02K00: require('../../assets/image/Clothing-Pet/S02P02K00.png'),
   S02P02K01: require('../../assets/image/Clothing-Pet/S02P02K01.png'),
-
 };
 
 export default function ClothingScreen() {
+  const { selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [selectedCategory, setSelectedCategory] = useState("shirt");
-  const [selectedItems, setSelectedItems] = useState({ 
-    shirt: null, 
-    pant: null, 
-    skin: { image: require('../../assets/image/Clothing-Item/Skin/K00.png'), name: 'K00' }, 
-    mypet: null, 
-  });
 
   useEffect(() => {
     updatePetImage();

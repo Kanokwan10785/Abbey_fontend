@@ -8,6 +8,7 @@ import ShopScreen from './app/Screens/ShopScreen.js';
 import ClothingScreen from './app/Screens/ClothingScreen.js';
 import HomeScreen from './app/Screens/HomeScreen.js';
 import Description from './app/Screens/Exercise/Description.js';
+import { ClothingProvider } from './app/Screens/ClothingContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,14 +33,16 @@ const App = () => {
     //   </NavigationContainer>
     // </SafeAreaProvider>
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="ShopScreen" component={ShopScreen} />
-        <Stack.Screen name="ClothingScreen" component={ClothingScreen} />
-        <Stack.Screen name="HomeScreen" component={HomeScreen} />
-        <Stack.Screen name="ExerciseScreen" component={ExerciseScreen} />
-        <Stack.Screen name="AnalysisScreen" component={AnalysisScreen} />
-        <Stack.Screen name="Description" component={Description} />
-      </Stack.Navigator>
+      <ClothingProvider>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="ShopScreen" component={ShopScreen} />
+          <Stack.Screen name="ClothingScreen" component={ClothingScreen} />
+          <Stack.Screen name="HomeScreen" component={HomeScreen} />
+          <Stack.Screen name="ExerciseScreen" component={ExerciseScreen} />
+          <Stack.Screen name="AnalysisScreen" component={AnalysisScreen} />
+          <Stack.Screen name="Description" component={Description} />
+        </Stack.Navigator>
+      </ClothingProvider>
     </NavigationContainer>
   );
 };
