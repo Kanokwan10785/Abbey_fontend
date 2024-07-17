@@ -16,7 +16,6 @@ const styles = StyleSheet.create({
   currencyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
   },
   currencyBackground: {
     backgroundColor: 'white',
@@ -26,16 +25,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+    currencyText: {
+    fontSize: 18,
+    marginRight: 14,
+    fontFamily: 'appfont_02',
+  },
   currencyIcon: {
     width: 40,
     height: 40,
     position: 'absolute',
     right: -5,
-  },
-  currencyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginRight: 14,
   },
 });
 export default DollarIcon;

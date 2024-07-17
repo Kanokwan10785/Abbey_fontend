@@ -7,7 +7,7 @@ const ProfileButton = () => (
         <Text style={styles.levelText}>13</Text>
       </View>
       <TouchableOpacity style={styles.usernameContainer} onPress={() => alert('เปิดหน้าต่างโปรไฟล์')}>
-        <Text style={styles.username}>AEK</Text>
+        <Text style={styles.usernameText}>AEK</Text>
       </TouchableOpacity>
     </View>
 );
@@ -26,12 +26,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: '#FFCC00',
     borderWidth: 5,
-    marginRight: -4,
+    marginRight: -10,
     zIndex: 1,
   },    
   levelText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontFamily: 'appfont_02',
   },
   usernameContainer: {
     backgroundColor: 'white',
@@ -40,9 +40,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     marginLeft: -8,
   },
-  username: {
+  usernameText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'appfont_02',
   },
 });
 export default ProfileButton;

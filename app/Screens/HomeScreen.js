@@ -3,9 +3,9 @@ import React from 'react';
 import BottomBar from './BottomBar';
 import ProfileButton from './Profile.js';
 import DollarIcon from './Dollar.js';
-import gym from '../../assets/image/gym-02.gif';
+import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
-import dogrun from '../../assets/image/dog-run-01.gif';
+import dogrun from '../../assets/image/Home-Pet/S02P02K00.gif';
 
 const FoodButton = () => (
   <TouchableOpacity style={styles.foodButton} onPress={() => alert('รับประทานอาหาร')}>
@@ -20,22 +20,20 @@ const DogRun = () => (
 export default function HomeScreen() {
   return (
     <ImageBackground source={gym} style={styles.background}>
-      <View style={styles.container}>
         <View style={styles.header}>
           <ProfileButton />
           <DollarIcon />
         </View>
-        <View style={styles.screen}>
-          <View style={styles.section} />
-          <View style={styles.section} />
-          <View style={styles.section}>
+        <View style={styles.screenDogrun}>
+          <View style={styles.sectionDogrun} />
+          <View style={styles.sectionDogrun} />
+          <View style={styles.sectionDogrun}>
             <DogRun />
           </View>
-          <View style={styles.section} />
+          <View style={styles.sectionDogrun} />
         </View>
         <FoodButton />
         <BottomBar />
-      </View>
     </ImageBackground>
   );
 }
@@ -45,19 +43,16 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
   },
-  container: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 20,
+    margin: 20,
   },
-  screen: {
+  screenDogrun: {
     flex: 1,
     flexDirection: 'column',
   },
-  section: {
+  sectionDogrun: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -80,8 +75,8 @@ const styles = StyleSheet.create({
     height: 50,
   },
   dogRun: {
-    width: 340,
-    height: 340,
+    width: '280%',
+    height: '280%',
     resizeMode: 'contain',
   },
 });
