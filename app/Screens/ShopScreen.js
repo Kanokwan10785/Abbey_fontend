@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   beforeinsidecategory: {
     width: 85,
     height: 85,
-    borderRadius: 10,
+    borderRadius: 10,//มีปัญหา
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F9E79F",
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   afterinsidecategory: {
     width: 85,
     height: 85,
-    borderRadius: 10,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -187,7 +187,8 @@ const styles = StyleSheet.create({
     marginHorizontal: '2.5%',
     marginBottom: '2.5%',
     height: 136,
-    backgroundColor: '#FFAF32',
+    // backgroundColor: '#FFAF32', //สีเก่า
+    backgroundColor: '#FAA828',
     borderRadius: 10,
     alignItems: 'center',
     borderColor: "#F9E79F",

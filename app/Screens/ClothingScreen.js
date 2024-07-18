@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   beforeinsidecollection: {
     width: 60,
     height: 60,
-    borderRadius: 10,
+    borderRadius: 10, //มีปัญหา
     justifyContent: "center",
     alignItems: "center",
     borderColor: "#F9E79F",
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   afterinsidecollection: {
     width: 60,
     height: 60,
-    borderRadius: 10,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { View, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import BottomBar from './BottomBar';
 import ProfileButton from './Profile.js';
 import DollarIcon from './Dollar.js';
@@ -28,11 +29,14 @@ const petImages = {
   S02P02K01: require('../../assets/image/Home-Pet/S02P02K01.gif'),
 };
 
-const FoodButton = () => (
-  <TouchableOpacity style={styles.foodButton} onPress={() => alert('รับประทานอาหาร')}>
-    <Image source={fruit} style={styles.foodIcon} />
-  </TouchableOpacity>
-);
+const FoodButton = () => {
+  const navigation = useNavigation();
+  return (
+    <TouchableOpacity style={styles.foodButton} onPress={() => navigation.navigate('FoodScreen')}>
+      <Image source={fruit} style={styles.foodIcon} />
+    </TouchableOpacity>
+  );
+};
 
 const CatImage = ({ imageKey }) => (
   <Image source={petImages[imageKey]} style={styles.petImages} />
