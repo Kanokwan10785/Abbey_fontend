@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
   },
   itemsMenu: {
     flex: 1,
-    // marginTop: 8,
+    marginTop: 8,
     // marginBottom: -8,
-    backgroundColor: "#FFAF32",
+    // backgroundColor: "#FFAF32",
   },
   itemsMenuContent: {
     flexDirection: "row",
@@ -187,13 +187,13 @@ const styles = StyleSheet.create({
     marginHorizontal: '2.5%',
     marginBottom: '2.5%',
     height: 136,
-    backgroundColor: '#9E640A',
+    backgroundColor: '#FFAF32',
     borderRadius: 10,
     alignItems: 'center',
     borderColor: "#F9E79F",
     borderWidth: 6,
     marginBottom: 18,
-    marginTop: 5,
+    // marginTop: 5,
   },
   insideitemImage: {
     width: 90,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     resizeMode: 'contain',
     borderRadius: 15,
-    backgroundColor: '#FFAF32',
+    backgroundColor: '#F9E79F',
     marginTop: 8,
   },
   itemImage: {
