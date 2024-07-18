@@ -139,17 +139,17 @@ export default function ClothingScreen() {
         </View>
         <View style={styles.collectionMenu}>
           <TouchableOpacity style={styles.collectionButton} onPress={() => setSelectedCategory("shirt")}>
-            <View style={styles.insidecollection}>
+            <View style={selectedCategory === "shirt" ? styles.afterinsidecollection : styles.beforeinsidecollection}>
               <Image source={shirtIcon} style={styles.collectionIcon} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.collectionButton} onPress={() => setSelectedCategory("pant")}>
-            <View style={styles.insidecollection}>
+            <View style={selectedCategory === "pant" ? styles.afterinsidecollection : styles.beforeinsidecollection}>
               <Image source={pantsIcon} style={styles.collectionIcon} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.collectionButton} onPress={() => setSelectedCategory("skin")}>
-            <View style={styles.insidecollection}>
+            <View style={selectedCategory === "skin" ? styles.afterinsidecollection : styles.beforeinsidecollection}>
               <Image source={skinIcon} style={styles.collectionIcon} />
             </View>
           </TouchableOpacity>
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     borderWidth: 6,
     margin: 2,
   },
-  insidecollection: {
+  beforeinsidecollection: {
     width: 60,
     height: 60,
     borderRadius: 10,
@@ -283,6 +283,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "#F9E79F",
     borderWidth: 6,
+  },
+  afterinsidecollection: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
   collectionIcon: {
     width: 40,
