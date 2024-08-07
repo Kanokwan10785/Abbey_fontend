@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://192.168.1.136:1337'; // Replace with your Strapi URL
+const API_URL = 'http://10.4.11.189:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -39,31 +39,13 @@ export const register = async (username, email, password,height, weight,age,sele
   }
 };
 
-// export const question = async (height, weight, birthday, gender, pet, userId) => {
-//   try {
-//     const jwt = await AsyncStorage.getItem('jwt');
-//     if (!jwt) {
-//       throw new Error('No JWT token found');
-//     }
 
-//     const response = await api.post('/api/personal-infors', {
-//       data: {
-//         height,
-//         weight,
-//         birthday,
-//         gender,
-//         pet,
-//         user: userId,
-//       }
-//     }, {
-//       headers: {
-//         Authorization: `Bearer ${jwt}`,
-//       }
-//     });
-    
-//     return response.data;
-//   } catch (error) {
-//     console.error('Question error', error);
-//     throw error;
-//   }
-// };
+export const getDailyExercise = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/daily-exercises?populate=exercise`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching daily exercise', error);
+    throw error;
+  }
+};

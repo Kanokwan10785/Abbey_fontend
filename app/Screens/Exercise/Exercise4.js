@@ -2,6 +2,8 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import coin from '../../../assets/image/coin.png';
+import cancel from '../../../assets/image/cancel.png'
 
 const Exercise4 = () => {
   const navigation = useNavigation();
@@ -13,17 +15,17 @@ const Exercise4 = () => {
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton}
         onPress={() => navigation.navigate('ExerciseScreen')}>
-          <Icon name="close" size={30} color="#FFA500" />
+          <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
-          <Icon name="coin" size={24} color="#FFA500" />
+          <Image source={coin} style={styles.coin} />
           <Text style={styles.coinsText}>{coins}</Text>
         </View>
       </View>
       <View style={styles.trophyContainer}>
         <Image source={require('../../../assets/image/trophy.png')} style={styles.trophyImage} />
         <View style={styles.coinRewardContainer}>
-          <Icon name="coin" size={24} color="#FFA500" />
+          <Image source={coin} style={styles.coin} />
           <Text style={styles.coinRewardText}>{reward}</Text>
         </View>
       </View>
@@ -48,9 +50,22 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   closeButton: {
-    margin: 16,
+    marginTop: 20,
+  },
+  close: {
+    width: 35,
+    height: 35,
+  },
+  coin: {
+    width: 30,
+    height: 30,
   },
   coinsContainer: {
+    backgroundColor: '#FFA500',
+    padding: 5,
+    paddingHorizontal: 10,
+    borderRadius: 25,
+    marginVertical: 20,
     flexDirection: 'row',
     alignItems: 'center',
     margin: 16,
@@ -59,7 +74,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 8,
     fontFamily: 'appfont_01',
-    color: '#FFA500',
+    color: '#fff',
   },
   trophyContainer: {
     alignItems: 'center',
@@ -68,6 +83,7 @@ const styles = StyleSheet.create({
   trophyImage: {
     width: 200,
     height: 200,
+    marginTop: 80,
   },
   coinRewardContainer: {
     flexDirection: 'row',
@@ -78,6 +94,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   coinRewardText: {
+    fontFamily: 'appfont_01',
     fontSize: 18,
     color: '#FFF',
     marginLeft: 8,

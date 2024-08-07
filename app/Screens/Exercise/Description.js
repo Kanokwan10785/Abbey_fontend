@@ -1,25 +1,55 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Colors from '../../Shared/Colors'
 
-const Description = ({ navigation }) => {
+const Description = ({ route, navigation }) => {
+  const { item, items } = route.params;
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (items && item) {
+      const index = items.findIndex(i => i.id === item.id);
+      setCurrentIndex(index);
+    }
+  }, [item, items]);
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      navigation.setParams({ item: items[newIndex] });
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < items.length - 1) {
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      navigation.setParams({ item: items[newIndex] });
+    }
+  };
+
+  if (!item || !items) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>เกิดข้อผิดพลาดในการโหลดข้อมูล</Text>
+      </View>
+    );
+  }
+
+  const currentItem = items[currentIndex];
+
   return (
-    <View style={styles.container}>
-      <Image
-        source={require('../../../assets/image/exercise.png')}
-        style={styles.exerciseImage}
-      />
+    <ScrollView style={styles.container}>
+      <Image source={currentItem.image} style={styles.exerciseImage} />
       <View style={styles.header}>
-        <Text style={styles.title}>ท่ากระโดดตบ</Text>
+        <Text style={styles.title}>{currentItem.name}</Text>
         <View style={styles.timerContainer}>
           <Icon name="timer" size={20} color="#FFA500" />
-          <Text style={styles.timerText}>00:30 น.</Text>
+          <Text style={styles.timerText}>{currentItem.duration}</Text>
         </View>
       </View>
-      <Text style={styles.description}>
-        เริ่มจากอยู่ในท่ายืนเท้าชิด แขนแนบลำตัว จากนั้นกระโดดแยกขา และมือทั้งสองข้างแตะกันเหนือศีรษะ กลับสู่ท่าเตรียม และทำซ้ำ
-      </Text>
+      <Text style={styles.description}>{currentItem.description}</Text>
       <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
       <Image
         source={require('../../../assets/image/exercise.png')}
@@ -27,35 +57,33 @@ const Description = ({ navigation }) => {
       />
       <View style={styles.navigation}>
         <View style={styles.buttonnav}>
-         <TouchableOpacity style={styles.navButton}>
-          <Icon name="chevron-left" size={30} color="#FFA500" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.textpage}>1</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Icon name="chevron-right" size={30} color="#FFA500" />
-        </TouchableOpacity> 
-        </View>     
+          <TouchableOpacity style={styles.navButton} onPress={handlePrevious} disabled={currentIndex === 0}>
+            <Icon name="chevron-left" size={30} color={currentIndex === 0 ? "#CCC" : "#FFA500"} />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Text style={styles.textpage}>{currentIndex + 1}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleNext} disabled={currentIndex === items.length - 1}>
+            <Icon name="chevron-right" size={30} color={currentIndex === items.length - 1 ? "#CCC" : "#FFA500"} />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
           <Text style={styles.closeText}>ปิด</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#FFF',
-    height: '100%',
   },
   exerciseImage: {
     borderRadius: 20,
     width: '95%',
-    height: 200,
+    height: 300,
     marginTop: 40,
     alignSelf: 'center',
   },
@@ -64,6 +92,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 8,
+    marginHorizontal: 16,
   },
   title: {
     fontSize: 22,
@@ -71,7 +100,6 @@ const styles = StyleSheet.create({
     fontFamily: 'appfont_02',
   },
   timerContainer: {
-    marginVertical: 20,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -84,21 +112,22 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 18,
     color: '#555',
-    marginBottom: 16,
+    margin: 16,
     fontFamily: 'appfont_01',
   },
   sectionTitle: {
     fontSize: 22,
     color: '#333',
     marginVertical: 8,
+    marginHorizontal: 16,
     fontFamily: 'appfont_02',
   },
   muscleImage: {
     borderRadius: 20,
     width: '95%',
     height: 300,
-    marginTop: 20,
     alignSelf: 'center',
+    marginVertical: 20,
   },
   muscleLabels: {
     flexDirection: 'row',
@@ -128,6 +157,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 16,
+    marginHorizontal: 16,
   },
   buttonnav: {
     flexDirection: 'row',
@@ -136,7 +166,7 @@ const styles = StyleSheet.create({
   textpage: {
     fontSize: 18,
     marginHorizontal: 16,
-    color: Colors.yellow,
+    color: '#FFA500',
     fontFamily: 'appfont_01',
   },
   navButton: {
@@ -146,14 +176,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 40,
     backgroundColor: '#F6A444',
-    padding: 10,
-    marginHorizontal: 20,
     borderRadius: 50,
   },
   closeText: {
     fontSize: 18,
     color: '#FFF',
     fontFamily: 'appfont_01',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#FF0000',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
