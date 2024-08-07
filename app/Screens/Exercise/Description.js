@@ -40,7 +40,7 @@ const Description = ({ route, navigation }) => {
   const currentItem = items[currentIndex];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <Image source={currentItem.image} style={styles.exerciseImage} />
       <View style={styles.header}>
         <Text style={styles.title}>{currentItem.name}</Text>
