@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
 import BottomBar from './BottomBar';
-import ProfileButton from './Profile.js';
+import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
@@ -57,6 +57,7 @@ const eatingPetImages = {
   S02P01K00F01: require('../../assets/image/Food-Pet/S02P01K00F01.gif'),
   S02P01K01F01: require('../../assets/image/Food-Pet/S02P01K01F01.gif'),
   S02P02K00F01: require('../../assets/image/Food-Pet/S02P02K00F01.gif'),
+  S02P02K01F01: require('../../assets/image/Food-Pet/S02P02K01F01.gif'),
   
   S00P00K00F04: require('../../assets/image/Food-Pet/S00P00K00F04.gif'),
   S00P00K01F04: require('../../assets/image/Food-Pet/S00P00K01F04.gif'),
@@ -75,6 +76,7 @@ const eatingPetImages = {
   S02P01K00F04: require('../../assets/image/Food-Pet/S02P01K00F04.gif'),
   S02P01K01F04: require('../../assets/image/Food-Pet/S02P01K01F04.gif'),
   S02P02K00F04: require('../../assets/image/Food-Pet/S02P02K00F04.gif'),
+  S02P02K01F04: require('../../assets/image/Food-Pet/S02P02K01F04.gif'),
 };
 
 export default function FoodScreen({ navigation }) {

@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { View, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import BottomBar from './BottomBar';
-import ProfileButton from './Profile.js';
+import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';

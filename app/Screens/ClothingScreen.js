@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
 import BottomBar from './BottomBar';
-import ProfileButton from './Profile.js';
+import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
 import wardrobe from '../../assets/image/bar-02.png';
