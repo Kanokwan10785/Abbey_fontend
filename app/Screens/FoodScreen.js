@@ -8,15 +8,16 @@ import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
+import axios from 'axios';
 
-const initialFoodData = [
-  { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
-  { id: 2, image: require('../../assets/image/Clothing-Item/Food/F02.png'), name: 'F02', quantity: 0 },
-  { id: 3, image: require('../../assets/image/Clothing-Item/Food/F03.png'), name: 'F03', quantity: 0 },
-  { id: 4, image: require('../../assets/image/Clothing-Item/Food/F04.png'), name: 'F04', quantity: 8 },
-  { id: 5, image: require('../../assets/image/Clothing-Item/Food/F05.png'), name: 'F05', quantity: 0 },
-  { id: 6, image: require('../../assets/image/Clothing-Item/Food/F06.png'), name: 'F06', quantity: 0 },
-];
+// const initialFoodData = [
+//   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
+//   { id: 2, image: require('../../assets/image/Clothing-Item/Food/F02.png'), name: 'F02', quantity: 0 },
+//   { id: 3, image: require('../../assets/image/Clothing-Item/Food/F03.png'), name: 'F03', quantity: 0 },
+//   { id: 4, image: require('../../assets/image/Clothing-Item/Food/F04.png'), name: 'F04', quantity: 8 },
+//   { id: 5, image: require('../../assets/image/Clothing-Item/Food/F05.png'), name: 'F05', quantity: 0 },
+//   { id: 6, image: require('../../assets/image/Clothing-Item/Food/F06.png'), name: 'F06', quantity: 0 },
+// ];
 
 const defaultPetImages = {
   S00P00K00: require('../../assets/image/Food-Pet/S00P00K00.gif'),
@@ -81,12 +82,13 @@ const eatingPetImages = {
 
 export default function FoodScreen({ navigation }) {
   const { selectedItems } = useContext(ClothingContext);
-  const [foodData, setFoodData] = useState(initialFoodData);
+  const [foodData, setFoodData] = useState([]);
   const [currentPetImage, setCurrentPetImage] = useState(null);
   const [isEating, setIsEating] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
+    fetchFoodData();
     updatePetImage();
   }, [selectedItems]);
 
@@ -99,16 +101,33 @@ export default function FoodScreen({ navigation }) {
       setTimeout(() => {
         setCurrentPetImage(`${shirtName}${pantName}${skinName}`);
         setIsEating(false);
-        setIsButtonDisabled(false); // Enable button after 2.8 seconds
+        setIsButtonDisabled(false);
       }, 2800);
     }
   }, [isEating]);
+
+  const fetchFoodData = async () => {
+    try {
+      const response = await axios.get('http://172.30.90.0:1337/api/food-items?populate=*');
+
+      const formattedData = response.data.data.map(item => ({
+        id: item.id,
+        image: item.attributes.Food.data?.attributes.formats.thumbnail.url, // Use thumbnail URL or adjust as needed
+        name: item.attributes.Food.data?.attributes.name,
+        quantity: item.attributes.quantity || 0,
+    }));
+
+      setFoodData(formattedData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleEat = (item) => {
     if (item.quantity <= 0 || isButtonDisabled) {
       return;
     }
-    setIsButtonDisabled(true); // Disable button after clicking "กิน"
+    setIsButtonDisabled(true);
     const { shirt, pant, skin } = selectedItems;
     const shirtName = shirt ? shirt.name : 'S00';
     const pantName = pant ? pant.name : 'P00';
@@ -118,7 +137,6 @@ export default function FoodScreen({ navigation }) {
     setCurrentPetImage(petKey);
     setIsEating(true);
 
-    // Update foodData to reduce quantity
     setFoodData(prevFoodData =>
       prevFoodData.map(foodItem =>
         foodItem.id === item.id ? { ...foodItem, quantity: foodItem.quantity - 1 } : foodItem
@@ -140,7 +158,9 @@ export default function FoodScreen({ navigation }) {
       <>
         {foodData.map((item) => (
           <View key={item.id} style={styles.item}>
-            <Image source={item.image ? item.image : empty} style={styles.itemImage} />
+            {item.image && (
+              <Image source={{ uri: item.image }} style={styles.itemImage}/>
+            )}
             <Text style={styles.itemQuantity}>{item.quantity}</Text>
             <TouchableOpacity style={styles.itemButton} onPress={() => handleEat(item)} disabled={isButtonDisabled}>
               <Text style={styles.itemButtonText}>กิน</Text>
