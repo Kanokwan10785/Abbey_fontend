@@ -108,12 +108,12 @@ export default function FoodScreen({ navigation }) {
 
   const fetchFoodData = async () => {
     try {
-      const response = await axios.get('http://172.30.90.0:1337/api/food-items?populate=*');
+      const response = await axios.get('http://192.168.1.147:1337/api/food-items?populate=*');
 
       const formattedData = response.data.data.map(item => ({
         id: item.id,
-        image: item.attributes.Food.data?.attributes.formats.thumbnail.url, // Use thumbnail URL or adjust as needed
-        name: item.attributes.Food.data?.attributes.name,
+        image: item.attributes.Food?.data?.[0]?.attributes?.formats?.large?.url, // Use thumbnail URL or adjust as needed
+        // name: item.attributes.Food.data?.attributes.name,
         quantity: item.attributes.quantity || 0,
     }));
 
