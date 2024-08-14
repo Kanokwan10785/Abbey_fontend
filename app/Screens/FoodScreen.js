@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#9E640A",
     zIndex: 1,
     flex: 1,
-    marginBottom: -20,
+    // marginBottom: -20,
   },
   itemsMenu: {
     flex: 1,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-start",
-    margin: 5,
+    // margin: 5,
   },
   item: {
     width: '20%',
