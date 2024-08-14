@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   editdepersonalInformation: {
-    width: 45,
+    width: 45,  
     height: 45,
     position: "absolute",
     justifyContent: "center",
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
-    top: "50%",
+    top: 95,
     left: 3,
   },
   editButtonText: {

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, Dimensions, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image, Dimensions, ScrollView, Modal } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 import BottomBar from './BottomBar';
@@ -48,6 +48,79 @@ const weeklySummary = [
 
 const AnalysisScreen = () => {
   const navigation = useNavigation();
+
+  const [weight, setWeight] = useState(58); // น้ำหนัก (กิโลกรัม)
+  const [heightCm, setHeightCm] = useState(167); // ส่วนสูง (เซนติเมตร)
+  const [bmi, setBmi] = useState(0);
+  const [bmiStatus, setBmiStatus] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [weightData, setWeightData] = useState([55, 56, 57, 58, 59]); // ค่าน้ำหนักในกราฟ
+  const [dateLabels, setDateLabels] = useState(['3', '5', '7', '9', '11']); // ค่าวันที่ในกราฟ
+  const [newWeight, setNewWeight] = useState(''); // น้ำหนักใหม่ที่จะใส่
+  const [newDate, setNewDate] = useState(''); // วันที่ใหม่ที่จะใส่
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const handleSaveData = () => {
+    const weightValue = parseFloat(newWeight);
+    const dateValue = newDate;
+
+    if (!isNaN(weightValue) && weightValue > 0 && dateValue !== '') {
+      setWeightData([...weightData, weightValue]);
+      setDateLabels([...dateLabels, dateValue]);
+      setWeight(weightValue); // อัปเดตน้ำหนักล่าสุด
+      setNewWeight(''); // รีเซ็ตค่าอินพุตหลังจากเพิ่มข้อมูลแล้ว
+      setNewDate('');
+      setIsModalVisible(false); // ปิดป๊อปอัปหลังจากบันทึกข้อมูล
+    } else {
+      alert('กรุณาใส่น้ำหนักและวันที่ที่ถูกต้อง');
+    }
+  };
+
+  useEffect(() => {
+    const calculateBmi = () => {
+      const height = heightCm / 100; // แปลงส่วนสูงจากเซนติเมตรเป็นเมตร
+      const bmiValue = (weight / (height * height)).toFixed(1);
+      setBmi(bmiValue);
+      if (bmiValue < 18.5) {
+        setBmiStatus('น้ำหนักน้อย');
+      } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
+        setBmiStatus('น้ำหนักปกติ');
+      } else if (bmiValue >= 25 && bmiValue < 29.9) {
+        setBmiStatus('น้ำหนักเกิน');
+      } else {
+        setBmiStatus('โรคอ้วน');
+      }
+    };
+
+    calculateBmi();
+  }, [weight, heightCm]);
+
+  const handleSave = () => {
+    const weightValue = parseFloat(weight);
+    const heightCmValue = parseFloat(heightCm);
+
+    if (!isNaN(weightValue) && !isNaN(heightCmValue)) {
+      setWeight(weightValue);
+      setHeightCm(heightCmValue);
+      setIsEditing(false);
+      const height = heightCmValue / 100; // แปลงส่วนสูงจากเซนติเมตรเป็นเมตร
+      const bmiValue = (weightValue / (height * height)).toFixed(1);
+      setBmi(bmiValue);
+      if (bmiValue < 18.5) {
+        setBmiStatus('น้ำหนักน้อย');
+      } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
+        setBmiStatus('น้ำหนักปกติ');
+      } else if (bmiValue >= 25 && bmiValue < 29.9) {
+        setBmiStatus('น้ำหนักเกิน');
+      } else {
+        setBmiStatus('โรคอ้วน');
+      }
+    } else {
+      alert('กรุณาใส่ข้อมูลที่ถูกต้อง');
+    }
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.summaryItem}>
       <Image source={item.image} style={styles.summaryImage} />
@@ -100,20 +173,25 @@ const AnalysisScreen = () => {
           }}
         />
         <Text style={styles.sectionTitle}>สรุปรายสัปดาห์</Text>
-          <FlatList
-            data={weeklySummary}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            style={styles.summaryList}
-          />
+        <FlatList
+          data={weeklySummary}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          style={styles.summaryList}
+        />
         <View style={styles.graphContainer}>
-          <Text style={styles.graphTitle}>กราฟน้ำหนัก</Text>
+          <View style={styles.graphHeader}>
+            <Text style={styles.graphTitle}>กราฟน้ำหนัก</Text>
+            <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+              <Text style={styles.graphsaveButtonText}>บันทึก</Text>
+            </TouchableOpacity>
+          </View>
           <LineChart
             data={{
-              labels: ['3', '5', '7', '9', '11'],
+              labels: dateLabels,
               datasets: [
                 {
-                  data: [55, 56, 57, 58, 59],
+                  data: weightData,
                 },
               ],
             }}
@@ -143,15 +221,75 @@ const AnalysisScreen = () => {
               borderRadius: 16,
             }}
           />
-          <View style={styles.graphFooter}>
-            <Text>ปัจจุบันน้ำหนัก 58</Text>
-            <View>
-              <Text>หนักที่สุด : 59</Text>
-              <Text>เบาที่สุด : 55</Text>
+        </View>
+
+        <View style={styles.bmiContainer}>
+          <Text style={styles.bmiLabel}>ค่าดัชนีมวลกาย</Text>
+          {isEditing ? (
+            <View style={styles.editContainer}>
+              <TextInput
+                style={styles.input}
+                value={weight.toString()}
+                onChangeText={text => setWeight(text)}
+                placeholder="น้ำหนัก (kg)"
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                value={heightCm.toString()}
+                onChangeText={text => setHeightCm(text)}
+                placeholder="ส่วนสูง (cm)"
+                keyboardType="numeric"
+              />
+              <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+                <Text style={styles.saveButtonText}>บันทึก</Text>
+              </TouchableOpacity>
             </View>
-          </View>
+          ) : (
+            <View style={styles.bmiValueContainer}>
+              <Text style={styles.bmiValue}>{bmi}</Text>
+              <Text style={styles.bmiStatus}>{bmiStatus}</Text>
+              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
+                <Text style={styles.editButtonText}>แก้ไข</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      {/* Modal สำหรับการเพิ่มน้ำหนักและวันที่ */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>บันทึกน้ำหนักและวันที่</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={newWeight}
+                onChangeText={setNewWeight}
+                placeholder="น้ำหนัก (kg)"
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                value={newDate}
+                onChangeText={setNewDate}
+                placeholder="วันที่ (dd-mm-yyyy)"
+                keyboardType="default"
+              />
+            </View>
+            <TouchableOpacity onPress={handleSaveData} style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>บันทึก</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <BottomBar />
     </View>
   );
@@ -224,22 +362,134 @@ const styles = StyleSheet.create({
     fontFamily: 'appfont_01',
   },
   graphContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFECB3',
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#dcdcdc',
     marginTop: 20,
   },
+  graphHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   graphTitle: {
     fontSize: 16,
     fontFamily: 'appfont_01',
-    marginBottom: 10,
   },
   graphFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
+  },
+  graph: {
+    fontSize: 14,
+  },
+  graphsaveButtonText: {
+    color: '#fff',
+    backgroundColor: '#F6A444',
+    padding: 5,
+    borderRadius: 5,
+    fontFamily: 'appfont_01',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  input: {
+    height: 40,
+    borderColor: '#dcdcdc',
+    borderWidth: 1,
+    marginRight: 10,
+    paddingLeft: 8,
+    borderRadius: 5,
+    flex: 1,
+    backgroundColor: '#FFF',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 15,
+    textAlign: 'center',
+    fontFamily: 'appfont_01',
+  },
+  modalButton: {
+    backgroundColor: '#F6A444',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontFamily: 'appfont_01',
+  },
+  bmiContainer: {
+    backgroundColor: '#FFECB3',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#dcdcdc',
+    marginTop: 20,
+  },
+  bmiLabel: {
+    fontSize: 16,
+    fontFamily: 'appfont_01',
+  },
+  bmiValueContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  bmiValue: {
+    fontSize: 18,
+    fontFamily: 'appfont_01',
+    backgroundColor: '#FFF',
+    padding: 5,
+    borderRadius: 5,
+  },
+  bmiStatus: {
+    fontSize: 16,
+    fontFamily: 'appfont_01',
+    marginLeft: 10,
+  },
+  editButton: {
+    marginLeft: 10,
+    backgroundColor: '#F6A444',
+    padding: 5,
+    borderRadius: 5,
+  },
+  editButtonText: {
+    color: '#FFF',
+    fontFamily: 'appfont_01',
+  },
+  editContainer: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+  },
+  saveButton: {
+    backgroundColor: '#F6A444',
+    padding: 10,
+    borderRadius: 5,
+    alignSelf: 'center',
+    fontFamily: 'appfont_01',
+  },
+  saveButtonText: {
+    color: '#FFF',
+    fontFamily: 'appfont_01',
   },
 });
 

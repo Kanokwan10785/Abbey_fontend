@@ -1,16 +1,16 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://10.4.11.189:1337'; // Replace with your Strapi URL
+const API_URL = 'http://172.30.81.13:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
 });
 
-export const login = async (identifier, password) => {
+export const login = async (username, password) => {
   try {
     const response = await api.post('/api/auth/local', {
-      identifier,
+      username,
       password,
     });
     return response.data;

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TextInput,Alert, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, Image, TextInput,Alert, TouchableOpacity, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import Colors from '../Shared/Colors'
 import login from '../../assets/image/login.png'
@@ -27,11 +27,8 @@ export default function Register() {
       };
 
     return (
-        <View style={{
-            alignItems: 'center',
-            backgroundColor: Colors.yellow,
-            height: '100%'
-        }}>
+        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
             <View style={{
                 backgroundColor: Colors.while,
                 padding: 40,
@@ -85,29 +82,42 @@ export default function Register() {
                         fontSize: 20,
                         color: Colors.while,
                         padding: 2,
+                        fontFamily: 'appfont_01',
                     }}>เข้าสู่ระบบ</Text>
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row',marginTop: 20 }}>
-                <Text style={{marginRight: 50 }}>มีบัญชีอยู่แล้ว?</Text>
-                <Text style={{color:Colors.yellow}}
+                <Text style={{marginRight: 50 ,fontFamily:'appfont_01'}}>มีบัญชีอยู่แล้ว?</Text>
+                <Text style={{color:Colors.yellow ,fontFamily:'appfont_01'}}
                 onPress={() => navigation.navigate('Loginpage')}>เข้าสู่ระบบ</Text>
                 </View>
             </View>
+            </ScrollView>
         </View>
     )
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Colors.yellow,
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     header: {
         fontSize: 30,
         marginTop: 20,
         marginBottom: 10,
         color: Colors.yellow,
+        fontFamily: 'appfont_02',
     },
     description: {
         fontSize: 15,
         textAlign: 'center',
         marginBottom: 40,
+        fontFamily: 'appfont_01',
     },
     buttonlogin: {
         backgroundColor: Colors.yellow,
@@ -115,7 +125,8 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         width: 320,
         marginTop: 10,
-        alignItems: 'center'
+        alignItems: 'center',
+        fontFamily: 'appfont_02',
     },
     input: {
     width: '100%',
@@ -124,6 +135,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 10,
     marginBottom: 30,
+    fontFamily: 'appfont_01',
   },
   
 
