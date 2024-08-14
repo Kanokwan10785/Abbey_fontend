@@ -42,8 +42,8 @@ const AuthNavigator = () => (
     <ClothingProvider>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {/* <Stack.Screen name="Login" component={Login} />
-    <Stack.Screen name="Loginpage" component={Loginpage} />
-    <Stack.Screen name="Register" component={Register} /> */}
+        <Stack.Screen name="Loginpage" component={Loginpage} />
+        <Stack.Screen name="Register" component={Register} /> */}
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
         <Stack.Screen name="ShopScreen" component={ShopScreen} />
         <Stack.Screen name="ClothingScreen" component={ClothingScreen} />
