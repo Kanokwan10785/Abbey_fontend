@@ -1,7 +1,6 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://172.30.81.13:1337'; // Replace with your Strapi URL
+const API_URL = 'http://192.168.1.183:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -46,6 +45,23 @@ export const getDailyExercise = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching daily exercise', error);
+    throw error;
+  }
+};
+
+export const fetchFoodData = async () => {
+  try {
+    const response = await api.get('/api/food-items?populate=*');
+    const formattedData = response.data.data.map(item => ({
+      id: item.id,
+      label: item.attributes.label,
+      name: item.attributes.name,
+      image: item.attributes.food?.data?.attributes?.formats?.large?.url,
+      quantity: item.attributes.quantity,
+    }));
+    return formattedData;
+  } catch (error) {
+    console.error('Error fetching food data', error);
     throw error;
   }
 };

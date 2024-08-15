@@ -5,10 +5,9 @@ import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
-import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
-import axios from 'axios';
+import { fetchFoodData, updateFoodQuantity } from './api'; // Import ฟังก์ชันจาก api.js
 
 // const initialFoodData = [
 //   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
@@ -88,7 +87,11 @@ export default function FoodScreen({ navigation }) {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
-    fetchFoodData();
+    const getData = async () => {
+      const data = await fetchFoodData();
+      setFoodData(data);
+    };
+    getData();  
     updatePetImage();
   }, [selectedItems]);
 
@@ -105,23 +108,6 @@ export default function FoodScreen({ navigation }) {
       }, 2800);
     }
   }, [isEating]);
-
-  const fetchFoodData = async () => {
-    try {
-      const response = await axios.get('http://192.168.1.147:1337/api/food-items?populate=*');
-
-      const formattedData = response.data.data.map(item => ({
-        id: item.id,
-        image: item.attributes.Food?.data?.[0]?.attributes?.formats?.large?.url, // Use thumbnail URL or adjust as needed
-        // name: item.attributes.Food.data?.attributes.name,
-        quantity: item.attributes.quantity || 0,
-    }));
-
-      setFoodData(formattedData);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const handleEat = (item) => {
     if (item.quantity <= 0 || isButtonDisabled) {
@@ -154,23 +140,36 @@ export default function FoodScreen({ navigation }) {
   };
 
   const renderItems = () => {
+    const sortedFoodData = [...foodData].sort((a, b) => {
+      if (a.label < b.label) return -1;
+      if (a.label > b.label) return 1;
+      return 0;
+    });
     return (
       <>
-        {foodData.map((item) => (
-          <View key={item.id} style={styles.item}>
-            {item.image && (
-              <Image source={{ uri: item.image }} style={styles.itemImage}/>
-            )}
-            <Text style={styles.itemQuantity}>{item.quantity}</Text>
-            <TouchableOpacity style={styles.itemButton} onPress={() => handleEat(item)} disabled={isButtonDisabled}>
-              <Text style={styles.itemButtonText}>กิน</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+        {sortedFoodData.map((item) => {
+          const hideButtonAndQuantity = item.label === 'F99';
+    
+          return (
+            <View key={item.id} style={styles.item}>
+              {item.image && (
+                <Image source={{ uri: item.image }} style={styles.itemImage}/>
+              )}
+              {!hideButtonAndQuantity && (
+                <>
+                  <Text style={styles.itemQuantity}>{item.quantity}</Text>
+                  <TouchableOpacity style={styles.itemButton} onPress={() => handleEat(item)} disabled={isButtonDisabled}>
+                    <Text style={styles.itemButtonText}>กิน</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          );
+        })}
       </>
     );
-  };
-
+  };  
+  
   return (
     <View style={styles.container}>
       <View style={styles.gymBackgroundContainer}>
