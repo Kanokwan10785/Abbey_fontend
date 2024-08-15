@@ -91,7 +91,7 @@ export default function FoodScreen({ navigation }) {
       const data = await fetchFoodData();
       setFoodData(data);
     };
-    getData();  
+    getData();
     updatePetImage();
   }, [selectedItems]);
 
@@ -109,7 +109,7 @@ export default function FoodScreen({ navigation }) {
     }
   }, [isEating]);
 
-  const handleEat = (item) => {
+  const handleEat = async (item) => {
     if (item.quantity <= 0 || isButtonDisabled) {
       return;
     }
@@ -123,12 +123,22 @@ export default function FoodScreen({ navigation }) {
     setCurrentPetImage(petKey);
     setIsEating(true);
 
+    // ลดจำนวนสินค้าใน state
+    const newQuantity = (item.quantity - 1).toString(); // แปลงค่าเป็น string
     setFoodData(prevFoodData =>
       prevFoodData.map(foodItem =>
-        foodItem.id === item.id ? { ...foodItem, quantity: foodItem.quantity - 1 } : foodItem
+        foodItem.id === item.id ? { ...foodItem, quantity: parseInt(newQuantity, 10) } : foodItem
       )
     );
-  };
+
+    // อัปเดตจำนวนสินค้าไปยังเซิร์ฟเวอร์
+    try {
+      await updateFoodQuantity(item.id, newQuantity);
+    } catch (error) {
+      // เพิ่มการแสดงรายละเอียดข้อผิดพลาด
+      console.error('Failed to update quantity on server', error.response?.data || error.message);
+    }
+};
 
   const updatePetImage = () => {
     const { shirt, pant, skin } = selectedItems;
