@@ -65,3 +65,17 @@ export const fetchFoodData = async () => {
     throw error;
   }
 };
+
+export const updateFoodQuantity = async (foodId, newQuantity) => {
+  try {
+    const response = await api.put(`/api/food-items/${foodId}?populate=*`, {
+      data: {
+        quantity: newQuantity,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating food quantity', error);
+    throw error;
+  }
+};
