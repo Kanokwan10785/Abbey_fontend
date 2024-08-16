@@ -41,9 +41,9 @@ const AuthNavigator = () => (
   <NavigationContainer independent={true}>
     <ClothingProvider>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Loginpage" component={Loginpage} />
-        <Stack.Screen name="Register" component={Register} /> */}
+        <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
         <Stack.Screen name="ShopScreen" component={ShopScreen} />
         <Stack.Screen name="ClothingScreen" component={ClothingScreen} />
@@ -51,7 +51,7 @@ const AuthNavigator = () => (
         <Stack.Screen name="ExerciseScreen" component={ExerciseScreen} />
         <Stack.Screen name="AnalysisScreen" component={AnalysisScreen} />
         <Stack.Screen name="Description" component={Description} />
-        {/* <Stack.Screen name="Question" component={Question} /> */}
+        <Stack.Screen name="Question" component={Question} />
         <Stack.Screen name="Exercise1" component={Exercise1} />
         <Stack.Screen name="Exercise2" component={Exercise2} />
         <Stack.Screen name="Exercise4" component={Exercise4} />
@@ -86,7 +86,7 @@ const AppNavigator = () => (
         <Stack.Screen name="ExerciseScreen" component={ExerciseScreen} />
         <Stack.Screen name="AnalysisScreen" component={AnalysisScreen} />
         <Stack.Screen name="Description" component={Description} />
-        {/* <Stack.Screen name="Question" component={Question} /> */}
+        <Stack.Screen name="Question" component={Question} />
         <Stack.Screen name="Exercise1" component={Exercise1} />
         <Stack.Screen name="Exercise2" component={Exercise2} />
         <Stack.Screen name="Exercise4" component={Exercise4} />

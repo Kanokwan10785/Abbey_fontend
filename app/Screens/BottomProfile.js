@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
+import { fetchUserProfile, updateUserProfile } from './api';  // Import API functions
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
@@ -8,12 +9,46 @@ const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [profileImage, setProfileImage] = useState(require("../../assets/image/123.jpg"));
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState("AEK IEIEIE");
-  const [weight, setWeight] = useState("56kg");
-  const [height, setHeight] = useState("178cm");
-  const [birthday, setBirthday] = useState("12/12/2555");
-  const [age, setAge] = useState("11ปี");
-  const [gender, setGender] = useState("ชาย");
+  const [username, setUsername] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const userId = 54; // Replace with dynamic user ID
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const userData = await fetchUserProfile(userId);
+
+        setUsername(userData.username);
+        setWeight(userData.weight);
+        setHeight(userData.height);
+        setBirthday(userData.birthday);
+        setAge(userData.age);
+        setGender(transformGenderToThai(userData.selectedGender));
+        if (userData.profileImage) {
+          setProfileImage({ uri: userData.profileImage });
+        }
+      } catch (error) {
+        console.error('Error fetching user profile', error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  const transformGenderToThai = (gender) => {
+    switch(gender) {
+      case 'male':
+        return 'ชาย';
+      case 'female':
+        return 'หญิง';
+      default:
+        return gender; // กรณีไม่มีค่า เพศที่ระบุไว้
+    }
+  };
 
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
@@ -33,6 +68,27 @@ const ProfileButton = () => {
 
     if (!result.cancelled) {
       setProfileImage({ uri: result.uri });
+    }
+  };
+
+  const saveProfile = async () => {
+    try {
+      // แปลง gender กลับไปเป็นภาษาอังกฤษก่อนส่งไปที่ Strapi
+      const transformedGender = gender === 'ชาย' ? 'male' : 'female';
+      
+      await updateUserProfile(userId, {
+        username: username,
+        weight: weight,
+        height: height,
+        birthday: birthday,
+        age: age,
+        selectedGender: transformedGender,
+        profileImage: profileImage.uri,
+      });
+      console.log('Profile updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating user profile', error);
     }
   };
 
@@ -80,11 +136,11 @@ const ProfileButton = () => {
                   {isEditing ? (
                     <>
                       <View style={styles.inputGroup}>
-                        <Text style={styles.labelText}>ชื่อ:</Text>
+                        <Text style={styles.labelText}>ชื่อผู้ใช้:</Text>
                         <TextInput
                           style={styles.input}
-                          value={name}
-                          onChangeText={setName}
+                          value={username}
+                          onChangeText={setUsername}
                         />
                       </View>
                       <View style={styles.inputGroup}>
@@ -127,17 +183,17 @@ const ProfileButton = () => {
                           onChangeText={setGender}
                         />
                       </View>
-                      <TouchableOpacity onPress={() => setIsEditing(false)}>
+                      <TouchableOpacity onPress={saveProfile}>
                         <Text style={styles.saveButton}>บันทึก</Text>
                       </TouchableOpacity>
                     </>
                   ) : (
                     <>
-                      <Text style={styles.headText}>{name}</Text>
-                      <Text style={styles.detailText}>น้ำหนัก: {weight}</Text>
-                      <Text style={styles.detailText}>ส่วนสูง: {height}</Text>
+                      <Text style={styles.headText}>{username}</Text>
+                      <Text style={styles.detailText}>น้ำหนัก: {weight} กิโลกรัม</Text>
+                      <Text style={styles.detailText}>ส่วนสูง: {height} เซนติเมตร</Text>
                       <Text style={styles.detailText}>วันเกิด: {birthday}</Text>
-                      <Text style={styles.detailText}>อายุ: {age}</Text>
+                      <Text style={styles.detailText}>อายุ: {age} ปี</Text>
                       <Text style={styles.detailText}>เพศ: {gender}</Text>
                     </>
                   )}
@@ -250,7 +306,7 @@ const styles = StyleSheet.create({
   },
   insidepersonalInformation: {
     width: "65%",
-    height: "100%", // เพิ่มความสูงของกล่องโปรไฟล์ให้พอดีกับข้อมูลที่เพิ่มขึ้น
+    height: "100%", 
     borderRadius: 8,
     backgroundColor: "#F9E79F",
     borderColor: "#E97424",
@@ -271,7 +327,6 @@ const styles = StyleSheet.create({
   },
   profileDetails: {
     padding: 5,
-    // alignItems: "center",
   },
   inputGroup: {
     flexDirection: "row",
@@ -321,7 +376,7 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     marginVertical: 2,
     borderRadius: 8,
-    flex: 1,  // เพิ่ม flex: 1 เพื่อให้ช่อง input ขยายเต็มที่
+    flex: 1,
   },
   saveButton: {
     fontSize: 18,

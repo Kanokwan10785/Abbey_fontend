@@ -6,10 +6,10 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-export const login = async (username, password) => {
+export const login = async (identifier, password) => {
   try {
     const response = await api.post('/api/auth/local', {
-      username,
+      identifier,
       password,
     });
     return response.data;
@@ -76,6 +76,37 @@ export const updateFoodQuantity = async (foodId, newQuantity) => {
     return response.data;
   } catch (error) {
     console.error('Error updating food quantity', error);
+    throw error;
+  }
+};
+
+export const fetchUserProfile = async (userId) => {
+  try {
+    const response = await api.get(`/api/users/${userId}?populate=*`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile', error);
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (userId, data) => {
+  try {
+    const response = await api.put(`/api/users/${userId}`, {
+      data: {
+        username: data.username,
+        weight: data.weight,
+        height: data.height,
+        birthday: data.birthday,
+        age: data.age,
+        selectedGender: data.selectedGender,  // ตรวจสอบว่าเราส่ง selectedGender
+        profileImage: data.profileImage,      // ส่งรูปภาพโปรไฟล์
+        // เพิ่มฟิลด์อื่นๆ ที่ต้องการอัปเดตได้ที่นี่
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user profile', error);
     throw error;
   }
 };
