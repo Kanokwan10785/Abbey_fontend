@@ -420,15 +420,14 @@ const styles = StyleSheet.create({
     top: 4,
   },
   logoutButton: {
-    width: 100,
+    width: 95,
     height: 30,
-    backgroundColor: "red",
+    backgroundColor: "#6b1d1d",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
     bottom : 1,
-    left: -3,
   },
   logoutButtonText: {
     fontSize: 18,
