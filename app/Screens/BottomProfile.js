@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextI
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwtDecode from 'jwt-decode';
-import { useNavigation } from '@react-navigation/native'; // นำเข้า useNavigation
+import { useNavigation } from '@react-navigation/native';
 import { fetchUserProfile, updateUserProfile } from './api';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
@@ -19,7 +19,7 @@ const ProfileButton = () => {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [userId, setUserId] = useState(null);
-  const navigation = useNavigation(); // ใช้ useNavigation เพื่อนำทาง
+  const navigation = useNavigation();
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -115,7 +115,7 @@ const ProfileButton = () => {
   const logout = async () => {
     await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
     setModalVisible(false); // ปิดโมดอล
-    navigation.replace('Login'); // นำผู้ใช้ไปยังหน้า Login โดยแทนที่สแต็กของหน้าเดิม
+    navigation.navigate('Login'); // เปลี่ยนไปใช้ navigate แทน replace
     console.log('User logged out');
   };
 
@@ -213,9 +213,14 @@ const ProfileButton = () => {
                           onChangeText={setGender}
                         />
                       </View>
-                      <TouchableOpacity onPress={saveProfile}>
-                        <Text style={styles.saveButton}>บันทึก</Text>
-                      </TouchableOpacity>
+                      <View style={styles.buttonGroup}>
+                        <TouchableOpacity onPress={saveProfile} style={styles.saveButton}>
+                          <Text style={styles.saveButtonText}>บันทึก</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.backButton}>
+                          <Text style={styles.backButtonText}>กลับ</Text>
+                        </TouchableOpacity>
+                      </View>
                     </>
                   ) : (
                     <>
@@ -398,26 +403,38 @@ const styles = StyleSheet.create({
     color: "white",
     fontFamily: "appfont_02",
   },
-  input: {
-    fontSize: 16,
-    fontFamily: "appfont_02",
-    color: "#000",
-    backgroundColor: "#FFF",
-    paddingLeft: 15,
-    marginVertical: 2,
-    borderRadius: 8,
-    flex: 1,
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
   },
   saveButton: {
-    fontSize: 18,
-    color: "#FFF",
-    textAlign: "center",
-    paddingHorizontal: 20,
-    fontFamily: "appfont_02",
+    width: 95,
+    height: 30,
     backgroundColor: "green",
-    padding: 2,
-    borderRadius: 8,
-    top: 4,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  saveButtonText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: "white",
+    fontFamily: "appfont_02",
+  },
+  backButton: {
+    width: 95,
+    height: 30,
+    backgroundColor: "#e59400",
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backButtonText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: "white",
+    fontFamily: "appfont_02",
   },
   logoutButton: {
     width: 95,
