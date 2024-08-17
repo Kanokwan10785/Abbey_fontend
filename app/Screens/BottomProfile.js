@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
-import { fetchUserProfile, updateUserProfile } from './api';  // Import API functions
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwtDecode from 'jwt-decode';
+import { useNavigation } from '@react-navigation/native'; // นำเข้า useNavigation
+import { fetchUserProfile, updateUserProfile } from './api';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
@@ -15,12 +18,23 @@ const ProfileButton = () => {
   const [birthday, setBirthday] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const userId = 54; // Replace with dynamic user ID
+  const [userId, setUserId] = useState(null);
+  const navigation = useNavigation(); // ใช้ useNavigation เพื่อนำทาง
 
   useEffect(() => {
     const loadUserProfile = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
       try {
-        const userData = await fetchUserProfile(userId);
+        const decoded = jwtDecode(token);
+        setUserId(decoded.id);
+
+        const userData = await fetchUserProfile(decoded.id, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setUsername(userData.username);
         setWeight(userData.weight);
@@ -46,7 +60,7 @@ const ProfileButton = () => {
       case 'female':
         return 'หญิง';
       default:
-        return gender; // กรณีไม่มีค่า เพศที่ระบุไว้
+        return gender;
     }
   };
 
@@ -72,8 +86,10 @@ const ProfileButton = () => {
   };
 
   const saveProfile = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token || !userId) return;
+
     try {
-      // แปลง gender กลับไปเป็นภาษาอังกฤษก่อนส่งไปที่ Strapi
       const transformedGender = gender === 'ชาย' ? 'male' : 'female';
       
       await updateUserProfile(userId, {
@@ -84,12 +100,23 @@ const ProfileButton = () => {
         age: age,
         selectedGender: transformedGender,
         profileImage: profileImage.uri,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       console.log('Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating user profile', error);
     }
+  };
+
+  const logout = async () => {
+    await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
+    setModalVisible(false); // ปิดโมดอล
+    navigation.replace('Login'); // นำผู้ใช้ไปยังหน้า Login โดยแทนที่สแต็กของหน้าเดิม
+    console.log('User logged out');
   };
 
   return (
@@ -129,8 +156,11 @@ const ProfileButton = () => {
                 <Text style={styles.profileText}>Lv 00</Text>
               </View>
               <TouchableOpacity style={styles.editButton} onPress={pickImage}>
-                   <Text style={styles.editButtonText}>แก้ไข</Text>
+                <Text style={styles.editButtonText}>แก้ไข</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                  <Text style={styles.logoutButtonText}>ล็อกเอ้า</Text>
+                </TouchableOpacity>
               <View style={styles.insidepersonalInformation}>
                 <View style={styles.profileDetails}>
                   {isEditing ? (
@@ -359,7 +389,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
-    top: "50%",
+    top: 90,
     left: 3,
   },
   editButtonText: {
@@ -388,6 +418,23 @@ const styles = StyleSheet.create({
     padding: 2,
     borderRadius: 8,
     top: 4,
+  },
+  logoutButton: {
+    width: 100,
+    height: 30,
+    backgroundColor: "red",
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    bottom : 1,
+    left: -3,
+  },
+  logoutButtonText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: "white",
+    fontFamily: "appfont_02",
   },
 });
 
