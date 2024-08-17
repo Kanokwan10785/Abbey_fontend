@@ -12,15 +12,40 @@ export default function Loginpage() {
     const [password, setPassword] = useState('');
 
     const handleLogin = async () => {
+        if (!username || !password) {
+            Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+            return;
+        }
+    
         try {
             const response = await login(username, password);
             console.log('Login successful', response);
             await AsyncStorage.setItem('jwt', response.jwt);
             navigation.navigate('HomeScreen');
         } catch (error) {
-            Alert.alert('Login failed', error.response ? error.response.data.message : error.message);
+            if (error.response) {
+    
+                const errorMessage = error.response.data.message;
+    
+                if (errorMessage === "Invalid identifier or password") {
+                    if (username && password) {
+                        // กรณีที่ 2: ชื่อถูก แต่รหัสผ่านผิด
+                        Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกรหัสผ่านให้ถูกต้อง');
+                    } else {
+                        // กรณีที่ 3: ชื่อไม่ถูกต้อง
+                        Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                    }
+                } else {
+                    Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', errorMessage);
+                }
+            } else if (error.request) {
+                Alert.alert('Login failed', 'No response from server');
+            } else {
+                Alert.alert('Login failed', error.message);
+            }
         }
     };
+    
 
     return (
         <View style={styles.container}>
