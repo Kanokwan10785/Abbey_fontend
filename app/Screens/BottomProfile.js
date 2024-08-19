@@ -42,9 +42,9 @@ const ProfileButton = () => {
         setBirthday(userData.birthday);
         setAge(userData.age);
         setGender(transformGenderToThai(userData.selectedGender));
-        if (userData.profileImage) {
-          setProfileImage({ uri: userData.profileImage });
-        }
+        // if (userData.profileImage) {
+        //   setProfileImage({ uri: userData.profileImage });
+        // }
       } catch (error) {
         console.error('Error fetching user profile', error);
       }
