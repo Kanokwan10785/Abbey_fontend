@@ -9,6 +9,7 @@ import AnalysisScreen from './app/Screens/AnalysisScreen.js';
 import ShopScreen from './app/Screens/ShopScreen.js';
 import ClothingScreen from './app/Screens/ClothingScreen.js';
 import HomeScreen from './app/Screens/HomeScreen.js';
+import BottomProfile from './app/Screens/BottomProfile.js';
 import Description from './app/Screens/Exercise/Description.js';
 import Question from './app/Screens/Question.js';
 import Exercise1 from './app/Screens/Exercise/Exercise1.js';
@@ -45,6 +46,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Loginpage" component={Loginpage} />
       <Stack.Screen name="Register" component={Register} />
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Screen name="BottomProfile" component={BottomProfile} />
       <Stack.Screen name="ShopScreen" component={ShopScreen} />
       <Stack.Screen name="ClothingScreen" component={ClothingScreen} />
       <Stack.Screen name="FoodScreen" component={FoodScreen} />
