@@ -23,26 +23,27 @@ export default function Loginpage() {
             await AsyncStorage.setItem('jwt', response.jwt);
             navigation.navigate('HomeScreen');
         } catch (error) {
-            if (error.response) {
+            console.error('Login error details:', error.response ? error.response.data : error.message);
+            Alert.alert('Login failed', error.response ? error.response.data.message : error.message);
+            // if (error.response) {    
+            //     const errorMessage = error.response.data.message;
     
-                const errorMessage = error.response.data.message;
-    
-                if (errorMessage === "Invalid identifier or password") {
-                    if (username && password) {
-                        // กรณีที่ 2: ชื่อถูก แต่รหัสผ่านผิด
-                        Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกรหัสผ่านให้ถูกต้อง');
-                    } else {
-                        // กรณีที่ 3: ชื่อไม่ถูกต้อง
-                        Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
-                    }
-                } else {
-                    Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', errorMessage);
-                }
-            } else if (error.request) {
-                Alert.alert('Login failed', 'No response from server');
-            } else {
-                Alert.alert('Login failed', error.message);
-            }
+            //     if (errorMessage === "Invalid identifier or password") {
+            //         if (username && password) {
+            //             // กรณีที่ 2: ชื่อถูก แต่รหัสผ่านผิด
+            //             Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกรหัสผ่านให้ถูกต้อง');
+            //         } else {
+            //             // กรณีที่ 3: ชื่อไม่ถูกต้อง
+            //             Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+            //         }
+            //     } else {
+            //         Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', errorMessage);
+            //     }
+            // } else if (error.request) {
+            //     Alert.alert('Login failed', 'No response from server');
+            // } else {
+            //     Alert.alert('Login failed', error.message);
+            // }
         }
     };
     

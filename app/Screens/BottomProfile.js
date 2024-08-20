@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput, Alert } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwtDecode from 'jwt-decode';
@@ -42,11 +42,13 @@ const ProfileButton = () => {
         setBirthday(userData.birthday);
         setAge(userData.age);
         setGender(transformGenderToThai(userData.selectedGender));
-        // if (userData.profileImage) {
-        //   setProfileImage({ uri: userData.profileImage });
-        // }
+        
+        if (userData.profileImage) {
+          setProfileImage({ uri: userData.profileImage });
+        }
       } catch (error) {
         console.error('Error fetching user profile', error);
+        Alert.alert("Error", "Failed to load user profile.");
       }
     };
 
@@ -107,8 +109,10 @@ const ProfileButton = () => {
       });
       console.log('Profile updated successfully');
       setIsEditing(false);
+      Alert.alert("Success", "Profile updated successfully.");
     } catch (error) {
       console.error('Error updating user profile', error);
+      Alert.alert("Error", "Failed to update profile.");
     }
   };
 
@@ -179,6 +183,7 @@ const ProfileButton = () => {
                           style={styles.input}
                           value={weight}
                           onChangeText={setWeight}
+                          keyboardType="numeric"
                         />
                       </View>
                       <View style={styles.inputGroup}>
@@ -187,6 +192,7 @@ const ProfileButton = () => {
                           style={styles.input}
                           value={height}
                           onChangeText={setHeight}
+                          keyboardType="numeric"
                         />
                       </View>
                       <View style={styles.inputGroup}>
@@ -203,6 +209,7 @@ const ProfileButton = () => {
                           style={styles.input}
                           value={age}
                           onChangeText={setAge}
+                          keyboardType="numeric"
                         />
                       </View>
                       <View style={styles.inputGroup}>
@@ -218,18 +225,18 @@ const ProfileButton = () => {
                           <Text style={styles.saveButtonText}>บันทึก</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.backButton}>
-                          <Text style={styles.backButtonText}>กลับ</Text>
+                          <Text style={styles.backButtonText}>ยกเลิก</Text>
                         </TouchableOpacity>
                       </View>
                     </>
                   ) : (
                     <>
-                      <Text style={styles.headText}>{username}</Text>
-                      <Text style={styles.detailText}>น้ำหนัก: {weight} กิโลกรัม</Text>
-                      <Text style={styles.detailText}>ส่วนสูง: {height} เซนติเมตร</Text>
-                      <Text style={styles.detailText}>วันเกิด: {birthday}</Text>
-                      <Text style={styles.detailText}>อายุ: {age} ปี</Text>
-                      <Text style={styles.detailText}>เพศ: {gender}</Text>
+                      <Text style={styles.detailText}>ชื่อผู้ใช้: {username || "null"}</Text>
+                      <Text style={styles.detailText}>น้ำหนัก: {weight || "null"} กิโลกรัม</Text>
+                      <Text style={styles.detailText}>ส่วนสูง: {height || "null"} เซนติเมตร</Text>
+                      <Text style={styles.detailText}>วันเกิด: {birthday || "null"}</Text>
+                      <Text style={styles.detailText}>อายุ: {age || "null"} ปี</Text>
+                      <Text style={styles.detailText}>เพศ: {gender || "null"}</Text>
                     </>
                   )}
                   {!isEditing && (
@@ -366,12 +373,26 @@ const styles = StyleSheet.create({
   inputGroup: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 10,
   },
   labelText: {
     fontSize: 16,
     fontFamily: "appfont_02",
     color: "#000",
-    marginRight: 10,
+    marginRight: 10, 
+  },
+  input: {
+    backgroundColor: "white", 
+    color: "black", 
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: -5, 
+    paddingLeft: 10,
+    fontSize: 16,
+    fontFamily: "appfont_02",
+    flex: 0.9,
+    textAlign: 'left',
   },
   headText: {
     fontSize: 24,

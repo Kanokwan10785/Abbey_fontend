@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.183:1337'; // Replace with your Strapi URL
+const API_URL = 'http://10.4.11.29:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -35,7 +35,7 @@ export const register = async (username, email, password,height, weight,age,sele
     });
     return response.data;
   } catch (error) {
-    console.error('Register error', error);
+    console.error('Register error details:', error.response ? error.response.data : error.message);
     throw error;
   }
 };
