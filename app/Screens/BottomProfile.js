@@ -23,26 +23,24 @@ const ProfileButton = () => {
 
   useEffect(() => {
     const loadUserProfile = async () => {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) return;
-
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      if (!token || !userId) return;
+  
       try {
-        const decoded = jwtDecode(token);
-        setUserId(decoded.id);
-
-        const userData = await fetchUserProfile(decoded.id, {
+        const userData = await fetchUserProfile(userId, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+  
         setUsername(userData.username);
         setWeight(userData.weight);
         setHeight(userData.height);
         setBirthday(userData.birthday);
         setAge(userData.age);
         setGender(transformGenderToThai(userData.selectedGender));
-        
+  
         if (userData.profileImage) {
           setProfileImage({ uri: userData.profileImage });
         }
@@ -51,9 +49,10 @@ const ProfileButton = () => {
         Alert.alert("Error", "Failed to load user profile.");
       }
     };
-
+  
     loadUserProfile();
   }, []);
+  
 
   const transformGenderToThai = (gender) => {
     switch(gender) {
@@ -88,33 +87,33 @@ const ProfileButton = () => {
   };
 
   const saveProfile = async () => {
-    const token = await AsyncStorage.getItem('token');
+    const token = await AsyncStorage.getItem('jwt');
     if (!token || !userId) return;
 
     try {
-      const transformedGender = gender === 'ชาย' ? 'male' : 'female';
-      
-      await updateUserProfile(userId, {
-        username: username,
-        weight: weight,
-        height: height,
-        birthday: birthday,
-        age: age,
-        selectedGender: transformedGender,
-        profileImage: profileImage.uri,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log('Profile updated successfully');
-      setIsEditing(false);
-      Alert.alert("Success", "Profile updated successfully.");
+        const transformedGender = gender === 'ชาย' ? 'male' : 'female';
+        
+        await updateUserProfile(userId, {
+            username: username,
+            weight: weight,
+            height: height,
+            birthday: birthday,
+            age: age,
+            selectedGender: transformedGender,
+            profileImage: profileImage.uri,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        console.log('Profile updated successfully');
+        setIsEditing(false);
+        Alert.alert("Success", "Profile updated successfully.");
     } catch (error) {
-      console.error('Error updating user profile', error);
-      Alert.alert("Error", "Failed to update profile.");
+        console.error('Error updating user profile', error);
+        Alert.alert("Error", "Failed to update profile.");
     }
-  };
+};
 
   const logout = async () => {
     await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
