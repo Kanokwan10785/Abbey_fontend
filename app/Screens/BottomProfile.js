@@ -17,6 +17,7 @@ const ProfileButton = () => {
   const [birthday, setBirthday] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+  const [level, setLevel] = useState("");
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -38,10 +39,13 @@ const ProfileButton = () => {
         setBirthday(userData.birthday);
         setAge(userData.age);
         setGender(transformGenderToThai(userData.selectedGender));
+        setLevel(userData.level);
   
-        if (userData.profileImage) {
-          setProfileImage({ uri: userData.profileImage });
+        const profileImageUrl = userData.picture?.formats?.medium?.url;
+        if (profileImageUrl) {
+          setProfileImage({ uri: profileImageUrl });
         }
+
       } catch (error) {
         console.error('Error fetching user profile', error);
         Alert.alert("Error", "Failed to load user profile.");
@@ -129,7 +133,7 @@ const ProfileButton = () => {
   return (
     <View style={styles.profileContainer}>
       <View style={styles.levelCircle}>
-        <Text style={styles.levelText}>13</Text>
+      <Text style={styles.levelText}>{level}</Text> 
       </View>
       <TouchableOpacity
         style={styles.usernameContainer}
@@ -160,7 +164,7 @@ const ProfileButton = () => {
                 <Image
                   source={profileImage}
                   style={styles.profileImage}/>
-                <Text style={styles.profileText}>Lv 00</Text>
+                <Text style={styles.profileText}>Lv {level}</Text>
               </View>
               <TouchableOpacity style={styles.editButton} onPress={pickImage}>
                 <Text style={styles.editButtonText}>แก้ไข</Text>
@@ -215,14 +219,14 @@ const ProfileButton = () => {
                           keyboardType="numeric"
                         />
                       </View>
-                      <View style={styles.inputGroup}>
+                      {/* <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>เพศ:</Text>
                         <TextInput
                           style={styles.input}
                           value={gender}
                           onChangeText={setGender}
                         />
-                      </View>
+                      </View> */}
                       <View style={styles.buttonGroup}>
                         <TouchableOpacity onPress={saveProfile} style={styles.saveButton}>
                           <Text style={styles.saveButtonText}>บันทึก</Text>

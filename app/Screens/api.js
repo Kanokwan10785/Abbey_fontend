@@ -113,3 +113,16 @@ export const updateUserProfile = async (userId, data, config = {}) => {
       throw error;
   }
 };
+
+// ฟังก์ชันการอัปเดตข้อมูลรูปโปรไฟล์ผู้ใช้
+export const fetchUserProfileImage = async (userId, config = {}) => {
+  try {
+    const response = await api.get(`/api/users/${userId}?populate=picture`, config);
+    const profileImageUrl = response.data.picture?.formats?.medium?.url; // ใช้รูปแบบขนาดกลาง
+    // const profileImageUrl = response.data.picture?.formats?.url; // ใช้รูปแบบขนาดปกติ
+    return profileImageUrl;
+  } catch (error) {
+    console.error('Error fetching user profile image', error);
+    throw error;
+  }
+};
