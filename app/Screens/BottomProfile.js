@@ -9,7 +9,7 @@ import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
 const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [profileImage, setProfileImage] = useState(require("../../assets/image/123.jpg"));
+  const [profileImage, setProfileImage] = useState(require("../../assets/image/profile02.png"));
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState("");
   const [weight, setWeight] = useState("");

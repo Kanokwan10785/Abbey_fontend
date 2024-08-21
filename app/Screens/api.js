@@ -95,34 +95,15 @@ export const fetchUserProfile = async (userId, config = {}) => {
   }
 };
 
-// ฟังก์ชันการอัปเดตข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
-export const updateUserProfile = async (userId, data, config = {}) => {
-  try {
-      const response = await api.put(`/api/users/${userId}`, {
-          username: data.username,
-          weight: data.weight,
-          height: data.height,
-          birthday: data.birthday,
-          age: data.age,
-          selectedGender: data.selectedGender,
-          profileImage: data.profileImage,
-      }, config);
-      return response.data;
-  } catch (error) {
-      console.error('Error updating user profile', error);
-      throw error;
-  }
-};
+// ฟังก์ชันการอัปเดตข้อมูลโปรไฟล์ผู้ใช้ 
+  export const updateUserProfile = async (userId, data, config = {}) => {
+    try {
+        const response = await api.put(`/api/users/${userId}?populate=*`, data, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating user profile', error);
+        throw error;
+    }
+  };
 
 // ฟังก์ชันการอัปเดตข้อมูลรูปโปรไฟล์ผู้ใช้
-export const fetchUserProfileImage = async (userId, config = {}) => {
-  try {
-    const response = await api.get(`/api/users/${userId}?populate=picture`, config);
-    const profileImageUrl = response.data.picture?.formats?.medium?.url; // ใช้รูปแบบขนาดกลาง
-    // const profileImageUrl = response.data.picture?.formats?.url; // ใช้รูปแบบขนาดปกติ
-    return profileImageUrl;
-  } catch (error) {
-    console.error('Error fetching user profile image', error);
-    throw error;
-  }
-};
