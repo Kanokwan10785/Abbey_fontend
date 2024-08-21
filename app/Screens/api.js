@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.181:1337'; // Replace with your Strapi URL
+const API_URL = 'http://172.20.10.5:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -96,14 +96,18 @@ export const fetchUserProfile = async (userId, config = {}) => {
 };
 
 // ฟังก์ชันการอัปเดตข้อมูลโปรไฟล์ผู้ใช้ 
-  export const updateUserProfile = async (userId, data, config = {}) => {
-    try {
-        const response = await api.put(`/api/users/${userId}?populate=*`, data, config);
-        return response.data;
-    } catch (error) {
-        console.error('Error updating user profile', error);
-        throw error;
-    }
-  };
+export const updateUserProfile = async (userId, data, config) => {
+  const response = await fetch(`http://172.20.10.5:1337/api/users/${userId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...config.headers, // รวม header จาก config
+    },
+    body: JSON.stringify(data),
+  });
+
+  return response; // ตรวจสอบให้แน่ใจว่าส่งคืนค่า response โดยตรง
+};
+
 
 // ฟังก์ชันการอัปเดตข้อมูลรูปโปรไฟล์ผู้ใช้

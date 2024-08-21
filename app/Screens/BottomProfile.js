@@ -82,45 +82,96 @@ const ProfileButton = () => {
       aspect: [4, 3],
       quality: 1,
     });
-
+    
     if (!result.cancelled) {
-      setProfileImage({ uri: result.uri });
+      setProfileImage({ uri: result.assets[0].uri });
     }
   };
-
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
     if (!token || !userId) return;
-
+    
     try {
-        const updatedData = {
-            username: username,
-            weight: weight,
-            height: height,
-            birthday: birthday,
-            age: age,
-            selectedGender: gender === 'ชาย' ? 'male' : 'female',
-            profileImage: profileImage.uri,
-        };
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        };
-
-        const response = await updateUserProfile(userId, updatedData, config);
+      let imageUrl = null;
+      let pictureId = null;
+  
+      // ตรวจสอบว่ามีรูปภาพที่ต้องการอัปโหลดหรือไม่
+      if (profileImage.uri) {
+        // ดึงนามสกุลของไฟล์จาก URI
+        const fileExtension = profileImage.uri.split('.').pop();
         
-        console.log('Profile updated successfully:', response);
-        setIsEditing(false);
-        setModalVisible(false); // ปิด modal หลังบันทึกสำเร็จ
-        Alert.alert("Success", "Profile updated successfully.");
+        // ตั้งค่า MIME type ตามนามสกุลของไฟล์
+        let mimeType = 'image/jpeg'; // ค่าเริ่มต้น
+        if (fileExtension === 'png') {
+          mimeType = 'image/png';
+        }
+  
+        const formData = new FormData();
+        formData.append('files', {
+          uri: profileImage.uri,
+          name: `profile-image.${fileExtension}`, // ใช้นามสกุลของไฟล์ที่แท้จริง
+          type: mimeType,
+        });
+  
+        const uploadResponse = await fetch('http://172.20.10.5:1337/api/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+  
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload image');
+        }
+  
+        const uploadData = await uploadResponse.json();
+        console.log('Upload response:', uploadData);
+  
+        imageUrl = uploadData[0].url; // ดึง URL ของรูปภาพที่อัปโหลด
+        pictureId = uploadData[0].id; // ดึง ID ของไฟล์ที่อัปโหลด
+  
+        // หลังจากอ่านข้อมูลจาก uploadResponse แล้ว ไม่สามารถเข้าถึง response อีกครั้งได้
+        // จึงเก็บข้อมูลที่ต้องการไว้ในตัวแปรเพื่อนำไปใช้ในขั้นตอนต่อไป
+      }
+  
+      // อัปเดตโปรไฟล์ผู้ใช้
+      const updatedData = {
+        username: username,
+        weight: weight,
+        height: height,
+        birthday: birthday,
+        age: age,
+        selectedGender: gender === 'ชาย' ? 'male' : 'female',
+        picture: pictureId, // อัปเดตฟิลด์ picture ด้วย ID ของไฟล์
+      };
+  
+      const response = await updateUserProfile(userId, updatedData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Update Profile response:', response);
+  
+      if (response.status !== 200) {
+        console.error('Profile update failed:', response);  // พิมพ์ response เมื่อเกิดข้อผิดพลาด
+        throw new Error('Failed to update profile');
+      }
+  
+      setIsEditing(false);
+      setModalVisible(false);
+      Alert.alert('Success', 'Profile updated successfully.');
     } catch (error) {
-        console.error('Error updating user profile:', error);
-        Alert.alert("Error", "Failed to update profile.");
+      console.error('Error updating user profile:', error);
+      Alert.alert('Error', 'Failed to update profile.');
     }
   };
+  
+  
+  
+  
 
 
   const logout = async () => {
