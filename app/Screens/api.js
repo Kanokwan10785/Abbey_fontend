@@ -98,21 +98,18 @@ export const fetchUserProfile = async (userId, config = {}) => {
 // ฟังก์ชันการอัปเดตข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const updateUserProfile = async (userId, data, config = {}) => {
   try {
-    const response = await api.put(`/api/users/${userId}`, {
-      data: {
-        username: data.username,
-        weight: data.weight,
-        height: data.height,
-        birthday: data.birthday,
-        age: data.age,
-        selectedGender: data.selectedGender,
-        profileImage: data.profileImage,
-        // เพิ่มฟิลด์อื่นๆ ที่ต้องการอัปเดตได้ที่นี่
-      },
-    }, config);
-    return response.data;
+      const response = await api.put(`/api/users/${userId}`, {
+          username: data.username,
+          weight: data.weight,
+          height: data.height,
+          birthday: data.birthday,
+          age: data.age,
+          selectedGender: data.selectedGender,
+          profileImage: data.profileImage,
+      }, config);
+      return response.data;
   } catch (error) {
-    console.error('Error updating user profile', error);
-    throw error;
+      console.error('Error updating user profile', error);
+      throw error;
   }
 };

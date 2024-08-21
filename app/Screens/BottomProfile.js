@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput, Alert } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwtDecode from 'jwt-decode';
 import { useNavigation } from '@react-navigation/native';
 import { fetchUserProfile, updateUserProfile } from './api';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
@@ -88,38 +87,44 @@ const ProfileButton = () => {
 
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
+    const userId = await AsyncStorage.getItem('userId');
     if (!token || !userId) return;
 
     try {
-        const transformedGender = gender === 'ชาย' ? 'male' : 'female';
-        
-        await updateUserProfile(userId, {
+        const updatedData = {
             username: username,
             weight: weight,
             height: height,
             birthday: birthday,
             age: age,
-            selectedGender: transformedGender,
+            selectedGender: gender === 'ชาย' ? 'male' : 'female',
             profileImage: profileImage.uri,
-        }, {
+        };
+
+        const config = {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-        });
-        console.log('Profile updated successfully');
+        };
+
+        const response = await updateUserProfile(userId, updatedData, config);
+        
+        console.log('Profile updated successfully:', response);
         setIsEditing(false);
+        setModalVisible(false); // ปิด modal หลังบันทึกสำเร็จ
         Alert.alert("Success", "Profile updated successfully.");
     } catch (error) {
-        console.error('Error updating user profile', error);
+        console.error('Error updating user profile:', error);
         Alert.alert("Error", "Failed to update profile.");
     }
-};
+  };
+
 
   const logout = async () => {
-    await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
-    setModalVisible(false); // ปิดโมดอล
-    navigation.navigate('Login'); // เปลี่ยนไปใช้ navigate แทน replace
-    console.log('User logged out');
+      await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
+      setModalVisible(false); // ปิดโมดอล
+      navigation.navigate('Login'); // เปลี่ยนไปใช้ navigate แทน replace
+      console.log('User logged out');
   };
 
   return (
