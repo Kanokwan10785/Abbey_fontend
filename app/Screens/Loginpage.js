@@ -19,8 +19,13 @@ export default function Loginpage() {
     
         try {
             const response = await login(username, password);
+            console.log('User profile', response.user.id);
+            console.log('User token', response.jwt);   
             console.log('Login successful', response);
-            await AsyncStorage.setItem('jwt', response.jwt);
+            await AsyncStorage.setItem('jwt', response.jwt); // เก็บข้อมูล
+            // ตรวจสอบว่าข้อมูลถูกเก็บแล้วหรือไม่
+            const storedJwt = await AsyncStorage.getItem('jwt');
+            console.log('Stored JWT:', storedJwt);
             navigation.navigate('HomeScreen');
         } catch (error) {
             console.error('Login error details:', error.response ? error.response.data : error.message);
