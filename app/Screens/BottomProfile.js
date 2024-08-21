@@ -17,7 +17,6 @@ const ProfileButton = () => {
   const [birthday, setBirthday] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [userId, setUserId] = useState(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -136,7 +135,7 @@ const ProfileButton = () => {
         style={styles.usernameContainer}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.usernameText}>AEK</Text>
+        <Text style={styles.usernameText}>{username}</Text>
       </TouchableOpacity>
       <Modal
         animationType="slide"
@@ -235,12 +234,12 @@ const ProfileButton = () => {
                     </>
                   ) : (
                     <>
-                      <Text style={styles.detailText}>ชื่อผู้ใช้: {username || "null"}</Text>
-                      <Text style={styles.detailText}>น้ำหนัก: {weight || "null"} กิโลกรัม</Text>
-                      <Text style={styles.detailText}>ส่วนสูง: {height || "null"} เซนติเมตร</Text>
-                      <Text style={styles.detailText}>วันเกิด: {birthday || "null"}</Text>
-                      <Text style={styles.detailText}>อายุ: {age || "null"} ปี</Text>
-                      <Text style={styles.detailText}>เพศ: {gender || "null"}</Text>
+                      <Text style={styles.headText}>{username || "ไม่มีข้อมูล"}</Text>
+                      <Text style={styles.detailText}>น้ำหนัก: {weight || "ไม่มีข้อมูล"} กิโลกรัม</Text>
+                      <Text style={styles.detailText}>ส่วนสูง: {height || "ไม่มีข้อมูล"} เซนติเมตร</Text>
+                      <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text>
+                      <Text style={styles.detailText}>อายุ: {age || "ไม่มีข้อมูล"} ปี</Text>
+                      <Text style={styles.detailText}>เพศ: {gender || "ไม่มีข้อมูล"}</Text>
                     </>
                   )}
                   {!isEditing && (
@@ -286,7 +285,8 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 8,
     paddingVertical: 5,
-    paddingHorizontal: 25,
+    paddingLeft: 24,
+    paddingRight: 10,
     marginLeft: -8,
   },
   usernameText: {
