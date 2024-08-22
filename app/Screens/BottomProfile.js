@@ -9,6 +9,49 @@ import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
 LogBox.ignoreAllLogs(); // ปิดข้อความแจ้งเตือนทั้งหมด (ใช้ในกรณีจำเป็นเท่านั้น)
 
+const CustomAlertimage = ({ visible, onClose }) => (
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={visible}
+    onRequestClose={onClose}
+  >
+    <View style={styles.customAlertContainer}>
+      <View style={styles.customAlertBox}>
+        <Text style={styles.customAlertTitle}>ยกเลิกการเลือกรูป</Text>
+        <Text style={styles.customAlertMessage}>คุณได้ยกเลิกการเลือกรูปภาพแล้ว</Text>
+        <TouchableOpacity style={styles.customAlertButton} onPress={onClose}>
+          <Text style={styles.customAlertButtonText}>OK</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+
+const CustomAlertdata = ({ visible, onConfirm, onCancel }) => (
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={visible}
+    onRequestClose={onCancel}
+  >
+    <View style={styles.customAlertContainer}>
+      <View style={styles.customAlertBox}>
+        <Text style={styles.customAlertTitle}>ยกเลิกการแก้ไข</Text>
+        <Text style={styles.customAlertMessage}>   คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข? ข้อมูลที่เปลี่ยนแปลงจะไม่ถูกบันทึก</Text>
+        <View style={styles.buttonText}>
+          <TouchableOpacity style={styles.customAlertButton} onPress={onConfirm}>
+            <Text style={styles.customAlertButtonText}>ใช่</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.customAlertButton} onPress={onCancel}>
+            <Text style={styles.customAlertButtonText}>ไม่</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
+
 const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [profileImage, setProfileImage] = useState(require("../../assets/image/profile02.png"));
@@ -24,6 +67,8 @@ const ProfileButton = () => {
   const [isImageUpdated, setIsImageUpdated] = useState(false); // สถานะใหม่สำหรับการอัปเดตรูปภาพ
   const [originalProfileImage, setOriginalProfileImage] = useState(profileImage);
   const [originalData, setOriginalData] = useState({});
+  const [isAlertVisible, setAlertVisible] = useState(false); // สถานะสำหรับ Custom Alert
+  const [isDataAlertVisible, setDataAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertdata
 
   const navigation = useNavigation();
 
@@ -32,14 +77,14 @@ const ProfileButton = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
       if (!token || !userId) return;
-  
+
       try {
         const userData = await fetchUserProfile(userId, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-  
+
         setUsername(userData.username);
         setWeight(userData.weight);
         setHeight(userData.height);
@@ -47,13 +92,13 @@ const ProfileButton = () => {
         setAge(userData.age);
         setGender(transformGenderToThai(userData.selectedGender));
         setLevel(userData.level);
-  
+
         const profileImageUrl = userData.picture?.formats?.medium?.url;
         if (profileImageUrl) {
           setProfileImage({ uri: profileImageUrl });
           setOriginalProfileImage({ uri: profileImageUrl }); // เก็บรูปภาพต้นฉบับ
         }
-  
+
         setOriginalData({
           username: userData.username,
           weight: userData.weight,
@@ -62,14 +107,14 @@ const ProfileButton = () => {
           age: userData.age,
           gender: transformGenderToThai(userData.selectedGender),
         });
-  
+
       } catch (error) {
         Alert.alert("Error", "Failed to load user profile.");
       }
     };
-  
+
     loadUserProfile();
-  }, []);  
+  }, []);
 
   const transformGenderToThai = (gender) => {
     switch(gender) {
@@ -100,14 +145,14 @@ const ProfileButton = () => {
         });
 
         if (result.cancelled) {
-            Alert.alert('ยกเลิกการเลือกรูป', 'คุณได้ยกเลิกการเลือกรูปภาพแล้ว');
+            setAlertVisible(true); // แสดง Custom Alert เมื่อผู้ใช้ยกเลิกการเลือกรูป
         } else {
             setProfileImage({ uri: result.assets[0].uri });
             setIsImageUpdated(true);
         }
     } catch (error) {
         console.error('Error picking image:', error);
-        Alert.alert('ยกเลิกการเลือกรูป', 'คุณได้ยกเลิกการเลือกรูปภาพแล้ว');
+        setAlertVisible(true); // แสดง Custom Alert เมื่อเกิดข้อผิดพลาด
     }
   };
 
@@ -121,49 +166,37 @@ const ProfileButton = () => {
     setProfileImage(originalProfileImage); // คืนค่ารูปภาพเดิม
     setIsEditing(false);
   };
-  
+
   const handleModalClose = () => {
     if (isEditing) {
-      Alert.alert(
-        'ยกเลิกการแก้ไข',
-        'คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข? ข้อมูลที่เปลี่ยนแปลงจะไม่ถูกบันทึก',
-        [
-          {
-            text: 'ไม่',
-            onPress: () => {},
-            style: 'cancel',
-          },
-          {
-            text: 'ใช่',
-            onPress: () => {
-              setModalVisible(false);
-              setIsEditing(false);
-              setIsImageUpdated(false);
-              // คืนค่าเดิม
-              setProfileImage(originalProfileImage);
-              setUsername(originalData.username);
-              setWeight(originalData.weight);
-              setHeight(originalData.height);
-              setBirthday(originalData.birthday);
-              setAge(originalData.age);
-              setGender(originalData.gender);
-            },
-          },
-        ],
-        { cancelable: true }
-      );
+      setDataAlertVisible(true); // แสดง CustomAlertdata
     } else {
       setModalVisible(false);
     }
-  };  
+  };
+
+  const confirmModalClose = () => {
+    setModalVisible(false);
+    setIsEditing(false);
+    setIsImageUpdated(false);
+    // คืนค่าเดิม
+    setProfileImage(originalProfileImage);
+    setUsername(originalData.username);
+    setWeight(originalData.weight);
+    setHeight(originalData.height);
+    setBirthday(originalData.birthday);
+    setAge(originalData.age);
+    setGender(originalData.gender);
+    setDataAlertVisible(false);
+  };
 
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
     if (!token || !userId) return;
-    
+
     setIsSaving(true); // ปิดการใช้งานปุ่มบันทึกทันทีที่เริ่มการบันทึก
-  
+
     try {
       let pictureId = null;
 
@@ -173,17 +206,17 @@ const ProfileButton = () => {
         if (fileExtension === 'png') {
           mimeType = 'image/png';
         }
-  
+
         const formData = new FormData();
         formData.append('files', {
           uri: profileImage.uri,
           name: `profile-image.${fileExtension}`,
           type: mimeType,
         });
-  
+
         // เรียกใช้งานฟังก์ชัน uploadFile
         const uploadData = await uploadFile(formData, token);
-  
+
         pictureId = uploadData[0].id;
       }
 
@@ -207,11 +240,11 @@ const ProfileButton = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.status !== 200) {
         throw new Error('Failed to update profile');
       }
-  
+
       setIsEditing(false);
       setModalVisible(false);
       Alert.alert('Success', 'Profile updated successfully.');
@@ -352,6 +385,13 @@ const ProfileButton = () => {
           </View>
         </View>
       </Modal>
+      {/* Render the custom alerts */}
+      <CustomAlertimage visible={isAlertVisible} onClose={() => setAlertVisible(false)} />
+      <CustomAlertdata
+        visible={isDataAlertVisible}
+        onConfirm={confirmModalClose}
+        onCancel={() => setDataAlertVisible(false)}
+      />
     </View>
   );
 };
@@ -527,7 +567,7 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
+    width: "100%",
   },
   saveButton: {
     width: 95,
@@ -572,6 +612,52 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: "white",
     fontFamily: "appfont_02",
+  },
+  //ส่วนตกแต่ง CustomAlertimage และ CustomAlertdata
+  customAlertContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  customAlertBox: {
+    width: 320,
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    borderRadius: 8,
+    backgroundColor: "#F9E79F",
+    borderColor: "#E97424",
+    borderWidth: 6,
+  },
+  buttonText: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  customAlertTitle: {
+    fontSize: 20,
+    fontFamily: "appfont_02",
+    marginBottom: 3,
+  },
+  customAlertMessage: {
+    fontSize: 16,
+    fontFamily: "appfont_01",
+    marginBottom: 10,
+  },
+  customAlertButtonText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: "white",
+    fontFamily: "appfont_02",
+  },
+  customAlertButton: {
+    backgroundColor: "#e59400",
+    color: "white",
+    borderRadius: 10,
+    padding: 2,
+    alignItems: "center",
+    width: "25%",
   },
 });
 
