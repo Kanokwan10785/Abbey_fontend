@@ -20,6 +20,9 @@ const ProfileButton = () => {
   const [gender, setGender] = useState("");
   const [level, setLevel] = useState("");
   const [isImageUpdated, setIsImageUpdated] = useState(false); // สถานะใหม่สำหรับการอัปเดตรูปภาพ
+  const [originalProfileImage, setOriginalProfileImage] = useState(profileImage);
+  const [originalData, setOriginalData] = useState({});
+
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -46,8 +49,18 @@ const ProfileButton = () => {
         const profileImageUrl = userData.picture?.formats?.medium?.url;
         if (profileImageUrl) {
           setProfileImage({ uri: profileImageUrl });
+          setOriginalProfileImage({ uri: profileImageUrl }); // เก็บรูปภาพต้นฉบับ
         }
-
+  
+        setOriginalData({
+          username: userData.username,
+          weight: userData.weight,
+          height: userData.height,
+          birthday: userData.birthday,
+          age: userData.age,
+          gender: transformGenderToThai(userData.selectedGender),
+        });
+  
       } catch (error) {
         console.error('Error fetching user profile', error);
         Alert.alert("Error", "Failed to load user profile.");
@@ -55,8 +68,7 @@ const ProfileButton = () => {
     };
   
     loadUserProfile();
-  }, []);
-  
+  }, []);  
 
   const transformGenderToThai = (gender) => {
     switch(gender) {
@@ -77,7 +89,7 @@ const ProfileButton = () => {
         return;
       }
     }
-
+  
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -85,12 +97,26 @@ const ProfileButton = () => {
       quality: 1,
     });
     
-    if (!result.cancelled) {
+    if (result.cancelled) {
+      // แสดงข้อความแจ้งเตือนหากผู้ใช้ยกเลิกการเลือกภาพ
+      Alert.alert('ยกเลิกการเลือกรูป', 'คุณได้ยกเลิกการเลือกรูปภาพแล้ว');
+    } else {
       setProfileImage({ uri: result.assets[0].uri });
       setIsImageUpdated(true); // ตั้งค่าเพื่อให้รู้ว่ารูปภาพถูกเปลี่ยน
     }
   };
 
+  const handleCancel = () => {
+    setUsername(originalData.username);
+    setWeight(originalData.weight);
+    setHeight(originalData.height);
+    setBirthday(originalData.birthday);
+    setAge(originalData.age);
+    setGender(originalData.gender);
+    setProfileImage(originalProfileImage); // คืนค่ารูปภาพเดิม
+    setIsEditing(false);
+  };
+  
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
@@ -260,7 +286,7 @@ const ProfileButton = () => {
                         <TouchableOpacity onPress={saveProfile} style={styles.saveButton} disabled={isSaving}>
                           <Text style={styles.saveButtonText}>{isSaving ? 'กำลังบันทึก...' : 'บันทึก'}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.backButton} disabled={isSaving}>
+                        <TouchableOpacity onPress={handleCancel} style={styles.backButton} disabled={isSaving}>
                           <Text style={styles.backButtonText}>ยกเลิก</Text>
                         </TouchableOpacity>
                       </View>
