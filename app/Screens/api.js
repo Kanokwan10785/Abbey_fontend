@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://172.20.10.5:1337'; // Replace with your Strapi URL
+const API_URL = 'http://192.168.1.181:1337'; // Replace with your Strapi URL 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -97,7 +97,7 @@ export const fetchUserProfile = async (userId, config = {}) => {
 
 // ฟังก์ชันการอัปเดตข้อมูลโปรไฟล์ผู้ใช้ 
 export const updateUserProfile = async (userId, data, config) => {
-  const response = await fetch(`http://172.20.10.5:1337/api/users/${userId}`, {
+  const response = await fetch(`${API_URL}/api/users/${userId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -109,5 +109,25 @@ export const updateUserProfile = async (userId, data, config) => {
   return response; // ตรวจสอบให้แน่ใจว่าส่งคืนค่า response โดยตรง
 };
 
+// ฟังก์ชันการอัปโหลดไฟล์
+export const uploadFile = async (formData, token) => {
+  try {
+    const uploadResponse = await fetch(`${API_URL}/api/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-// ฟังก์ชันการอัปเดตข้อมูลรูปโปรไฟล์ผู้ใช้
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    const uploadData = await uploadResponse.json();
+    return uploadData; // ส่งคืนข้อมูลที่ได้จากการอัปโหลด
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    throw error;
+  }
+};

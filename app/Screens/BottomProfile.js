@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextI
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { fetchUserProfile, updateUserProfile } from './api';
+import { fetchUserProfile, updateUserProfile, uploadFile } from './api';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
@@ -87,22 +87,19 @@ const ProfileButton = () => {
       setProfileImage({ uri: result.assets[0].uri });
     }
   };
+  
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
     if (!token || !userId) return;
-    
+  
     try {
       let imageUrl = null;
       let pictureId = null;
   
-      // ตรวจสอบว่ามีรูปภาพที่ต้องการอัปโหลดหรือไม่
       if (profileImage.uri) {
-        // ดึงนามสกุลของไฟล์จาก URI
         const fileExtension = profileImage.uri.split('.').pop();
-        
-        // ตั้งค่า MIME type ตามนามสกุลของไฟล์
-        let mimeType = 'image/jpeg'; // ค่าเริ่มต้น
+        let mimeType = 'image/jpeg';
         if (fileExtension === 'png') {
           mimeType = 'image/png';
         }
@@ -110,30 +107,15 @@ const ProfileButton = () => {
         const formData = new FormData();
         formData.append('files', {
           uri: profileImage.uri,
-          name: `profile-image.${fileExtension}`, // ใช้นามสกุลของไฟล์ที่แท้จริง
+          name: `profile-image.${fileExtension}`,
           type: mimeType,
         });
   
-        const uploadResponse = await fetch('http://172.20.10.5:1337/api/upload', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
+        // เรียกใช้งานฟังก์ชัน uploadFile
+        const uploadData = await uploadFile(formData, token);
   
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload image');
-        }
-  
-        const uploadData = await uploadResponse.json();
-        console.log('Upload response:', uploadData);
-  
-        imageUrl = uploadData[0].url; // ดึง URL ของรูปภาพที่อัปโหลด
-        pictureId = uploadData[0].id; // ดึง ID ของไฟล์ที่อัปโหลด
-  
-        // หลังจากอ่านข้อมูลจาก uploadResponse แล้ว ไม่สามารถเข้าถึง response อีกครั้งได้
-        // จึงเก็บข้อมูลที่ต้องการไว้ในตัวแปรเพื่อนำไปใช้ในขั้นตอนต่อไป
+        imageUrl = uploadData[0].url;
+        pictureId = uploadData[0].id;
       }
   
       // อัปเดตโปรไฟล์ผู้ใช้
@@ -144,7 +126,7 @@ const ProfileButton = () => {
         birthday: birthday,
         age: age,
         selectedGender: gender === 'ชาย' ? 'male' : 'female',
-        picture: pictureId, // อัปเดตฟิลด์ picture ด้วย ID ของไฟล์
+        picture: pictureId,
       };
   
       const response = await updateUserProfile(userId, updatedData, {
@@ -152,11 +134,8 @@ const ProfileButton = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      console.log('Update Profile response:', response);
   
       if (response.status !== 200) {
-        console.error('Profile update failed:', response);  // พิมพ์ response เมื่อเกิดข้อผิดพลาด
         throw new Error('Failed to update profile');
       }
   
@@ -167,8 +146,7 @@ const ProfileButton = () => {
       console.error('Error updating user profile:', error);
       Alert.alert('Error', 'Failed to update profile.');
     }
-  };
-  
+    };
   
   
   
