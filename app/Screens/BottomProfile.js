@@ -11,6 +11,7 @@ const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [profileImage, setProfileImage] = useState(require("../../assets/image/profile02.png"));
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);  // สถานะใหม่สำหรับการบันทึก
   const [username, setUsername] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
@@ -92,6 +93,8 @@ const ProfileButton = () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
     if (!token || !userId) return;
+    
+    setIsSaving(true); // ปิดการใช้งานปุ่มบันทึกทันทีที่เริ่มการบันทึก
   
     try {
       let imageUrl = null;
@@ -145,12 +148,10 @@ const ProfileButton = () => {
     } catch (error) {
       console.error('Error updating user profile:', error);
       Alert.alert('Error', 'Failed to update profile.');
+    } finally {
+      setIsSaving(false); // เปิดใช้งานปุ่มบันทึกอีกครั้งเมื่อการบันทึกเสร็จสิ้น
     }
-    };
-  
-  
-  
-
+  };
 
   const logout = async () => {
       await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
@@ -195,14 +196,14 @@ const ProfileButton = () => {
                   style={styles.profileImage}/>
                 <Text style={styles.profileText}>Lv {level}</Text>
               </View>
-             {isEditing && (
+              {isEditing && (
                 <TouchableOpacity style={styles.editButton} onPress={pickImage}>
                   <Text style={styles.editButtonText}>แก้ไข</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.logoutButton} onPress={logout}>
                   <Text style={styles.logoutButtonText}>ล็อกเอ้า</Text>
-                </TouchableOpacity>
+              </TouchableOpacity>
               <View style={styles.insidepersonalInformation}>
                 <View style={styles.profileDetails}>
                   {isEditing ? (
@@ -250,19 +251,11 @@ const ProfileButton = () => {
                           keyboardType="numeric"
                         />
                       </View>
-                      {/* <View style={styles.inputGroup}>
-                        <Text style={styles.labelText}>เพศ:</Text>
-                        <TextInput
-                          style={styles.input}
-                          value={gender}
-                          onChangeText={setGender}
-                        />
-                      </View> */}
                       <View style={styles.buttonGroup}>
-                        <TouchableOpacity onPress={saveProfile} style={styles.saveButton}>
-                          <Text style={styles.saveButtonText}>บันทึก</Text>
+                        <TouchableOpacity onPress={saveProfile} style={styles.saveButton} disabled={isSaving}>
+                          <Text style={styles.saveButtonText}>{isSaving ? 'กำลังบันทึก...' : 'บันทึก'}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.backButton}>
+                        <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.backButton} disabled={isSaving}>
                           <Text style={styles.backButtonText}>ยกเลิก</Text>
                         </TouchableOpacity>
                       </View>
