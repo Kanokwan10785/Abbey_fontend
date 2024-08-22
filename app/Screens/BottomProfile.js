@@ -52,6 +52,25 @@ const CustomAlertdata = ({ visible, onConfirm, onCancel }) => (
   </Modal>
 );
 
+const CustomAlertsaveProfile = ({ visible, onClose }) => (
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={visible}
+    onRequestClose={onClose}
+  >
+    <View style={styles.customAlertContainer}>
+      <View style={styles.customAlertBox}>
+        <Text style={styles.customAlertTitle}>บันทึกโปรไฟล์</Text>
+        <Text style={styles.customAlertMessage}>โปรไฟล์ของคุณได้รับการบันทึกแล้ว</Text>
+        <TouchableOpacity style={styles.customAlertButton} onPress={onClose}>
+          <Text style={styles.customAlertButtonText}>OK</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+
 const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [profileImage, setProfileImage] = useState(require("../../assets/image/profile02.png"));
@@ -69,6 +88,7 @@ const ProfileButton = () => {
   const [originalData, setOriginalData] = useState({});
   const [isAlertVisible, setAlertVisible] = useState(false); // สถานะสำหรับ Custom Alert
   const [isDataAlertVisible, setDataAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertdata
+  const [isSaveAlertVisible, setSaveAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertsaveProfile
 
   const navigation = useNavigation();
 
@@ -247,7 +267,7 @@ const ProfileButton = () => {
 
       setIsEditing(false);
       setModalVisible(false);
-      Alert.alert('Success', 'Profile updated successfully.');
+      setSaveAlertVisible(true); // แสดง CustomAlertsaveProfile เมื่อบันทึกสำเร็จ
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile.');
     } finally {
@@ -387,11 +407,8 @@ const ProfileButton = () => {
       </Modal>
       {/* Render the custom alerts */}
       <CustomAlertimage visible={isAlertVisible} onClose={() => setAlertVisible(false)} />
-      <CustomAlertdata
-        visible={isDataAlertVisible}
-        onConfirm={confirmModalClose}
-        onCancel={() => setDataAlertVisible(false)}
-      />
+      <CustomAlertdata visible={isDataAlertVisible} onConfirm={confirmModalClose} onCancel={() => setDataAlertVisible(false)}/>
+      <CustomAlertsaveProfile visible={isSaveAlertVisible} onClose={() => setSaveAlertVisible(false)} />
     </View>
   );
 };
