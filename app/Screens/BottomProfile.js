@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput, Alert, LogBox } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { fetchUserProfile, updateUserProfile, uploadFile } from './api';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
+
+LogBox.ignoreAllLogs(); // ปิดข้อความแจ้งเตือนทั้งหมด (ใช้ในกรณีจำเป็นเท่านั้น)
 
 const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -62,7 +64,6 @@ const ProfileButton = () => {
         });
   
       } catch (error) {
-        console.error('Error fetching user profile', error);
         Alert.alert("Error", "Failed to load user profile.");
       }
     };
@@ -82,27 +83,31 @@ const ProfileButton = () => {
   };
 
   const pickImage = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        alert('ขออภัย เราต้องการสิทธิ์เข้าถึงกล้องเพื่อเปลี่ยนรูปโปรไฟล์');
-        return;
-      }
-    }
-  
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    
-    if (result.cancelled) {
-      // แสดงข้อความแจ้งเตือนหากผู้ใช้ยกเลิกการเลือกภาพ
-      Alert.alert('ยกเลิกการเลือกรูป', 'คุณได้ยกเลิกการเลือกรูปภาพแล้ว');
-    } else {
-      setProfileImage({ uri: result.assets[0].uri });
-      setIsImageUpdated(true); // ตั้งค่าเพื่อให้รู้ว่ารูปภาพถูกเปลี่ยน
+    try {
+        if (Platform.OS !== 'web') {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('ขออภัย เราต้องการสิทธิ์เข้าถึงกล้องเพื่อเปลี่ยนรูปโปรไฟล์');
+                return;
+            }
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 4],
+            quality: 1,
+        });
+
+        if (result.cancelled) {
+            Alert.alert('ยกเลิกการเลือกรูป', 'คุณได้ยกเลิกการเลือกรูปภาพแล้ว');
+        } else {
+            setProfileImage({ uri: result.assets[0].uri });
+            setIsImageUpdated(true);
+        }
+    } catch (error) {
+        console.error('Error picking image:', error);
+        Alert.alert('ยกเลิกการเลือกรูป', 'คุณได้ยกเลิกการเลือกรูปภาพแล้ว');
     }
   };
 
@@ -117,6 +122,41 @@ const ProfileButton = () => {
     setIsEditing(false);
   };
   
+  const handleModalClose = () => {
+    if (isEditing) {
+      Alert.alert(
+        'ยกเลิกการแก้ไข',
+        'คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข? ข้อมูลที่เปลี่ยนแปลงจะไม่ถูกบันทึก',
+        [
+          {
+            text: 'ไม่',
+            onPress: () => {},
+            style: 'cancel',
+          },
+          {
+            text: 'ใช่',
+            onPress: () => {
+              setModalVisible(false);
+              setIsEditing(false);
+              setIsImageUpdated(false);
+              // คืนค่าเดิม
+              setProfileImage(originalProfileImage);
+              setUsername(originalData.username);
+              setWeight(originalData.weight);
+              setHeight(originalData.height);
+              setBirthday(originalData.birthday);
+              setAge(originalData.age);
+              setGender(originalData.gender);
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    } else {
+      setModalVisible(false);
+    }
+  };  
+
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
@@ -176,7 +216,6 @@ const ProfileButton = () => {
       setModalVisible(false);
       Alert.alert('Success', 'Profile updated successfully.');
     } catch (error) {
-      console.error('Error updating user profile:', error);
       Alert.alert('Error', 'Failed to update profile.');
     } finally {
       setIsSaving(false); // เปิดใช้งานปุ่มบันทึกอีกครั้งเมื่อการบันทึกเสร็จสิ้น
@@ -206,15 +245,13 @@ const ProfileButton = () => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
+        onRequestClose={handleModalClose} // ใช้ handleModalClose แทน
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <TouchableOpacity
-                onPress={() => setModalVisible(!modalVisible)}
+                onPress={handleModalClose} // ใช้ handleModalClose แทน
                 style={styles.closeButton}
               >
                 <Image source={cross} style={styles.crossIcon} />
