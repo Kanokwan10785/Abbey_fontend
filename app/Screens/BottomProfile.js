@@ -87,7 +87,7 @@ const ProfileButton = () => {
       setProfileImage({ uri: result.assets[0].uri });
     }
   };
-  
+
   const saveProfile = async () => {
     const token = await AsyncStorage.getItem('jwt');
     const userId = await AsyncStorage.getItem('userId');
@@ -195,9 +195,11 @@ const ProfileButton = () => {
                   style={styles.profileImage}/>
                 <Text style={styles.profileText}>Lv {level}</Text>
               </View>
-              <TouchableOpacity style={styles.editButton} onPress={pickImage}>
-                <Text style={styles.editButtonText}>แก้ไข</Text>
-              </TouchableOpacity>
+             {isEditing && (
+                <TouchableOpacity style={styles.editButton} onPress={pickImage}>
+                  <Text style={styles.editButtonText}>แก้ไข</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.logoutButton} onPress={logout}>
                   <Text style={styles.logoutButtonText}>ล็อกเอ้า</Text>
                 </TouchableOpacity>
