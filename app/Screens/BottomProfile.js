@@ -19,6 +19,7 @@ const ProfileButton = () => {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [level, setLevel] = useState("");
+  const [isImageUpdated, setIsImageUpdated] = useState(false); // สถานะใหม่สำหรับการอัปเดตรูปภาพ
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -86,6 +87,7 @@ const ProfileButton = () => {
     
     if (!result.cancelled) {
       setProfileImage({ uri: result.assets[0].uri });
+      setIsImageUpdated(true); // ตั้งค่าเพื่อให้รู้ว่ารูปภาพถูกเปลี่ยน
     }
   };
 
@@ -97,10 +99,9 @@ const ProfileButton = () => {
     setIsSaving(true); // ปิดการใช้งานปุ่มบันทึกทันทีที่เริ่มการบันทึก
   
     try {
-      let imageUrl = null;
       let pictureId = null;
-  
-      if (profileImage.uri) {
+
+      if (isImageUpdated) { // อัปโหลดรูปโปรไฟล์ใหม่ถ้ามีการแก้ไข
         const fileExtension = profileImage.uri.split('.').pop();
         let mimeType = 'image/jpeg';
         if (fileExtension === 'png') {
@@ -117,11 +118,10 @@ const ProfileButton = () => {
         // เรียกใช้งานฟังก์ชัน uploadFile
         const uploadData = await uploadFile(formData, token);
   
-        imageUrl = uploadData[0].url;
         pictureId = uploadData[0].id;
       }
-  
-      // อัปเดตโปรไฟล์ผู้ใช้
+
+      // สร้างอ็อบเจ็กต์สำหรับอัปเดตโปรไฟล์ผู้ใช้
       const updatedData = {
         username: username,
         weight: weight,
@@ -129,9 +129,13 @@ const ProfileButton = () => {
         birthday: birthday,
         age: age,
         selectedGender: gender === 'ชาย' ? 'male' : 'female',
-        picture: pictureId,
       };
-  
+
+      if (pictureId) {
+        updatedData.picture = pictureId; // อัปเดตรูปโปรไฟล์ถ้ามีการอัปโหลดใหม่
+      }
+
+      // อัปเดตโปรไฟล์ผู้ใช้
       const response = await updateUserProfile(userId, updatedData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -150,6 +154,7 @@ const ProfileButton = () => {
       Alert.alert('Error', 'Failed to update profile.');
     } finally {
       setIsSaving(false); // เปิดใช้งานปุ่มบันทึกอีกครั้งเมื่อการบันทึกเสร็จสิ้น
+      setIsImageUpdated(false); // รีเซ็ตสถานะการอัปเดตรูปภาพ
     }
   };
 

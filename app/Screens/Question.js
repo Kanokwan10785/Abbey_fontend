@@ -24,7 +24,7 @@ const Question = () => {
     try {
       const response = await register(username, email, password, height, weight, age, selectedGender, selectPet);
       console.log('Registration successful:', response);
-      navigation.navigate('HomeScreen');
+      navigation.navigate('Loginpage');
     } catch (error) {
       console.error('Registration error details:', error.response ? error.response.data : error.message);
       Alert.alert('Registration failed', error.response ? error.response.data.message : error.message);
