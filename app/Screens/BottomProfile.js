@@ -355,14 +355,14 @@ const ProfileButton = () => {
                           keyboardType="numeric"
                         />
                       </View>
-                      <View style={styles.inputGroup}>
+                      {/* <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>วันเกิด:</Text>
                         <TextInput
                           style={styles.input}
                           value={birthday}
                           onChangeText={setBirthday}
                         />
-                      </View>
+                      </View> */}
                       <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>อายุ:</Text>
                         <TextInput
@@ -386,7 +386,7 @@ const ProfileButton = () => {
                       <Text style={styles.headText}>{username || "ไม่มีข้อมูล"}</Text>
                       <Text style={styles.detailText}>น้ำหนัก: {weight || "ไม่มีข้อมูล"} กิโลกรัม</Text>
                       <Text style={styles.detailText}>ส่วนสูง: {height || "ไม่มีข้อมูล"} เซนติเมตร</Text>
-                      <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text>
+                      {/* <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text> */}
                       <Text style={styles.detailText}>อายุ: {age || "ไม่มีข้อมูล"} ปี</Text>
                       <Text style={styles.detailText}>เพศ: {gender || "ไม่มีข้อมูล"}</Text>
                     </>
