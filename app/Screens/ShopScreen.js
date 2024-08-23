@@ -82,30 +82,38 @@ export default function ShopScreen() {
     }
   };
 
-const renderItems = () => {
-  return itemsData[selectedCategory].map((item, index) => {
-    const isHidden = item.label === 'E00'; // ตรวจสอบว่า label คือ E00 หรือไม่
+  const renderItems = () => {
+    // เรียงลำดับรายการตาม label จาก A ถึง Z และจาก 1 ถึง 0
+    const sortedItems = itemsData[selectedCategory].sort((a, b) => {
+      if (a.label < b.label) return -1;
+      if (a.label > b.label) return 1;
+      return 0;
+    });
 
-    return (
-      <View key={index} style={styles.item}>
+    return sortedItems.map((item, index) => {
+      const isHidden = item.label === 'Z00'; // ตรวจสอบว่า label คือ Z00 หรือไม่
+
+      return (
+        <View key={index} style={styles.item}>
           <View style={styles.insideitemImage}>
             <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-      </View>
-        {!isHidden && (
-          <View style={styles.currencyPrice}>
-          <Text style={styles.itemPrice}>{item.price}</Text>
-          <Image source={dollar} style={styles.currencyIcon} />        
+          </View>
+          <Text style={styles.itemText}>{item.name}</Text>
+          {!isHidden && (
+            <View style={styles.currencyPrice}>
+              <Text style={styles.itemPrice}>{item.price}</Text>
+              <Image source={dollar} style={styles.currencyIcon} />
+            </View>
+          )}
+          {!isHidden && (
+            <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
+              <Text style={styles.itemButtonText}>ซื้อ</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        )}
-        {!isHidden && (
-          <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
-            <Text style={styles.itemButtonText}>ซื้อ</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  });
-};
+      );
+    });
+  };
 
 
   return (
@@ -264,7 +272,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
     textAlign: "center",
     fontFamily: "appfont_02",
-
   },
   itemButton: {
     backgroundColor: "#F9E79F",
