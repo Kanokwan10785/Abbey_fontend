@@ -82,23 +82,31 @@ export default function ShopScreen() {
     }
   };
 
-  const renderItems = () => {
-    return itemsData[selectedCategory].map((item, index) => (
+const renderItems = () => {
+  return itemsData[selectedCategory].map((item, index) => {
+    const isHidden = item.label === 'E00'; // ตรวจสอบว่า label คือ E00 หรือไม่
+
+    return (
       <View key={index} style={styles.item}>
-        <View style={styles.insideitemImage}>
-          <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-        </View>
-        <Text style={styles.itemText}>{item.name}</Text>
-        <View style={styles.currencyContainer}>
-          <Text style={styles.itemPrice}>{item.price}</Text>
-          <Image source={dollar} style={styles.currencyIcon} />
-        </View>
-        <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
-          <Text style={styles.itemButtonText}>ซื้อ</Text>
-        </TouchableOpacity>
+          <View style={styles.insideitemImage}>
+            <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
       </View>
-    ));
-  };
+        {!isHidden && (
+          <View style={styles.currencyPrice}>
+          <Text style={styles.itemPrice}>{item.price}</Text>
+          <Image source={dollar} style={styles.currencyIcon} />        
+        </View>
+        )}
+        {!isHidden && (
+          <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
+            <Text style={styles.itemButtonText}>ซื้อ</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  });
+};
+
 
   return (
     <View style={styles.container}>
@@ -229,7 +237,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9E79F',
     marginTop: 8,
   },
-  currencyContainer: {
+  currencyPrice: {
     flexDirection: 'row',
     alignItems: 'center',
   },
