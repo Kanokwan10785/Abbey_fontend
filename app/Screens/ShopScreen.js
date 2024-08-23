@@ -3,49 +3,72 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Scrol
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
+import { fetchItemsData } from './api'; // เพิ่มการนำเข้า fetchItemsData จาก api.js
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
 import pantsIcon from '../../assets/image/Clothing-Icon/Pant/pant-icon-02.png';
 import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import foodIcon from '../../assets/image/food-01.png';
-
-const itemsData = {
-  shirt: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Shirt/S01.png'), name: 'S01', price: 'XX.XX' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Shirt/S02.png'), name: 'S02', price: 'XX.XX' },
-    { id: 3, image: null }, { id: 4, image: null }, { id: 5, image: null }, 
-    { id: 6, image: null }, { id: 7, image: null }, { id: 8, image: null }, 
-    { id: 9, image: null }, { id: 10, image: null }, { id: 11, image: null }, 
-    { id: 12, image: null }, { id: 13, image: null }, { id: 14, image: null }, 
-    { id: 15, image: null }, { id: 16, image: null }, { id: 17, image: null }, 
-    { id: 18, image: null }, { id: 19, image: null }, { id: 20, image: null }, 
-  ],
-  pant: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Pant/P01.png'), name: 'P01', price: 'XX.XX' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Pant/P02.png'), name: 'P02', price: 'XX.XX' },
-    { id: 3, image: null }, { id: 4, image: null },
-  ],
-  skin: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Skin/K00.png'), name: 'K00', price: 'XX.XX' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Skin/K01.png'), name: 'K01', price: 'XX.XX' },
-    { id: 3, image: null }, { id: 4, image: null },
-  ],
-  food: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', price: 'XX.XX' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Food/F02.png'), name: 'F02', price: 'XX.XX' },
-    { id: 3, image: require('../../assets/image/Clothing-Item/Food/F03.png'), name: 'F03', price: 'XX.XX' },
-    { id: 4, image: require('../../assets/image/Clothing-Item/Food/F04.png'), name: 'F04', price: 'XX.XX' },
-    { id: 5, image: require('../../assets/image/Clothing-Item/Food/F05.png'), name: 'F05', price: 'XX.XX' },
-    { id: 6, image: require('../../assets/image/Clothing-Item/Food/F06.png'), name: 'F06', price: 'XX.XX' },
-    { id: 7, image: null }, { id: 8, image: null },
-  ],
-};
+import dollar from '../../assets/image/dollar-01.png';
 
 export default function ShopScreen() {
   const { selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [balance, setBalance] = useState(1250);
-  const [selectedCategory, setSelectedCategory] = useState('shirt');
+  const [selectedCategory, setSelectedCategory] = useState('ShirtItem');
+  const [itemsData, setItemsData] = useState({
+    ShirtItem: [],
+    PantItem: [],
+    SkinItem: [],
+    FoodItem: []
+  });
+
+  useEffect(() => {
+    const loadData = async () => {
+      const data = await fetchItemsData();
+
+      const categorizedItems = {
+        ShirtItem: [],
+        PantItem: [],
+        SkinItem: [],
+        FoodItem: []
+      };
+
+      data.forEach(item => {
+        const attributes = item.attributes;
+        const itemDetails = {
+          label: attributes.label,
+          name: attributes.name,
+          price: attributes.price,
+          isSinglePurchase: attributes.isSinglePurchase,
+          imageUrl: attributes.image?.data?.attributes?.url || '',
+          petFoodItemsId: attributes.pet_food_items?.data.map(petItem => petItem.id) || [],
+          clothingItemsId: attributes.clothing_items?.data.map(clothingItem => clothingItem.id) || []
+        };
+
+        switch (attributes.category) {
+          case 'Shirt-item':
+            categorizedItems.ShirtItem.push(itemDetails);
+            break;
+          case 'Pant-item':
+            categorizedItems.PantItem.push(itemDetails);
+            break;
+          case 'Skin-item':
+            categorizedItems.SkinItem.push(itemDetails);
+            break;
+          case 'Food-item':
+            categorizedItems.FoodItem.push(itemDetails);
+            break;
+          default:
+            break;
+        }
+      });
+
+      setItemsData(categorizedItems);
+    };
+
+    loadData();
+  }, []);
 
   const handleBuy = (item) => {
     if (balance >= parseFloat(item.price)) {
@@ -60,19 +83,19 @@ export default function ShopScreen() {
   };
 
   const renderItems = () => {
-    return itemsData[selectedCategory].map((item) => (
-      <View key={item.id} style={styles.item}>
+    return itemsData[selectedCategory].map((item, index) => (
+      <View key={index} style={styles.item}>
         <View style={styles.insideitemImage}>
-          <Image source={item.image} style={styles.itemImage} />
+          <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
         </View>
-        {item.image && (
-          <>
-            <Text style={styles.itemPrice}>{item.price}</Text>
-            <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
-              <Text style={styles.itemButtonText}>ซื้อ</Text>
-            </TouchableOpacity>
-          </>
-        )}
+        <Text style={styles.itemText}>{item.name}</Text>
+        <View style={styles.currencyContainer}>
+          <Text style={styles.itemPrice}>{item.price}</Text>
+          <Image source={dollar} style={styles.currencyIcon} />
+        </View>
+        <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
+          <Text style={styles.itemButtonText}>ซื้อ</Text>
+        </TouchableOpacity>
       </View>
     ));
   };
@@ -86,23 +109,23 @@ export default function ShopScreen() {
         </View>
       </ImageBackground>
       <View style={styles.categoryMenu}>
-        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("shirt")}>
-          <View style={selectedCategory === "shirt" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
+        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("ShirtItem")}>
+          <View style={selectedCategory === "ShirtItem" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
             <Image source={shirtIcon} style={styles.categoryIcon} />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("pant")}>
-          <View style={selectedCategory === "pant" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
+        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("PantItem")}>
+          <View style={selectedCategory === "PantItem" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
             <Image source={pantsIcon} style={styles.categoryIcon} />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("skin")}>
-          <View style={selectedCategory === "skin" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
+        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("SkinItem")}>
+          <View style={selectedCategory === "SkinItem" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
             <Image source={skinIcon} style={styles.categoryIcon} />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("food")}>
-          <View style={selectedCategory === "food" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
+        <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("FoodItem")}>
+          <View style={selectedCategory === "FoodItem" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
             <Image source={foodIcon} style={styles.categoryIcon} />
           </View>
         </TouchableOpacity>
@@ -186,7 +209,7 @@ const styles = StyleSheet.create({
     width: '28%',
     marginHorizontal: '2.5%',
     marginBottom: '2.5%',
-    height: 136,
+    height: 156,
     // backgroundColor: '#FFAF32', //สีเก่า
     backgroundColor: '#FAA828',
     borderRadius: 10,
@@ -206,6 +229,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9E79F',
     marginTop: 8,
   },
+  currencyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currencyIcon: {
+    width: 20,
+    height: 20,
+    position: 'absolute',
+    right: -15,
+  },
   itemImage: {
     width: 85,
     height: 85,
@@ -215,6 +248,15 @@ const styles = StyleSheet.create({
     color: "#FFF",
     textAlign: "center",
     fontFamily: "appfont_02",
+    marginRight: 5,
+    right: 5,
+  },
+  itemText: {
+    fontSize: 14,
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "appfont_02",
+
   },
   itemButton: {
     backgroundColor: "#F9E79F",
