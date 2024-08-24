@@ -69,6 +69,22 @@ export const fetchFoodData = async () => {
   }
 };
 
+// ฟังก์ชันการดึงข้อมูลอาหารที่ผู้ใช้มี
+export const fetchUserFoodData = async (userId) => {
+  try {
+    const response = await api.get(`/api/users/${userId}?populate=pet_food_items`);
+    const foodItems = response.data.pet_food_items.map(item => ({
+      id: item.id,
+      name: item.buy_food,
+      quantity: item.quantity,    
+    }));
+    return foodItems;
+  } catch (error) {
+    console.error('Error fetching user food data', error);
+    throw error;
+  }
+};
+
 // ฟังก์ชันการอัปเดตจำนวนอาหาร
 export const updateFoodQuantity = async (foodId, newQuantity) => {
   try {

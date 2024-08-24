@@ -7,7 +7,7 @@ import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
-import { fetchFoodData, updateFoodQuantity } from './api'; // Import ฟังก์ชันจาก api.js
+import { fetchFoodData, updateFoodQuantity, fetchUserFoodData } from './api'; // Import ฟังก์ชันจาก api.js
 
 // const initialFoodData = [
 //   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
@@ -86,9 +86,19 @@ export default function FoodScreen({ navigation }) {
   const [isEating, setIsEating] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     const data = await fetchFoodData();
+  //     setFoodData(data);
+  //   };
+  //   getData();
+  //   updatePetImage();
+  // }, [selectedItems]);
+
   useEffect(() => {
     const getData = async () => {
-      const data = await fetchFoodData();
+      const userId = 67; // สมมติว่า ID ผู้ใช้คือ 67
+      const data = await fetchUserFoodData(userId);
       setFoodData(data);
     };
     getData();
@@ -113,32 +123,32 @@ export default function FoodScreen({ navigation }) {
     if (item.quantity <= 0 || isButtonDisabled) {
       return;
     }
-    setIsButtonDisabled(true);
+    setIsButtonDisabled(true); 
     const { shirt, pant, skin } = selectedItems;
     const shirtName = shirt ? shirt.name : 'S00';
     const pantName = pant ? pant.name : 'P00';
     const skinName = skin ? skin.name : 'K00';
     const petKey = `${shirtName}${pantName}${skinName}${item.name}`;
-
+  
     setCurrentPetImage(petKey);
     setIsEating(true);
-
+  
     // ลดจำนวนสินค้าใน state
-    const newQuantity = (item.quantity - 1).toString(); // แปลงค่าเป็น string
+    const newQuantity = item.quantity - 1;
     setFoodData(prevFoodData =>
       prevFoodData.map(foodItem =>
-        foodItem.id === item.id ? { ...foodItem, quantity: parseInt(newQuantity, 10) } : foodItem
+        foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
       )
     );
-
+  
     // อัปเดตจำนวนสินค้าไปยังเซิร์ฟเวอร์
     try {
       await updateFoodQuantity(item.id, newQuantity);
     } catch (error) {
-      // เพิ่มการแสดงรายละเอียดข้อผิดพลาด
       console.error('Failed to update quantity on server', error.response?.data || error.message);
     }
-};
+  };
+
 
   const updatePetImage = () => {
     const { shirt, pant, skin } = selectedItems;
@@ -167,6 +177,7 @@ export default function FoodScreen({ navigation }) {
               )}
               {!hideButtonAndQuantity && (
                 <>
+                <Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.itemQuantity}>{item.quantity}</Text>
                   <TouchableOpacity style={styles.itemButton} onPress={() => handleEat(item)} disabled={isButtonDisabled}>
                     <Text style={styles.itemButtonText}>กิน</Text>
@@ -304,6 +315,13 @@ const styles = StyleSheet.create({
   itemQuantity: {
     fontSize: 16,
     bottom: 12,
+    color: "#000",
+    position: "absolute",
+    fontFamily: "appfont_02",
+  },
+  itemName: {
+    fontSize: 12,
+    // bottom: 12,
     color: "#000",
     position: "absolute",
     fontFamily: "appfont_02",
