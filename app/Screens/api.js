@@ -135,7 +135,7 @@ export const uploadFile = async (formData, token) => {
 // ฟังก์ชันใหม่สำหรับดึงข้อมูลรายการสินค้าจาก API
 export const fetchItemsData = async () => {
   try {
-    const response = await axios.get('http://192.168.1.117:1337/api/shop-items?populate=image,pet_food_items,clothing_items');
+    const response = await api.get('/api/shop-items?populate=image,pet_food_items,clothing_items');
     return response.data.data;
   } catch (error) {
     console.error('Error fetching items data', error);
