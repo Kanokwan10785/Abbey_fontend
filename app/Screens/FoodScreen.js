@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Scrol
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
-import { fetchFoodData, updateFoodQuantity, fetchUserFoodData } from './api'; // Import ฟังก์ชันจาก api.js
+import { updateFoodQuantity, fetchUserFoodData } from './api'; // Import ฟังก์ชันจาก api.js
 
 // const initialFoodData = [
 //   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
@@ -97,7 +98,7 @@ export default function FoodScreen({ navigation }) {
 
   useEffect(() => {
     const getData = async () => {
-      const userId = 67; // สมมติว่า ID ผู้ใช้คือ 67
+      const userId = await AsyncStorage.getItem('userId');
       const data = await fetchUserFoodData(userId);
       setFoodData(data);
     };
