@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     width: '28%',
     marginHorizontal: '2.5%',
     marginBottom: '2.5%',
-    height: 156,
+    height: 152,
     // backgroundColor: '#FFAF32', //สีเก่า
     backgroundColor: '#FAA828',
     borderRadius: 10,
@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     justifyContent: 'center',
     alignItems: 'center',
+    top: 3,
   },
   itemButtonText: {
     fontSize: 14,
