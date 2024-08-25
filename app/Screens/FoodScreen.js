@@ -9,6 +9,7 @@ import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import { updateFoodQuantity, fetchUserFoodData } from './api'; // Import ฟังก์ชันจาก api.js
+import axios from 'axios';
 
 // const initialFoodData = [
 //   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
@@ -124,29 +125,29 @@ export default function FoodScreen({ navigation }) {
     if (item.quantity <= 0 || isButtonDisabled) {
       return;
     }
-    setIsButtonDisabled(true); 
-    const { shirt, pant, skin } = selectedItems;
-    const shirtName = shirt ? shirt.name : 'S00';
-    const pantName = pant ? pant.name : 'P00';
-    const skinName = skin ? skin.name : 'K00';
-    const petKey = `${shirtName}${pantName}${skinName}${item.name}`;
   
-    setCurrentPetImage(petKey);
-    setIsEating(true);
-  
-    // ลดจำนวนสินค้าใน state
-    const newQuantity = item.quantity - 1;
-    setFoodData(prevFoodData =>
-      prevFoodData.map(foodItem =>
-        foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
-      )
-    );
-  
-    // อัปเดตจำนวนสินค้าไปยังเซิร์ฟเวอร์
+    setIsButtonDisabled(true); // Disable button after clicking "กิน"
+    
     try {
-      await updateFoodQuantity(item.id, newQuantity);
+      const newQuantity = item.quantity - 1;
+  
+      // อัปเดทข้อมูลในเซิร์ฟเวอร์
+      await axios.put(`http://192.168.1.117:1337/api/pet-food-items/${item.id}`, {
+        data: { quantity: newQuantity }
+      });
+  
+      // อัปเดทข้อมูลใน state เพื่อให้ UI เปลี่ยนแปลงตาม
+      setFoodData(prevFoodData =>
+        prevFoodData.map(foodItem =>
+          foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
+        )
+      );
+  
+      // ตั้งค่าการอัปเดทภาพสัตว์เลี้ยงหลังจากการกิน (ตามโค้ดก่อนหน้า)
+  
     } catch (error) {
-      console.error('Failed to update quantity on server', error.response?.data || error.message);
+      console.error('Error while eating', error);
+      setIsButtonDisabled(false); // Enable button if error
     }
   };
 
