@@ -60,7 +60,7 @@ const eatingPetImages = {
   S02P01K01F01: require('../../assets/image/Food-Pet/S02P01K01F01.gif'),
   S02P02K00F01: require('../../assets/image/Food-Pet/S02P02K00F01.gif'),
   S02P02K01F01: require('../../assets/image/Food-Pet/S02P02K01F01.gif'),
-  
+
   S00P00K00F04: require('../../assets/image/Food-Pet/S00P00K00F04.gif'),
   S00P00K01F04: require('../../assets/image/Food-Pet/S00P00K01F04.gif'),
   S00P01K00F04: require('../../assets/image/Food-Pet/S00P01K00F04.gif'),
@@ -125,32 +125,23 @@ export default function FoodScreen({ navigation }) {
     if (item.quantity <= 0 || isButtonDisabled) {
       return;
     }
-  
-    setIsButtonDisabled(true); // Disable button after clicking "กิน"
-    
+
     try {
       const newQuantity = item.quantity - 1;
-  
-      // อัปเดทข้อมูลในเซิร์ฟเวอร์
-      await axios.put(`http://192.168.1.117:1337/api/pet-food-items/${item.id}`, {
-        data: { quantity: newQuantity }
-      });
-  
-      // อัปเดทข้อมูลใน state เพื่อให้ UI เปลี่ยนแปลงตาม
+
+      await updateFoodQuantity(item.id, newQuantity);
+
       setFoodData(prevFoodData =>
         prevFoodData.map(foodItem =>
           foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
         )
       );
-  
-      // ตั้งค่าการอัปเดทภาพสัตว์เลี้ยงหลังจากการกิน (ตามโค้ดก่อนหน้า)
-  
+
     } catch (error) {
       console.error('Error while eating', error);
       setIsButtonDisabled(false); // Enable button if error
     }
   };
-
 
   const updatePetImage = () => {
     const { shirt, pant, skin } = selectedItems;
@@ -171,15 +162,15 @@ export default function FoodScreen({ navigation }) {
       <>
         {sortedFoodData.map((item) => {
           const hideButtonAndQuantity = item.label === 'F99';
-    
+
           return (
             <View key={item.id} style={styles.item}>
               {item.image && (
-                <Image source={{ uri: item.image }} style={styles.itemImage}/>
+                <Image source={{ uri: item.image }} style={styles.itemImage} />
               )}
               {!hideButtonAndQuantity && (
                 <>
-                <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.itemQuantity}>{item.quantity}</Text>
                   <TouchableOpacity style={styles.itemButton} onPress={() => handleEat(item)} disabled={isButtonDisabled}>
                     <Text style={styles.itemButtonText}>กิน</Text>
@@ -191,8 +182,8 @@ export default function FoodScreen({ navigation }) {
         })}
       </>
     );
-  };  
-  
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.gymBackgroundContainer}>

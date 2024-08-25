@@ -105,16 +105,14 @@ export const fetchUserFoodData = async (userId) => {
 };
 
 // ฟังก์ชันการอัปเดตจำนวนอาหาร
-export const updateFoodQuantity = async (foodId, newQuantity) => {
+export const updateFoodQuantity = async (itemId, newQuantity) => {
   try {
-    const response = await api.put(`/api/food-items/${foodId}?populate=*`, {
-      data: {
-        quantity: newQuantity,
-      },
+    const response = await axios.put(`${API_URL}/api/pet-food-items/${itemId}`, {
+      data: { quantity: newQuantity },
     });
     return response.data;
   } catch (error) {
-    console.error('Error updating food quantity', error);
+    console.error('Error updating pet food item quantity', error);
     throw error;
   }
 };
