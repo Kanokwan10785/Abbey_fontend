@@ -51,24 +51,6 @@ export const getDailyExercise = async () => {
   }
 };
 
-// ฟังก์ชันการดึงข้อมูลอาหาร
-export const fetchFoodData = async () => {
-  try {
-    const response = await api.get('/api/food-items?populate=*');
-    const formattedData = response.data.data.map(item => ({
-      id: item.id,
-      label: item.attributes.label,
-      name: item.attributes.name,
-      image: item.attributes.food?.data?.attributes?.formats?.large?.url,
-      quantity: item.attributes.quantity,
-    }));
-    return formattedData;
-  } catch (error) {
-    console.error('Error fetching food data', error);
-    throw error;
-  }
-};
-
 // ฟังก์ชันการดึงข้อมูลอาหารที่ผู้ใช้มี
 export const fetchUserFoodData = async (userId) => {
   try {
