@@ -72,12 +72,31 @@ export const fetchFoodData = async () => {
 // ฟังก์ชันการดึงข้อมูลอาหารที่ผู้ใช้มี
 export const fetchUserFoodData = async (userId) => {
   try {
-    const response = await api.get(`/api/users/${userId}?populate=pet_food_items`);
-    const foodItems = response.data.pet_food_items.map(item => ({
-      id: item.id,
-      name: item.buy_food,
-      quantity: item.quantity,    
-    }));
+    // เรียกข้อมูลจาก shop-items เพื่อดึงชื่อและ URL ของ image
+    const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name`);
+
+    // เรียกข้อมูลจาก pet-food-items เพื่อดึงชื่ออาหารและข้อมูลอื่นๆ ของผู้ใช้
+    const petFoodResponse = await api.get(`/api/pet-food-items?filters[user][id][$eq]=${userId}&populate[choose_food][fields][0]=name`);
+
+    // สร้างแผนที่เพื่อให้เข้าถึง URL ได้ง่าย
+    const shopItemsMap = shopResponse.data.data.reduce((map, item) => {
+      map[item.attributes.name] = item.attributes.image?.data?.attributes?.url || null;
+      return map;
+    }, {});
+
+    // รวมข้อมูลจากทั้งสอง API
+    const foodItems = petFoodResponse.data.data?.map(item => {
+      const chooseFoodName = item.attributes.choose_food?.data?.attributes?.name;
+      const imageUrl = shopItemsMap[chooseFoodName] || null;
+
+      return {
+        id: item.id,
+        name: chooseFoodName, // ใช้ชื่อจาก choose_food
+        quantity: item.attributes.quantity,
+        image: imageUrl, // ดึง URL ของ image จาก shop-items ถ้ามี
+      };
+    }) || [];
+
     return foodItems;
   } catch (error) {
     console.error('Error fetching user food data', error);
