@@ -160,7 +160,7 @@ export default function FoodScreen({ navigation }) {
     return (
       <>
         {sortedFoodData.map((item) => {
-          const hideButtonAndQuantity = item.image === null ;
+          const hideButtonAndQuantity =  item.label === "Z00" ;
 
           return (
             <View key={item.id} style={styles.item}>
