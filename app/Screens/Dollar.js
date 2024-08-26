@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserProfile } from './api'; // Import ฟังก์ชันที่ใช้ดึงข้อมูลจาก API
 
 const DollarIcon = () => {
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState();
 
   useEffect(() => {
     const loadUserProfile = async () => {

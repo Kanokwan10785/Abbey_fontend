@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.117:1337'; // Replace with your Strapi URL 
+const API_URL = 'http://192.168.145.3:1337'; // Replace with your Strapi URL 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -159,5 +159,90 @@ export const fetchItemsData = async () => {
   } catch (error) {
     console.error('Error fetching items data', error);
     return [];
+  }
+};
+
+export const buyFoodItem = async (userId, shopItemId, foodName) => {
+  try {
+    console.log("Starting purchase process...");
+    console.log("User ID:", userId);
+    console.log("Shop Item ID:", shopItemId);
+    console.log("Food Name:", foodName);
+
+    // ดึงข้อมูลผู้ใช้และสินค้าที่จะซื้อ
+    const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
+    console.log("User Response:", userResponse.data);
+
+    const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=*`);
+    console.log("Shop Item Response:", shopItemResponse.data);
+
+    const user = userResponse.data;
+    const shopItem = shopItemResponse.data;
+
+    // ตรวจสอบยอดเงิน
+    if (user.balance >= shopItem.data.attributes.price) {
+      console.log("User has enough balance.");
+      
+      // ตรวจสอบว่า user มีรายการสินค้านี้อยู่ใน PetFoodItems หรือไม่
+      const petFoodItemsResponse = await axios.get(`${API_URL}/api/pet-food-items?populate=*`, {
+        params: {
+          'filters[user]': userId,
+          'filters[choose_food][name]': foodName,
+        },
+      });
+      console.log("Pet Food Items Response:", petFoodItemsResponse.data);
+
+      const petFoodItems = petFoodItemsResponse.data.data;
+
+      if (petFoodItems.length > 0) {
+        // หากพบว่ามีสินค้านี้อยู่แล้ว อัปเดต quantity
+        const petFoodItem = petFoodItems[0];
+        console.log("Updating quantity for existing item:", petFoodItem.id);
+
+        await axios.put(`${API_URL}/api/pet-food-items/${petFoodItem.id}`, {
+          data: {
+            quantity: petFoodItem.attributes.quantity + 1,
+          },
+        });
+      } else {
+        const foodNameMap = {
+          "แอปเปิล": "apple",
+          "แตงโม": "watermelon",
+          "น่องไก่ทอด": "fried chicken",
+          "เบอร์เกอร์": "hamburger",
+          "ปลาทอด": "fried fish",
+          "เนื้อย่าง": "roast beef",
+        };
+
+        // ตรวจสอบว่ามีการแมปชื่ออาหารแล้วหรือไม่
+        const mappedFoodName = foodNameMap[foodName];
+        if (!mappedFoodName) {
+          throw new Error(`Food name '${foodName}' is not mapped.`);
+        }
+
+        await axios.post(`${API_URL}/api/pet-food-items`, {
+          data: {
+            user: userId,
+            buy_food: mappedFoodName,
+            choose_food: shopItemId,
+            quantity: 1,
+          },
+        });
+      }
+
+      // หักยอดเงินของผู้ใช้
+      console.log("Deducting balance from user.");
+      await axios.put(`${API_URL}/api/users/${userId}`, {
+        balance: user.balance - shopItem.data.attributes.price,
+      });
+
+      return { success: true };
+    } else {
+      console.log("User does not have enough balance.");
+      return { success: false, message: 'ยอดเงินไม่พอ' };
+    }
+  } catch (error) {
+    console.error('Error during purchase:', error.response ? error.response.data : error.message);
+    throw error;
   }
 };

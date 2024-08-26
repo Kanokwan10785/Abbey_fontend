@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // เพิ่มการนำเข้า AsyncStorage
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { fetchItemsData } from './api'; // เพิ่มการนำเข้า fetchItemsData จาก api.js
+import { buyFoodItem, fetchItemsData } from './api'; // เพิ่มการนำเข้า fetchItemsData จาก api.js
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -14,14 +15,34 @@ import dollar from '../../assets/image/dollar-01.png';
 
 export default function ShopScreen() {
   const { selectedItems, setSelectedItems } = useContext(ClothingContext);
-  const [balance, setBalance] = useState(1250);
+  const [balance, setBalance] = useState();
   const [selectedCategory, setSelectedCategory] = useState('ShirtItem');
+  const [userId, setUserId] = useState(null); // State to hold userId
   const [itemsData, setItemsData] = useState({
     ShirtItem: [],
     PantItem: [],
     SkinItem: [],
     FoodItem: []
   });
+
+    // ดึงรหัสผู้ใช้จาก AsyncStorage
+    useEffect(() => {
+      const loadUserId = async () => {
+        try {
+          const storedUserId = await AsyncStorage.getItem('userId');
+          if (storedUserId) {
+            setUserId(storedUserId);
+            console.log("Loaded User ID:", storedUserId);
+          } else {
+            console.error("No userId found in AsyncStorage");
+          }
+        } catch (error) {
+          console.error("Failed to load userId from AsyncStorage", error);
+        }
+      };
+  
+      loadUserId();
+    }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,6 +58,7 @@ export default function ShopScreen() {
       data.forEach(item => {
         const attributes = item.attributes;
         const itemDetails = {
+          id: item.id,
           label: attributes.label,
           name: attributes.name,
           price: attributes.price,
@@ -70,18 +92,48 @@ export default function ShopScreen() {
     loadData();
   }, []);
 
-  const handleBuy = (item) => {
-    if (balance >= parseFloat(item.price)) {
-      setBalance(balance - parseFloat(item.price));
-      setSelectedItems(prevState => ({
-        ...prevState,
-        [selectedCategory]: item,
-      }));
-    } else {
-      alert('ยอดเงินไม่พอ');
+  const handleBuy = async (item) => {
+    const itemPrice = parseFloat(item.price);
+    
+    if (!userId) {
+      console.error("Cannot proceed with purchase, userId is null");
+      return;
+    }
+
+    if (!item.id) {
+      console.error("Cannot proceed with purchase, item.id is undefined");
+      return;
+  }
+  
+    try {
+      console.log("Item Selected:", item);
+      console.log("Item Name:", item.name);
+      console.log("Selected Category:", selectedCategory);
+      console.log("User ID:", userId);
+      
+      const result = await buyFoodItem(userId, item.id, item.name); // ส่ง userId, shopItemId และ item.name เป็น foodName
+
+      console.log("API Call Result:", result);
+
+      if (result.success) {
+        const newBalance = balance - parseFloat(item.price);
+        setBalance(newBalance);
+        console.log("Updated Balance:", newBalance);
+
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [selectedCategory]: item,
+        }));
+
+        console.log("Updated Selected Items:", selectedItems);
+      } else {
+        console.error("Purchase Failed:", result.message);
+      }
+    } catch (error) {
+      console.error('Error while buying item', error);
     }
   };
-
+  
   const renderItems = () => {
     // เรียงลำดับรายการตาม label จาก A ถึง Z และจาก 1 ถึง 0
     const sortedItems = itemsData[selectedCategory].sort((a, b) => {
