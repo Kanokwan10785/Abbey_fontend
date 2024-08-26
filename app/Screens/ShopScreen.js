@@ -14,7 +14,7 @@ import foodIcon from '../../assets/image/food-01.png';
 import dollar from '../../assets/image/dollar-01.png';
 
 export default function ShopScreen() {
-  const { selectedItems, setSelectedItems } = useContext(ClothingContext);
+  const {selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [balance, setBalance] = useState();
   const [selectedCategory, setSelectedCategory] = useState('ShirtItem');
   const [userId, setUserId] = useState(null); // State to hold userId

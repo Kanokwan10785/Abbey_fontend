@@ -5,40 +5,51 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserProfile } from './api'; // Import ฟังก์ชันที่ใช้ดึงข้อมูลจาก API
 
 const DollarIcon = () => {
-  const [balance, setBalance] = useState();
+  const [balance, setBalance] = useState(null);
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      if (!token || !userId) return;
-
+    const loadBalance = async () => {
       try {
+        // โหลดยอดเงินเก่าจาก AsyncStorage
+        const storedBalance = await AsyncStorage.getItem('balance');
+        if (storedBalance !== null) {
+          setBalance(parseFloat(storedBalance));
+        }
+
+        // ดึงข้อมูลยอดเงินล่าสุดจาก API
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+        if (!token || !userId) return;
+
         const userData = await fetchUserProfile(userId, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        setBalance(userData.balance); // อัปเดตค่า balance จากข้อมูลที่ได้รับ
+
+        const newBalance = userData.balance;
+        setBalance(newBalance); // อัปเดตยอดเงินใน state
+        await AsyncStorage.setItem('balance', newBalance.toString()); // บันทึกยอดเงินล่าสุดใน AsyncStorage
       } catch (error) {
-        console.error("Error fetching user profile", error);
+        console.error("Error loading balance", error);
       }
     };
 
-    loadUserProfile();
+    loadBalance();
   }, []); // useEffect จะทำงานเพียงครั้งเดียวเมื่อคอมโพเนนต์ถูกโหลด
 
   return (
     <View style={styles.currencyContainer}>
       <View style={styles.currencyBackground}>
-      <Text style={styles.currencyText}> {balance}</Text>
+        <Text style={styles.currencyText}>
+          {balance !== null ? balance.toLocaleString() : "0"} 
+        </Text>
         <Image source={dollar} style={styles.currencyIcon} />
       </View>
     </View>
   );
 };
 
-  
 const styles = StyleSheet.create({
   currencyContainer: {
     flexDirection: 'row',
