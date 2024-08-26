@@ -178,12 +178,30 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
 
     const user = userResponse.data;
     const shopItem = shopItemResponse.data;
+    const itemPrice = shopItem.data.attributes.price;
+
+    if (isNaN(itemPrice)) {
+      throw new Error(`ราคาสินค้าไม่ถูกต้อง: ${itemPrice}`);
+    }
 
     // ตรวจสอบยอดเงิน
-    if (user.balance >= shopItem.data.attributes.price) {
+    if (user.balance >= itemPrice) {
       console.log("User has enough balance.");
-      
-      // ตรวจสอบว่า user มีรายการสินค้านี้อยู่ใน PetFoodItems หรือไม่
+
+      // คำนวณยอดเงินคงเหลือใหม่
+      const newBalance = user.balance - itemPrice;
+
+      if (isNaN(newBalance)) {
+        throw new Error(`เกิดข้อผิดพลาดในการคำนวณยอดเงินคงเหลือ: ${newBalance}`);
+      }
+
+      // หักยอดเงินของผู้ใช้
+      console.log("Deducting balance from user.");
+      await axios.put(`${API_URL}/api/users/${userId}`, {
+        balance: newBalance,
+      });
+
+      // ตรวจสอบและอัปเดต Pet Food Item ที่มีอยู่
       const petFoodItemsResponse = await axios.get(`${API_URL}/api/pet-food-items?populate=*`, {
         params: {
           'filters[user]': userId,
@@ -195,7 +213,6 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
       const petFoodItems = petFoodItemsResponse.data.data;
 
       if (petFoodItems.length > 0) {
-        // หากพบว่ามีสินค้านี้อยู่แล้ว อัปเดต quantity
         const petFoodItem = petFoodItems[0];
         console.log("Updating quantity for existing item:", petFoodItem.id);
 
@@ -205,6 +222,9 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
           },
         });
       } else {
+        // เพิ่มรายการใหม่หากไม่พบรายการที่มีอยู่
+        console.log("Creating a new pet food item.");
+
         const foodNameMap = {
           "แอปเปิล": "apple",
           "แตงโม": "watermelon",
@@ -214,7 +234,6 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
           "เนื้อย่าง": "roast beef",
         };
 
-        // ตรวจสอบว่ามีการแมปชื่ออาหารแล้วหรือไม่
         const mappedFoodName = foodNameMap[foodName];
         if (!mappedFoodName) {
           throw new Error(`Food name '${foodName}' is not mapped.`);
@@ -229,12 +248,6 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
           },
         });
       }
-
-      // หักยอดเงินของผู้ใช้
-      console.log("Deducting balance from user.");
-      await axios.put(`${API_URL}/api/users/${userId}`, {
-        balance: user.balance - shopItem.data.attributes.price,
-      });
 
       return { success: true };
     } else {

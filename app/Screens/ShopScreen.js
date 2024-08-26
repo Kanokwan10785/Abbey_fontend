@@ -93,44 +93,68 @@ export default function ShopScreen() {
   }, []);
 
   const handleBuy = async (item) => {
+    // แปลงราคาเป็นตัวเลขแบบทศนิยม
     const itemPrice = parseFloat(item.price);
     
+    // ตรวจสอบว่า userId มีค่าหรือไม่
     if (!userId) {
       console.error("Cannot proceed with purchase, userId is null");
+      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
       return;
     }
-
+  
+    // ตรวจสอบว่า item.id มีค่าหรือไม่
     if (!item.id) {
       console.error("Cannot proceed with purchase, item.id is undefined");
+      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี item.id");
       return;
-  }
-  
+    }
+    
+    // ตรวจสอบว่าราคาของสินค้าเป็นตัวเลขที่ถูกต้องหรือไม่
+    if (isNaN(itemPrice)) {
+      console.error("Item price is not a valid number:", item.price);
+      alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
+      return;
+    }
+    
+    // ตรวจสอบว่ายอดเงินคงเหลือเพียงพอหรือไม่
+    if (balance < itemPrice) {
+      console.error("Insufficient balance to purchase the item");
+      alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+      return;
+    }
+    
     try {
       console.log("Item Selected:", item);
       console.log("Item Name:", item.name);
       console.log("Selected Category:", selectedCategory);
       console.log("User ID:", userId);
       
-      const result = await buyFoodItem(userId, item.id, item.name); // ส่ง userId, shopItemId และ item.name เป็น foodName
-
+      // เรียกใช้ฟังก์ชัน buyFoodItem เพื่อดำเนินการซื้อสินค้า
+      const result = await buyFoodItem(userId, item.id, item.name);
+  
       console.log("API Call Result:", result);
-
+  
       if (result.success) {
-        const newBalance = balance - parseFloat(item.price);
+        // คำนวณยอดเงินคงเหลือใหม่
+        const newBalance = balance - itemPrice;
         setBalance(newBalance);
         console.log("Updated Balance:", newBalance);
-
+  
+        // อัปเดตรายการสินค้าที่เลือก
         setSelectedItems(prevState => ({
           ...prevState,
           [selectedCategory]: item,
         }));
-
+  
         console.log("Updated Selected Items:", selectedItems);
       } else {
         console.error("Purchase Failed:", result.message);
+        alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
       }
     } catch (error) {
       console.error('Error while buying item', error);
+      alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
     }
   };
   
