@@ -9,7 +9,6 @@ import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import { updateFoodQuantity, fetchUserFoodData } from './api'; // Import ฟังก์ชันจาก api.js
-import { BalanceContext } from './BalanceContext';
 
 // const initialFoodData = [
 //   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
@@ -81,29 +80,40 @@ const eatingPetImages = {
   S02P02K01F04: require('../../assets/image/Food-Pet/S02P02K01F04.gif'),
 };
 
-export default function FoodScreen({ navigation }) {
+const FoodScreen = ({ navigation }) => {
   const { selectedItems } = useContext(ClothingContext);
   const [foodData, setFoodData] = useState([]);
   const [currentPetImage, setCurrentPetImage] = useState(null);
   const [isEating, setIsEating] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const data = await fetchFoodData();
-  //     setFoodData(data);
-  //   };
-  //   getData();
-  //   updatePetImage();
-  // }, [selectedItems]);
-
   useEffect(() => {
-    const getData = async () => {
-      const userId = await AsyncStorage.getItem('userId');
-      const data = await fetchUserFoodData(userId);
-      setFoodData(data);
+    const loadFoodDataFromStorage = async () => {
+      try {
+        const storedFoodData = await AsyncStorage.getItem('foodData');
+        if (storedFoodData) {
+          setFoodData(JSON.parse(storedFoodData));
+        }
+      } catch (error) {
+        console.error("Failed to load food data from storage", error);
+      }
     };
-    getData();
+
+    const fetchAndUpdateFoodData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        const data = await fetchUserFoodData(userId);
+        setFoodData(data);
+
+        // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
+        await AsyncStorage.setItem('foodData', JSON.stringify(data));
+      } catch (error) {
+        console.error("Failed to fetch food data from API", error);
+      }
+    };
+
+    loadFoodDataFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
+    fetchAndUpdateFoodData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
     updatePetImage();
   }, [selectedItems]);
 
@@ -131,11 +141,13 @@ export default function FoodScreen({ navigation }) {
 
       await updateFoodQuantity(item.id, newQuantity);
 
-      setFoodData(prevFoodData =>
-        prevFoodData.map(foodItem =>
-          foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
-        )
+      const updatedFoodData = foodData.map(foodItem =>
+        foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
       );
+      setFoodData(updatedFoodData);
+
+      // อัปเดตข้อมูลใน AsyncStorage ด้วย
+      await AsyncStorage.setItem('foodData', JSON.stringify(updatedFoodData));
 
     } catch (error) {
       console.error('Error while eating', error);
@@ -151,7 +163,6 @@ export default function FoodScreen({ navigation }) {
 
     setCurrentPetImage(`${shirtName}${pantName}${skinName}`);
   };
-
   const renderItems = () => {
     const sortedFoodData = [...foodData].sort((a, b) => {
       if (a.label < b.label) return -1;
@@ -161,7 +172,7 @@ export default function FoodScreen({ navigation }) {
     return (
       <>
         {sortedFoodData.map((item) => {
-          const hideButtonAndQuantity =  item.label === "Z00" ;
+          const hideButtonAndQuantity = item.label === "Z00";
 
           return (
             <View key={item.id} style={styles.item}>
@@ -336,3 +347,5 @@ const styles = StyleSheet.create({
     fontFamily: "appfont_02",
   },
 });
+
+export default FoodScreen;
