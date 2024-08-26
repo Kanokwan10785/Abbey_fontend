@@ -92,48 +92,72 @@ const ProfileButton = () => {
 
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      if (!token || !userId) return;
+  // ฟังก์ชันโหลดข้อมูลจาก AsyncStorage ก่อน
+  const loadUserProfileFromStorage = async () => {
+    try {
+      const storedUsername = await AsyncStorage.getItem('username');
+      const storedLevel = await AsyncStorage.getItem('level');
+      const storedProfileImage = await AsyncStorage.getItem('profileImage');
 
-      try {
-        const userData = await fetchUserProfile(userId, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      if (storedUsername) setUsername(storedUsername);
+      if (storedLevel !== null) setLevel(JSON.parse(storedLevel)); // แปลงค่า level กลับจาก string เป็น number
+      if (storedProfileImage) setProfileImage({ uri: storedProfileImage });
+    } catch (error) {
+      console.error("Failed to load user profile from storage", error);
+    }
+  };
 
-        setUsername(userData.username);
-        setWeight(userData.weight);
-        setHeight(userData.height);
-        setBirthday(userData.birthday);
-        setAge(userData.age);
-        setGender(transformGenderToThai(userData.selectedGender));
-        setLevel(userData.level);
+  // ฟังก์ชันโหลดข้อมูลจาก API
+  const loadUserProfileFromAPI = async () => {
+    const token = await AsyncStorage.getItem('jwt');
+    const userId = await AsyncStorage.getItem('userId');
+    if (!token || !userId) return;
 
-        const profileImageUrl = userData.picture?.formats?.medium?.url;
-        if (profileImageUrl) {
-          setProfileImage({ uri: profileImageUrl });
-          setOriginalProfileImage({ uri: profileImageUrl }); // เก็บรูปภาพต้นฉบับ
-        }
+    try {
+      const userData = await fetchUserProfile(userId, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        setOriginalData({
-          username: userData.username,
-          weight: userData.weight,
-          height: userData.height,
-          birthday: userData.birthday,
-          age: userData.age,
-          gender: transformGenderToThai(userData.selectedGender),
-        });
+      setUsername(userData.username);
+      setWeight(userData.weight);
+      setHeight(userData.height);
+      setBirthday(userData.birthday);
+      setAge(userData.age);
+      setGender(transformGenderToThai(userData.selectedGender));
+      setLevel(userData.level);
 
-      } catch (error) {
-        Alert.alert("Error", "Failed to load user profile.");
+      const profileImageUrl = userData.picture?.formats?.medium?.url;
+      if (profileImageUrl) {
+        setProfileImage({ uri: profileImageUrl });
+        setOriginalProfileImage({ uri: profileImageUrl });
       }
-    };
 
-    loadUserProfile();
+      setOriginalData({
+        username: userData.username,
+        weight: userData.weight,
+        height: userData.height,
+        birthday: userData.birthday,
+        age: userData.age,
+        gender: transformGenderToThai(userData.selectedGender),
+      });
+
+      // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
+      await AsyncStorage.setItem('username', userData.username);
+      await AsyncStorage.setItem('level', JSON.stringify(userData.level)); // บันทึก level เป็น string
+      if (profileImageUrl) {
+        await AsyncStorage.setItem('profileImage', profileImageUrl);
+      }
+
+    } catch (error) {
+      Alert.alert("Error", "Failed to load user profile.");
+    }
+  };
+
+  useEffect(() => {
+    loadUserProfileFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
+    loadUserProfileFromAPI(); // อัปเดตข้อมูลจาก API หลังจากนั้น
   }, []);
 
   const transformGenderToThai = (gender) => {
@@ -268,6 +292,14 @@ const ProfileButton = () => {
       setIsEditing(false);
       setModalVisible(false);
       setSaveAlertVisible(true); // แสดง CustomAlertsaveProfile เมื่อบันทึกสำเร็จ
+
+      // บันทึกข้อมูลที่อัปเดตลงใน AsyncStorage
+      await AsyncStorage.setItem('username', username);
+      await AsyncStorage.setItem('level', JSON.stringify(level)); // บันทึก level เป็น string
+      if (profileImage.uri) {
+        await AsyncStorage.setItem('profileImage', profileImage.uri);
+      }
+
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile.');
     } finally {
