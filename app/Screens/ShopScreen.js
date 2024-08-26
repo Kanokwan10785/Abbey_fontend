@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // เพิ่มการนำเข้า AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { buyFoodItem, fetchItemsData } from './api'; // เพิ่มการนำเข้า fetchItemsData จาก api.js
+import { buyFoodItem, fetchItemsData } from './api';
 import { ClothingContext } from './ClothingContext';
+import { BalanceContext } from './BalanceContext'; // Import BalanceContext
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
 import pantsIcon from '../../assets/image/Clothing-Icon/Pant/pant-icon-02.png';
@@ -14,10 +15,10 @@ import foodIcon from '../../assets/image/food-01.png';
 import dollar from '../../assets/image/dollar-01.png';
 
 export default function ShopScreen() {
-  const {selectedItems, setSelectedItems } = useContext(ClothingContext);
-  const [balance, setBalance] = useState();
+  const { selectedItems, setSelectedItems } = useContext(ClothingContext);
+  const { balance, setBalance } = useContext(BalanceContext); // ใช้ BalanceContext เพื่อจัดการยอดเงิน
   const [selectedCategory, setSelectedCategory] = useState('ShirtItem');
-  const [userId, setUserId] = useState(null); // State to hold userId
+  const [userId, setUserId] = useState(null);
   const [itemsData, setItemsData] = useState({
     ShirtItem: [],
     PantItem: [],
@@ -25,29 +26,28 @@ export default function ShopScreen() {
     FoodItem: []
   });
 
-    // ดึงรหัสผู้ใช้จาก AsyncStorage
-    useEffect(() => {
-      const loadUserId = async () => {
-        try {
-          const storedUserId = await AsyncStorage.getItem('userId');
-          if (storedUserId) {
-            setUserId(storedUserId);
-            console.log("Loaded User ID:", storedUserId);
-          } else {
-            console.error("No userId found in AsyncStorage");
-          }
-        } catch (error) {
-          console.error("Failed to load userId from AsyncStorage", error);
+  // ดึงรหัสผู้ใช้จาก AsyncStorage
+  useEffect(() => {
+    const loadUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          setUserId(storedUserId);
+        } else {
+          console.error("No userId found in AsyncStorage");
         }
-      };
-  
-      loadUserId();
-    }, []);
+      } catch (error) {
+        console.error("Failed to load userId from AsyncStorage", error);
+      }
+    };
 
+    loadUserId();
+  }, []);
+
+  // ดึงข้อมูลรายการสินค้า
   useEffect(() => {
     const loadData = async () => {
       const data = await fetchItemsData();
-
       const categorizedItems = {
         ShirtItem: [],
         PantItem: [],
@@ -93,73 +93,43 @@ export default function ShopScreen() {
   }, []);
 
   const handleBuy = async (item) => {
-    // แปลงราคาเป็นตัวเลขแบบทศนิยม
     const itemPrice = parseFloat(item.price);
     
-    // ตรวจสอบว่า userId มีค่าหรือไม่
     if (!userId) {
-      console.error("Cannot proceed with purchase, userId is null");
       alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
       return;
     }
-  
-    // ตรวจสอบว่า item.id มีค่าหรือไม่
-    if (!item.id) {
-      console.error("Cannot proceed with purchase, item.id is undefined");
-      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี item.id");
-      return;
-    }
     
-    // ตรวจสอบว่าราคาของสินค้าเป็นตัวเลขที่ถูกต้องหรือไม่
     if (isNaN(itemPrice)) {
-      console.error("Item price is not a valid number:", item.price);
       alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
       return;
     }
     
-    // ตรวจสอบว่ายอดเงินคงเหลือเพียงพอหรือไม่
     if (balance < itemPrice) {
-      console.error("Insufficient balance to purchase the item");
       alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
       return;
     }
     
     try {
-      console.log("Item Selected:", item);
-      console.log("Item Name:", item.name);
-      console.log("Selected Category:", selectedCategory);
-      console.log("User ID:", userId);
-      
-      // เรียกใช้ฟังก์ชัน buyFoodItem เพื่อดำเนินการซื้อสินค้า
       const result = await buyFoodItem(userId, item.id, item.name);
   
-      console.log("API Call Result:", result);
-  
       if (result.success) {
-        // คำนวณยอดเงินคงเหลือใหม่
         const newBalance = balance - itemPrice;
-        setBalance(newBalance);
-        console.log("Updated Balance:", newBalance);
+        setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
   
-        // อัปเดตรายการสินค้าที่เลือก
         setSelectedItems(prevState => ({
           ...prevState,
           [selectedCategory]: item,
         }));
-  
-        console.log("Updated Selected Items:", selectedItems);
       } else {
-        console.error("Purchase Failed:", result.message);
         alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
       }
     } catch (error) {
-      console.error('Error while buying item', error);
       alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
     }
   };
-  
+
   const renderItems = () => {
-    // เรียงลำดับรายการตาม label จาก A ถึง Z และจาก 1 ถึง 0
     const sortedItems = itemsData[selectedCategory].sort((a, b) => {
       if (a.label < b.label) return -1;
       if (a.label > b.label) return 1;
@@ -167,7 +137,7 @@ export default function ShopScreen() {
     });
 
     return sortedItems.map((item, index) => {
-      const isHidden = item.label === 'Z00'; // ตรวจสอบว่า label คือ Z00 หรือไม่
+      const isHidden = item.label === 'Z00';
 
       return (
         <View key={index} style={styles.item}>
@@ -190,7 +160,6 @@ export default function ShopScreen() {
       );
     });
   };
-
 
   return (
     <View style={styles.container}>
