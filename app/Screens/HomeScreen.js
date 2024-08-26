@@ -1,9 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
+import { fetchUserProfile } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
@@ -44,18 +46,40 @@ const CatImage = ({ imageKey }) => (
 
 export default function HomeScreen() {
   const { selectedItems } = useContext(ClothingContext);
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    const loadBalance = async () => {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      if (!token || !userId) return;
+
+      try {
+        const userData = await fetchUserProfile(userId, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setBalance(userData.balance);
+      } catch (error) {
+        console.error("Error fetching user profile", error);
+      }
+    };
+
+    loadBalance();
+  }, []); // ดึงยอดเงินเมื่อหน้าจอถูกโหลดครั้งแรก
 
   const shirtName = selectedItems.shirt ? selectedItems.shirt.name : 'S00';
   const pantName = selectedItems.pant ? selectedItems.pant.name : 'P00';
   const skinName = selectedItems.skin ? selectedItems.skin.name : 'K00';
 
-  const petKey = `${shirtName}${pantName}${skinName}`;
+  const petKey = `${shirtName}${pantName}${skinName}`; 
 
   return (
     <ImageBackground source={gym} style={styles.background}>
       <View style={styles.header}>
         <ProfileButton />
-        <DollarIcon />
+        <DollarIcon balance={balance} /> 
       </View>
       <View style={styles.screenpetImages}>
         <View style={styles.sectionpetImages} />

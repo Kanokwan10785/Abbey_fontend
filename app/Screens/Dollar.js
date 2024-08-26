@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { View, Text, StyleSheet, Image } from 'react-native';
 import dollar from '../../assets/image/dollar-01.png';
+import { BalanceContext } from './BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUserProfile } from './api'; // Import ฟังก์ชันที่ใช้ดึงข้อมูลจาก API
+import { fetchUserProfile } from './api';
+
 
 const DollarIcon = () => {
-  const [balance, setBalance] = useState(null);
+  const { balance, setBalance } = useContext(BalanceContext);
 
   useEffect(() => {
     const loadBalance = async () => {
@@ -27,22 +29,24 @@ const DollarIcon = () => {
           },
         });
 
-        const newBalance = userData.balance;
-        setBalance(newBalance); // อัปเดตยอดเงินใน state
-        await AsyncStorage.setItem('balance', newBalance.toString()); // บันทึกยอดเงินล่าสุดใน AsyncStorage
+        if (userData && userData.balance !== undefined) {
+          const newBalance = userData.balance;
+          setBalance(newBalance);
+          await AsyncStorage.setItem('balance', newBalance.toString());
+        }
       } catch (error) {
         console.error("Error loading balance", error);
       }
     };
 
     loadBalance();
-  }, []); // useEffect จะทำงานเพียงครั้งเดียวเมื่อคอมโพเนนต์ถูกโหลด
+  }, []); 
 
   return (
     <View style={styles.currencyContainer}>
       <View style={styles.currencyBackground}>
         <Text style={styles.currencyText}>
-          {balance !== null ? balance.toLocaleString() : "0"} 
+          {balance !== null ? balance.toLocaleString() : "0"}
         </Text>
         <Image source={dollar} style={styles.currencyIcon} />
       </View>

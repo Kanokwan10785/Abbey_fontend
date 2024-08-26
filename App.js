@@ -35,10 +35,12 @@ import Chestexercises from './app/Screens/Additional_Exercises/Chest/Chestexerci
 import Backexercises from './app/Screens/Additional_Exercises/Back/Backexercies.js';
 import FoodScreen from './app/Screens/FoodScreen.js';
 import { ClothingProvider } from './app/Screens/ClothingContext';
+import { BalanceProvider } from './app/Screens//BalanceContext';
 
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => (
+  <BalanceProvider>
   <ClothingProvider>
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {/* ใส่หน้าจอ Login และหน้าจออื่น ๆ */}
@@ -74,6 +76,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Backexercises" component={Backexercises} />
     </Stack.Navigator>
   </ClothingProvider>
+  </BalanceProvider>
 );
 
 const App = () => {
