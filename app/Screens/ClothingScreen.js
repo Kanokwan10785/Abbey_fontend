@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
+import { fetchUserClothingData } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -11,51 +13,68 @@ import pantsIcon from '../../assets/image/Clothing-Icon/Pant/pant-icon-02.png';
 import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
-
-const itemsData = {
-  shirt: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Shirt/S01.png'), name: 'S01' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Shirt/S02.png'), name: 'S02' },
-    { id: 3, image: null }, { id: 4, image: null }, { id: 5, image: null }, 
-    { id: 6, image: null }, { id: 7, image: null }, { id: 8, image: null }, 
-    { id: 9, image: null }, { id: 10, image: null }, { id: 11, image: null }, 
-  ],
-  pant: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Pant/P01.png'), name: 'P01' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Pant/P02.png'), name: 'P02' },
-    { id: 3, image: null }, { id: 4, image: null },
-  ],
-  skin: [
-    { id: 1, image: require('../../assets/image/Clothing-Item/Skin/K00.png'), name: 'K00' },
-    { id: 2, image: require('../../assets/image/Clothing-Item/Skin/K01.png'), name: 'K01' },
-    { id: 3, image: null }, { id: 4, image: null },
-  ],
-};
-
 const petImages = {
   S00P00K00: require('../../assets/image/Clothing-Pet/S00P00K00.png'),
-  S00P00K01: require('../../assets/image/Clothing-Pet/S00P00K01.png'),
-  S00P01K00: require('../../assets/image/Clothing-Pet/S00P01K00.png'),
-  S00P01K01: require('../../assets/image/Clothing-Pet/S00P01K01.png'),
-  S00P02K00: require('../../assets/image/Clothing-Pet/S00P02K00.png'),
-  S00P02K01: require('../../assets/image/Clothing-Pet/S00P02K01.png'),
-  S01P00K00: require('../../assets/image/Clothing-Pet/S01P00K00.png'),
-  S01P00K01: require('../../assets/image/Clothing-Pet/S01P00K01.png'),
-  S01P01K00: require('../../assets/image/Clothing-Pet/S01P01K00.png'),
-  S01P01K01: require('../../assets/image/Clothing-Pet/S01P01K01.png'),
-  S01P02K00: require('../../assets/image/Clothing-Pet/S01P02K00.png'),
-  S01P02K01: require('../../assets/image/Clothing-Pet/S01P02K01.png'),
-  S02P00K00: require('../../assets/image/Clothing-Pet/S02P00K00.png'),
-  S02P00K01: require('../../assets/image/Clothing-Pet/S02P00K01.png'),
-  S02P01K00: require('../../assets/image/Clothing-Pet/S02P01K00.png'),
-  S02P01K01: require('../../assets/image/Clothing-Pet/S02P01K01.png'),
-  S02P02K00: require('../../assets/image/Clothing-Pet/S02P02K00.png'),
-  S02P02K01: require('../../assets/image/Clothing-Pet/S02P02K01.png'),
+  // ...other pet images
 };
 
 export default function ClothingScreen() {
   const { selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [selectedCategory, setSelectedCategory] = useState("shirt");
+  const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
+
+  useEffect(() => {
+    const loadUserClothingData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        console.log('Fetched userId:', userId);
+
+        if (userId) {
+          const data = await fetchUserClothingData(userId);
+          organizeClothingData(data);
+        } else {
+          console.error('User ID not found in AsyncStorage');
+        }
+      } catch (error) {
+        if (error.response) {
+          console.error('Error loading user clothing data:', error.response.data);
+        } else {
+          console.error('Error loading user clothing data:', error.message);
+        }
+      }
+    };
+
+    loadUserClothingData();
+  }, []);
+
+  const organizeClothingData = (data) => {
+    const organizedData = { shirt: [], pant: [], skin: [] };
+
+    data.forEach(item => {
+      const label = item.label || '';
+      let category = '';
+
+      if (label.startsWith('S')) {
+        category = 'shirt';
+      } else if (label.startsWith('P')) {
+        category = 'pant';
+      } else if (label.startsWith('K')) {
+        category = 'skin';
+      }
+
+      if (category && organizedData[category]) {
+        organizedData[category].push({
+          id: item.id,
+          image: item.image || null,
+          name: item.name || 'Unknown',
+          label: item.label || 'Unknown',
+        });
+      }
+    });
+
+    console.log('Organized data:', organizedData);
+    setItemsData(organizedData);
+  };
 
   useEffect(() => {
     updatePetImage();
@@ -89,11 +108,17 @@ export default function ClothingScreen() {
   };
 
   const renderItems = () => {
+    if (!itemsData[selectedCategory].length) {
+      console.log(`No items found for category: ${selectedCategory}`);
+      return null;
+    }
+
     return (
       <>
         {itemsData[selectedCategory].map((item) => (
           <View key={item.id} style={styles.item}>
-            <Image source={item.image ? item.image : empty} style={styles.itemImage} />
+            <Image source={item.image ? { uri: item.image } : empty} style={styles.itemImage} />
+            <Text style={styles.itemName}>{item.name}</Text>
             {item.image && (
               <TouchableOpacity style={styles.itemButton} onPress={() => handleWear(selectedCategory, item.image, item.name)}>
                 <Text style={styles.itemButtonText}>สวมใส่</Text>
@@ -314,10 +339,10 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   item: {
-    width: '20%',
-    marginHorizontal: '2.5%',
+    width: '21%',
+    marginHorizontal: '2%',
     marginBottom: '5%',
-    height: 85,
+    height: 100,
     backgroundColor: "#FFAF32",
     alignItems: "center",
     borderColor: "#F9E79F",
@@ -327,6 +352,16 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     resizeMode: "contain",
+    top: 3,
+  },
+  itemName: {
+    fontSize: 10,
+    bottom: 26,
+    color: "#FFF",
+    top: 1,
+
+    fontFamily: "appfont_02",
+    textAlign: "center",
   },
   itemButton: {
     backgroundColor: "#F9E79F",
@@ -334,6 +369,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: 10,
     borderWidth: 0.5,
+    top: 2,
   },
   itemButtonText: {
     fontSize: 14,

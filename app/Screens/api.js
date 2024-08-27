@@ -103,6 +103,70 @@ export const updateFoodQuantity = async (itemId, newQuantity) => {
   }
 };
 
+// ฟังก์ชันการดึงข้อมูลเสื้อผ้าที่ผู้ใช้มี
+export const fetchUserClothingData = async (userId) => {
+  try {
+    if (!userId) {
+      throw new Error('Invalid userId');
+    }
+
+    console.log('Fetching shop items...');
+    const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label&[fields][2]=category`);
+    console.log('Shop items:', shopResponse.data.data);
+
+    console.log('Fetching clothing items...');
+    const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
+    console.log('Clothing items:', petClothingResponse.data.data);
+
+    // สร้างแผนที่เพื่อให้เข้าถึง URL ได้ง่าย
+    const shopItemsMap = shopResponse.data.data.reduce((map, item) => {
+      if (item.attributes.name) {
+        map[item.attributes.name] = {
+          label: item.attributes.label,
+          imageUrl: item.attributes.image?.data?.attributes?.url || null,
+          category: item.attributes.category,
+        };
+      }
+      return map;
+    }, {});
+
+    const clothingItems = petClothingResponse.data.data?.map(item => {
+      const chooseClothesData = item.attributes.choose_clothe?.data; // เปลี่ยนเป็น choose_clothe ตามข้อมูล JSON
+
+      if (!chooseClothesData) {
+        console.error('No choose_clothe found for item:', item);
+        return {
+          id: item.id,
+          name: 'Unknown',
+          label: 'Unknown',
+          category: 'Unknown',
+          quantity: item.attributes.quantity || 1,
+          image: null,
+        };
+      }
+
+      const chooseClothesName = chooseClothesData.attributes.name;
+      const shopItemData = shopItemsMap[chooseClothesName] || {};
+
+      return {
+        id: item.id,
+        name: chooseClothesName || 'Unknown',
+        label: shopItemData.label || 'Unknown',
+        category: shopItemData.category || 'Unknown',
+        quantity: item.attributes.quantity || 1,
+        image: shopItemData.imageUrl || null,
+      };
+    }) || [];
+
+    console.log('Organized clothing items:', clothingItems);
+    return clothingItems;
+  } catch (error) {
+    console.error('Error fetching user clothes data', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+
 // ฟังก์ชันการดึงข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const fetchUserProfile = async (userId, config = {}) => {
   try {
