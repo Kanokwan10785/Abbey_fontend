@@ -162,7 +162,9 @@ export default function ShopScreen() {
           <View style={styles.insideitemImage}>
             <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
           </View>
+          {!isHidden && (
           <Text style={styles.itemText}>{item.name}</Text>
+          )}
           {!isHidden && (
             <View style={styles.currencyPrice}>
               <Text style={styles.itemPrice}>{item.price}</Text>
