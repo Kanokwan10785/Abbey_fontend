@@ -352,49 +352,51 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
     if (user.balance >= itemPrice) {
       console.log("User has enough balance.");
 
-      // แมปชื่อเสื้อผ้า
-      const clothingNameMap = {
-        "เสื้อพละสีขาว": "white gym shirt",
-        "เสื้อชุดนอนสีฟ้า": "blue pajamas shirt",
-        "กางเกงนอนสีฟ้า": "blue pajamas pants",
-        "กางเกงพละสีดำ": "black gym pants",
-        "ลายทางสีเทา": "grey skin",
-        "ลายทางสีส้ม": "orange skin",
-      };
-
-      const mappedClothingName = clothingNameMap[clothingLabel];
-      if (!mappedClothingName) {
-        throw new Error(`Clothing label '${clothingLabel}' is not mapped.`);
-      }
-
-      // หักยอดเงินของผู้ใช้
-      console.log("Deducting balance from user.");
+      // คำนวณยอดเงินคงเหลือใหม่
       const newBalance = user.balance - itemPrice;
 
       if (isNaN(newBalance)) {
         throw new Error(`เกิดข้อผิดพลาดในการคำนวณยอดเงินคงเหลือ: ${newBalance}`);
       }
 
+      // หักยอดเงินของผู้ใช้
+      console.log("Deducting balance from user.");
       await axios.put(`${API_URL}/api/users/${userId}`, {
         balance: newBalance,
       });
 
-      // เพิ่มรายการเสื้อผ้าให้ผู้ใช้
-      console.log("Adding clothing item to user.");
-
-      await axios.put(`${API_URL}/api/clothing-items/${shopItemId}`, {
-        data: {
-          users: {
-            connect: [
-              {
-                id: userId,
-              }
-            ]
-          }
+      // ตรวจสอบว่าผู้ใช้มีเสื้อผ้าชิ้นนี้อยู่แล้วหรือไม่
+      const clothingItemsResponse = await axios.get(`${API_URL}/api/clothing-items`, {
+        params: {
+          'filters[users][id][$eq]': userId,
+          'filters[choose_clothe][name][$eq]': clothingLabel,
         },
       });
+      console.log("Clothing Items Response:", clothingItemsResponse.data);
 
-      return { success: true, message: 'ซื้อสำเร็จ', hasItem: false };
+      const clothingItems = clothingItemsResponse.data.data;
+
+      if (clothingItems.length > 0) {
+        console.log("User already owns this clothing item.");
+        return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
+      } else {
+        // เพิ่มเสื้อผ้าชิ้นใหม่ให้ผู้ใช้
+        console.log("Adding clothing item to user.");
+
+        await axios.put(`${API_URL}/api/clothing-items/${shopItemId}`, {
+          data: {
+            users: {
+              connect: [
+                {
+                  id: userId,
+                }
+              ]
+            }
+          },
+        });
+
+        return { success: true, message: 'ซื้อสำเร็จ', hasItem: true };
+      }
     } else {
       console.log("User does not have enough balance.");
       return { success: false, message: 'ยอดเงินไม่พอ' };
