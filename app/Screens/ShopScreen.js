@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { buyFoodItem, fetchItemsData } from './api';
+import { buyFoodItem, fetchItemsData, buyClothingItem } from './api'; // นำเข้า buyClothingItem ด้วย
 import { ClothingContext } from './ClothingContext';
 import { BalanceContext } from './BalanceContext'; // Import BalanceContext
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
@@ -110,43 +110,92 @@ export default function ShopScreen() {
     fetchAndUpdateItemsData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
   }, []);
 
-    const handleBuy = async (item) => {
-      const itemPrice = parseFloat(item.price);
-      
-      if (!userId) {
-        alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
-        return;
-      }
-      
-      if (isNaN(itemPrice)) {
-        alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
-        return;
-      }
-      
-      if (balance < itemPrice) {
-        alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
-        return;
-      }
-      
-      try {
-        const result = await buyFoodItem(userId, item.id, item.name);
-    
-        if (result.success) {
-          const newBalance = balance - itemPrice;
-          setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
-    
-          setSelectedItems(prevState => ({
-            ...prevState,
-            [selectedCategory]: item,
-          }));
-        } else {
-          alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
-        }
-      } catch (error) {
-        alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
-      }
-    };
+  // ฟังก์ชันสำหรับการซื้อเสื้อผ้า
+  const handleBuyClothingItem = async (item) => {
+    const itemPrice = parseFloat(item.price);
 
+    if (!userId) {
+      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
+      return;
+    }
+
+    if (isNaN(itemPrice)) {
+      alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
+      return;
+    }
+
+    if (balance < itemPrice) {
+      alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+      return;
+    }
+
+    try {
+      const result = await buyClothingItem(userId, item.id, item.name);
+
+      if (result.success) {
+        const newBalance = balance - itemPrice;
+        setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
+
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [selectedCategory]: item,
+        }));
+      } else {
+        alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
+      }
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
+    }
+  };
+
+  // ฟังก์ชันสำหรับการซื้ออาหาร
+  const handleBuyFoodItem = async (item) => {
+    const itemPrice = parseFloat(item.price);
+
+    if (!userId) {
+      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
+      return;
+    }
+
+    if (isNaN(itemPrice)) {
+      alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
+      return;
+    }
+
+    if (balance < itemPrice) {
+      alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+      return;
+    }
+
+    try {
+      const result = await buyFoodItem(userId, item.id, item.name);
+
+      if (result.success) {
+        const newBalance = balance - itemPrice;
+        setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
+
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [selectedCategory]: item,
+        }));
+      } else {
+        alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
+      }
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
+    }
+  };
+
+  // ฟังก์ชันสำหรับการซื้อสินค้าทั้งหมด
+  const handleBuy = async (item) => {
+    if (selectedCategory === 'FoodItem') {
+      await handleBuyFoodItem(item);
+    } else {
+      await handleBuyClothingItem(item);
+    }
+  };
+
+  // การแสดงรายการสินค้า
   const renderItems = () => {
     const sortedItems = itemsData[selectedCategory].sort((a, b) => {
       if (a.label < b.label) return -1;

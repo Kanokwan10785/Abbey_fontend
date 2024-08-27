@@ -72,7 +72,7 @@ export default function ClothingScreen() {
       }
     });
 
-    console.log('Organized data:', organizedData);
+    // console.log('Organized data:', organizedData);
     setItemsData(organizedData);
   };
 

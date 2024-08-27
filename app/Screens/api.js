@@ -112,11 +112,11 @@ export const fetchUserClothingData = async (userId) => {
 
     console.log('Fetching shop items...');
     const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label&[fields][2]=category`);
-    console.log('Shop items:', shopResponse.data.data);
+    // console.log('Shop items:', shopResponse.data.data);
 
     console.log('Fetching clothing items...');
     const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
-    console.log('Clothing items:', petClothingResponse.data.data);
+    // console.log('Clothing items:', petClothingResponse.data.data);
 
     // สร้างแผนที่เพื่อให้เข้าถึง URL ได้ง่าย
     const shopItemsMap = shopResponse.data.data.reduce((map, item) => {
@@ -158,7 +158,7 @@ export const fetchUserClothingData = async (userId) => {
       };
     }) || [];
 
-    console.log('Organized clothing items:', clothingItems);
+    // console.log('Organized clothing items:', clothingItems);
     return clothingItems;
   } catch (error) {
     console.error('Error fetching user clothes data', error.response ? error.response.data : error.message);
@@ -228,17 +228,17 @@ export const fetchItemsData = async () => {
 
 export const buyFoodItem = async (userId, shopItemId, foodName) => {
   try {
-    console.log("Starting purchase process...");
-    console.log("User ID:", userId);
-    console.log("Shop Item ID:", shopItemId);
-    console.log("Food Name:", foodName);
+    // console.log("Starting purchase process...");
+    // console.log("User ID:", userId);
+    // console.log("Shop Item ID:", shopItemId);
+    // console.log("Food Name:", foodName);
 
     // ดึงข้อมูลผู้ใช้และสินค้าที่จะซื้อ
     const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
-    console.log("User Response:", userResponse.data);
+    // console.log("User Response:", userResponse.data);
 
     const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=*`);
-    console.log("Shop Item Response:", shopItemResponse.data);
+    // console.log("Shop Item Response:", shopItemResponse.data);
 
     const user = userResponse.data;
     const shopItem = shopItemResponse.data;
@@ -250,7 +250,7 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
 
     // ตรวจสอบยอดเงิน
     if (user.balance >= itemPrice) {
-      console.log("User has enough balance.");
+      // console.log("User has enough balance.");
 
       // คำนวณยอดเงินคงเหลือใหม่
       const newBalance = user.balance - itemPrice;
@@ -260,7 +260,7 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
       }
 
       // หักยอดเงินของผู้ใช้
-      console.log("Deducting balance from user.");
+      // console.log("Deducting balance from user.");
       await axios.put(`${API_URL}/api/users/${userId}`, {
         balance: newBalance,
       });
@@ -314,6 +314,87 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
       }
 
       return { success: true };
+    } else {
+      console.log("User does not have enough balance.");
+      return { success: false, message: 'ยอดเงินไม่พอ' };
+    }
+  } catch (error) {
+    console.error('Error during purchase:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+
+// ฟังก์ชันซื้อสินค้าเสื้อผ้า
+export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
+  try {
+    console.log("Starting purchase process...");
+    console.log("User ID:", userId);
+    console.log("Shop Item ID:", shopItemId);
+    console.log("Clothing Label:", clothingLabel);
+
+    // ดึงข้อมูลผู้ใช้และสินค้าที่จะซื้อ
+    const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
+    console.log("User Response:", userResponse.data);
+
+    const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=*`);
+    console.log("Shop Item Response:", shopItemResponse.data);
+
+    const user = userResponse.data;
+    const shopItem = shopItemResponse.data;
+    const itemPrice = shopItem.data.attributes.price;
+
+    if (isNaN(itemPrice)) {
+      throw new Error(`ราคาสินค้าไม่ถูกต้อง: ${itemPrice}`);
+    }
+
+    // ตรวจสอบยอดเงิน
+    if (user.balance >= itemPrice) {
+      console.log("User has enough balance.");
+
+      // แมปชื่อเสื้อผ้า
+      const clothingNameMap = {
+        "เสื้อพละสีขาว": "white gym shirt",
+        "เสื้อชุดนอนสีฟ้า": "blue pajamas shirt",
+        "กางเกงนอนสีฟ้า": "blue pajamas pants",
+        "กางเกงพละสีดำ": "black gym pants",
+        "ลายทางสีเทา": "grey skin",
+        "ลายทางสีส้ม": "orange skin",
+      };
+
+      const mappedClothingName = clothingNameMap[clothingLabel];
+      if (!mappedClothingName) {
+        throw new Error(`Clothing label '${clothingLabel}' is not mapped.`);
+      }
+
+      // หักยอดเงินของผู้ใช้
+      console.log("Deducting balance from user.");
+      const newBalance = user.balance - itemPrice;
+
+      if (isNaN(newBalance)) {
+        throw new Error(`เกิดข้อผิดพลาดในการคำนวณยอดเงินคงเหลือ: ${newBalance}`);
+      }
+
+      await axios.put(`${API_URL}/api/users/${userId}`, {
+        balance: newBalance,
+      });
+
+      // เพิ่มรายการเสื้อผ้าให้ผู้ใช้
+      console.log("Adding clothing item to user.");
+
+      await axios.put(`${API_URL}/api/clothing-items/${shopItemId}`, {
+        data: {
+          users: {
+            connect: [
+              {
+                id: userId,
+              }
+            ]
+          }
+        },
+      });
+
+      return { success: true, message: 'ซื้อสำเร็จ', hasItem: false };
     } else {
       console.log("User does not have enough balance.");
       return { success: false, message: 'ยอดเงินไม่พอ' };
