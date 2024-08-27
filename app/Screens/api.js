@@ -337,12 +337,12 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
     const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
     console.log("User Response:", userResponse.data);
 
-    const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=*`);
+    const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=clothing_items`);
     console.log("Shop Item Response:", shopItemResponse.data);
 
     const user = userResponse.data;
-    const shopItem = shopItemResponse.data;
-    const itemPrice = shopItem.data.attributes.price;
+    const shopItem = shopItemResponse.data.data;
+    const itemPrice = shopItem.attributes.price;
 
     if (isNaN(itemPrice)) {
       throw new Error(`ราคาสินค้าไม่ถูกต้อง: ${itemPrice}`);
@@ -365,25 +365,19 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
         balance: newBalance,
       });
 
-      // ตรวจสอบว่าผู้ใช้มีเสื้อผ้าชิ้นนี้อยู่แล้วหรือไม่
-      const clothingItemsResponse = await axios.get(`${API_URL}/api/clothing-items`, {
-        params: {
-          'filters[users][id][$eq]': userId,
-          'filters[choose_clothe][name][$eq]': clothingLabel,
-        },
-      });
-      console.log("Clothing Items Response:", clothingItemsResponse.data);
+      // ตรวจสอบว่าผู้ใช้มีเสื้อผ้าชิ้นนี้อยู่แล้วหรือไม่ในข้อมูลของ shopItem
+      const userOwnsItem = shopItem.attributes.clothing_items.data.some(item => 
+        item.attributes.buy_clothes === clothingLabel
+      );
 
-      const clothingItems = clothingItemsResponse.data.data;
-
-      if (clothingItems.length > 0) {
+      if (userOwnsItem) {
         console.log("User already owns this clothing item.");
         return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
       } else {
         // เพิ่มเสื้อผ้าชิ้นใหม่ให้ผู้ใช้
         console.log("Adding clothing item to user.");
 
-        await axios.put(`${API_URL}/api/clothing-items/${shopItemId}`, {
+        await axios.put(`${API_URL}/api/clothing-items/${shopItem.id}`, {
           data: {
             users: {
               connect: [
