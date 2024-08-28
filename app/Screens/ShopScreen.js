@@ -60,7 +60,7 @@ export default function ShopScreen() {
     };
 
     const fetchAndUpdateItemsData = async () => {
-      console.log("Fetching items data from API...");
+      // console.log("Fetching items data from API...");
   
       try {
           const data = await fetchItemsData();
@@ -118,25 +118,23 @@ export default function ShopScreen() {
 
   // ฟังก์ชันสำหรับการเพิ่มไอเท็มเริ่มต้นให้ผู้ใช้
   const handleBeginnerClothingItems = async (userId) => {
-    console.log("Adding beginner clothing items...");
+    // console.log("Adding beginner clothing items...");
     try {
       // กำหนดรายการไอเท็มเริ่มต้นที่ต้องการเพิ่ม
       const beginnerItems = [
-        { id: 1, label: 'S01' }, // เสื้อพละสีขาว
-        { id: 3, label: 'P01' }, // กางเกงพละสีดำ
         { id: 5, label: 'K00' }  // ลายทางสีเทา
       ];
 
       for (const item of beginnerItems) {
         const result = await beginnerClothingItem(userId, item.id, item.label);
-        console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
+        // console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
 
         if (result.success) {
             setSelectedItems(prevState => ({
                 ...prevState,
                 [selectedCategory]: item,
             }));
-            console.log(`${item.label} added successfully.`);
+            // console.log(`${item.label} added successfully.`);
         } else {
             console.error(`Failed to add ${item.label}:`, result.message);
         }
@@ -273,7 +271,6 @@ export default function ShopScreen() {
   
     return sortedItems.map((item, index) => {
       const isHidden = item.label === 'Z00';
-      const isOwned = Object.values(selectedItems).some(selectedItem => selectedItem?.label === item.label);
   
       return (
         <View key={index} style={styles.item}>
@@ -290,14 +287,15 @@ export default function ShopScreen() {
             </View>
           )}
           {!isHidden && (
-            <TouchableOpacity style={styles.itemButton} onPress={() => !isOwned && handleBuy(item)} disabled={isOwned}>
-              <Text style={styles.itemButtonText}>{isOwned ? 'มีแล้ว' : (item.isBeginnerItem ? 'รับฟรี' : 'ซื้อ')}</Text>
+            <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
+              <Text style={styles.itemButtonText}>ซื้อ</Text>
             </TouchableOpacity>
           )}
         </View>
       );
     });
-  };  
+  };
+  
 
   return (
     <View style={styles.container}>
