@@ -13,6 +13,7 @@ import pantsIcon from '../../assets/image/Clothing-Icon/Pant/pant-icon-02.png';
 import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
+
 const petImages = {
   S00P00K00: require('../../assets/image/Clothing-Pet/S00P00K00.png'),
   // ...other pet images
@@ -27,20 +28,25 @@ export default function ClothingScreen() {
     const loadUserClothingData = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
-        console.log('Fetched userId:', userId);
-
-        if (userId) {
-          const data = await fetchUserClothingData(userId);
-          organizeClothingData(data);
-        } else {
+        if (!userId) {
           console.error('User ID not found in AsyncStorage');
+          return;
         }
+
+        // Load data from AsyncStorage first
+        const cachedClothingData = await AsyncStorage.getItem(`clothingData-${userId}`);
+        if (cachedClothingData) {
+          organizeClothingData(JSON.parse(cachedClothingData));
+        }
+
+        // Fetch updated data from the API
+        const data = await fetchUserClothingData(userId);
+        organizeClothingData(data);
+
+        // Cache the new data
+        await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data));
       } catch (error) {
-        if (error.response) {
-          console.error('Error loading user clothing data:', error.response.data);
-        } else {
-          console.error('Error loading user clothing data:', error.message);
-        }
+        console.error('Error loading user clothing data:', error.message);
       }
     };
 
@@ -72,7 +78,6 @@ export default function ClothingScreen() {
       }
     });
 
-    // console.log('Organized data:', organizedData);
     setItemsData(organizedData);
   };
 
@@ -109,7 +114,6 @@ export default function ClothingScreen() {
 
   const renderItems = () => {
     if (!itemsData[selectedCategory].length) {
-      // console.log(`No items found for category: ${selectedCategory}`);
       return null;
     }
 
