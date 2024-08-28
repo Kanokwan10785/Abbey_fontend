@@ -39,7 +39,7 @@ export default function ShopScreen() {
           await handleBeginnerClothingItems(storedUserId); // เรียกฟังก์ชันนี้ทันทีเมื่อโหลด User ID
           const items = await fetchPurchasedItems(storedUserId);
           setPurchasedItems(items);
-          console.log('Loaded userId from AsyncStorage:', storedUserId);
+          // console.log('Loaded userId from AsyncStorage:', storedUserId);
           
         } else {
           console.error("No userId found in AsyncStorage");
@@ -255,7 +255,7 @@ export default function ShopScreen() {
       alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
     }
   };
-  
+
   // ฟังก์ชันสำหรับการซื้อหรือเพิ่มไอเท็มเริ่มต้น
   const handleBuy = async (item) => {
     if (item.isBeginnerItem) {
