@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const API_URL = 'http://192.168.1.117:1337'; // Replace with your Strapi URL 
-const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL 
+const API_URL = 'http://192.168.1.115:1337'; // Replace with your Strapi URL 
+// const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -376,12 +376,14 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
         console.log("User already owns this clothing item.");
         return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
       } else {
+        let clothingItemId = shopItem.attributes.clothing_items.data[0].id;
+                
         // เพิ่มเสื้อผ้าชิ้นใหม่ให้ผู้ใช้
         console.log("Adding clothing item to user.");
-        console.log("Adding Shop item :", shopItem.id);
-        console.log("Adding Clothing item :", shopItem.attributes.clothing_items.data[0].id);
+        console.log("Adding Shop item:", shopItem.id);
+        console.log("Adding Clothing item:", clothingItemId);
 
-        await axios.put(`${API_URL}/api/clothing-items/${shopItem.attributes.clothing_items.data[0].id}`, {
+        await axios.put(`${API_URL}/api/clothing-items/${clothingItemId}`, {
           data: {
             users: {
               connect: [
