@@ -55,22 +55,24 @@ export default function ShopScreen() {
   // ดึงข้อมูลรายการสินค้า
   useEffect(() => {
     const loadItemsDataFromStorage = async () => {
-      try {
-        const storedItemsData = await AsyncStorage.getItem('itemsData');
-        if (storedItemsData) {
-          setItemsData(JSON.parse(storedItemsData));
+        try {
+            const storedItemsData = await AsyncStorage.getItem('itemsData');
+            if (storedItemsData) {
+                const parsedItemsData = JSON.parse(storedItemsData);
+                setItemsData(parsedItemsData);
+                sortItems(parsedItemsData);  // เรียงลำดับทันทีหลังจากตั้งค่า itemsData
+            }
+        } catch (error) {
+            console.error("Failed to load items data from storage", error);
         }
-      } catch (error) {
-        console.error("Failed to load items data from storage", error);
-      }
     };
 
+
     const fetchAndUpdateItemsData = async () => {
-      // console.log("Fetching items data from API...");
-  
+      // console.log("Fetching items data from API...");  
       try {
           const data = await fetchItemsData();
-  
+          // const categorizedItems = categorizeItems(data);
           const categorizedItems = {
               ShirtItem: [],
               PantItem: [],
@@ -109,8 +111,8 @@ export default function ShopScreen() {
                       break;
               }
           });
-  
           setItemsData(categorizedItems);
+          sortItems(categorizedItems); // เรียงลำดับทันทีหลังจากตั้งค่า itemsData
   
           // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
           await AsyncStorage.setItem('itemsData', JSON.stringify(categorizedItems));
@@ -296,11 +298,12 @@ const sortItems = () => {
   setSortedItems(sorted);
 };
 
-// ใช้ useEffect เพื่อดึงข้อมูลเมื่อ component ถูก mount
+// useEffect นี้จะทำให้แน่ใจว่า sortItems ถูกเรียกใช้ทุกครั้งที่ selectedCategory หรือ itemsData ถูกอัปเดต
 useEffect(() => {
-  fetchPurchasedItems(userId);
-  sortItems();
-}, [selectedCategory]);
+  if (itemsData[selectedCategory]) {
+      sortItems(itemsData);
+  }
+}, [selectedCategory, itemsData]);
 
 // การแสดงรายการสินค้า
 const renderItems = () => {
