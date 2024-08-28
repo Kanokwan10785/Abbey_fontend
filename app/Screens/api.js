@@ -327,19 +327,10 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
 
 
 // ฟังก์ชันซื้อสินค้าเสื้อผ้า
-export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
+export const buyClothingItem = async (userId, shopItemId, clothingLabel, isSinglePurchase = false) => {
   try {
-    // console.log("Starting purchase process...");
-    // console.log("User ID:", userId);
-    // console.log("Shop Item ID:", shopItemId);
-    // console.log("Clothing Label:", clothingLabel);
-
-    // ดึงข้อมูลผู้ใช้และสินค้าที่จะซื้อ
     const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
-    // console.log("User Response:", userResponse.data);
-
     const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=clothing_items`);
-    // console.log("Shop Item Response:", shopItemResponse.data);
 
     const user = userResponse.data;
     const shopItem = shopItemResponse.data.data;
@@ -351,38 +342,34 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
 
     // ตรวจสอบยอดเงิน
     if (user.balance >= itemPrice) {
-      // console.log("User has enough balance.");
 
-      // คำนวณยอดเงินคงเหลือใหม่
       const newBalance = user.balance - itemPrice;
 
       if (isNaN(newBalance)) {
         throw new Error(`เกิดข้อผิดพลาดในการคำนวณยอดเงินคงเหลือ: ${newBalance}`);
       }
 
-      // หักยอดเงินของผู้ใช้
-      // console.log("Deducting balance from user.");
-      await axios.put(`${API_URL}/api/users/${userId}`, {
-        balance: newBalance,
-      });
-
       // ตรวจสอบว่าผู้ใช้มีเสื้อผ้าชิ้นนี้อยู่แล้วหรือไม่ในข้อมูลของ shopItem
       const userOwnsItem = shopItem.attributes.clothing_items.data.some(item => 
         item.attributes.buy_clothes === clothingLabel
       );
-      // console.log("Deducting userOwnsItem:", userOwnsItem);
+
+      // เพิ่มการตรวจสอบ isSinglePurchase
+      if (isSinglePurchase && userOwnsItem) {
+        return { success: false, message: 'สินค้านี้สามารถซื้อได้เพียงครั้งเดียว และผู้ใช้มีสินค้านี้แล้ว' };
+      }
+
+      // หักยอดเงินของผู้ใช้
+      await axios.put(`${API_URL}/api/users/${userId}`, {
+        balance: newBalance,
+      });
 
       if (userOwnsItem) {
-        // console.log("User already owns this clothing item.");
         return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
       } else {
         let clothingItemId = shopItem.attributes.clothing_items.data[0].id;
 
         // เพิ่มเสื้อผ้าชิ้นใหม่ให้ผู้ใช้
-        // console.log("Adding clothing item to user.");
-        // console.log("Adding Shop item:", shopItem.id);
-        // console.log("Adding Clothing item:", clothingItemId);
-
         await axios.put(`${API_URL}/api/clothing-items/${clothingItemId}`, {
           data: {
             users: {
@@ -398,7 +385,6 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
         return { success: true, message: 'ซื้อสำเร็จ', hasItem: true };
       }
     } else {
-      // console.log("User does not have enough balance.");
       return { success: false, message: 'ยอดเงินไม่พอ' };
     }
   } catch (error) {

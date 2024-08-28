@@ -25,6 +25,7 @@ export default function ShopScreen() {
     SkinItem: [],
     FoodItem: []
   });
+  const [purchasedItems, setPurchasedItems] = useState({}); // สร้าง state สำหรับเก็บข้อมูลสินค้าที่ซื้อแล้ว
 
   // ดึงรหัสผู้ใช้จาก AsyncStorage
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function ShopScreen() {
           setUserId(storedUserId);
           // เรียกใช้ beginnerClothingItem สำหรับผู้ใช้ใหม่หรือผู้ใช้ที่มีอยู่แล้ว
           await handleBeginnerClothingItems(storedUserId); // เรียกฟังก์ชันนี้ทันทีเมื่อโหลด User ID
+          await loadPurchasedItems(); // โหลดข้อมูลสินค้าที่ซื้อแล้ว
         } else {
           console.error("No userId found in AsyncStorage");
         }
@@ -45,6 +47,18 @@ export default function ShopScreen() {
 
     loadUserId();
   }, []);
+
+  // ฟังก์ชันสำหรับโหลดข้อมูลสินค้าที่ซื้อแล้ว
+  const loadPurchasedItems = async () => {
+    try {
+      const storedPurchasedItems = await AsyncStorage.getItem('purchasedItems');
+      if (storedPurchasedItems) {
+        setPurchasedItems(JSON.parse(storedPurchasedItems));
+      }
+    } catch (error) {
+      console.error("Failed to load purchased items from storage", error);
+    }
+  };
 
   // ดึงข้อมูลรายการสินค้า
   useEffect(() => {
@@ -60,65 +74,60 @@ export default function ShopScreen() {
     };
 
     const fetchAndUpdateItemsData = async () => {
-      // console.log("Fetching items data from API...");
-  
       try {
-          const data = await fetchItemsData();
-  
-          const categorizedItems = {
-              ShirtItem: [],
-              PantItem: [],
-              SkinItem: [],
-              FoodItem: []
+        const data = await fetchItemsData();
+        const categorizedItems = {
+          ShirtItem: [],
+          PantItem: [],
+          SkinItem: [],
+          FoodItem: []
+        };
+
+        data.forEach(item => {
+          const attributes = item.attributes;
+          const itemDetails = {
+            id: item.id,
+            label: attributes.label,
+            name: attributes.name,
+            price: attributes.price,
+            isSinglePurchase: attributes.isSinglePurchase,
+            imageUrl: attributes.image?.data?.attributes?.url || '',
+            petFoodItemsId: attributes.pet_food_items?.data.map(petItem => petItem.id) || [],
+            clothingItemsId: attributes.clothing_items?.data.map(clothingItem => clothingItem.id) || []
           };
-  
-          data.forEach(item => {
-              const attributes = item.attributes;
-              const itemDetails = {
-                  id: item.id,
-                  label: attributes.label,
-                  name: attributes.name,
-                  price: attributes.price,
-                  isSinglePurchase: attributes.isSinglePurchase,
-                  imageUrl: attributes.image?.data?.attributes?.url || '',
-                  petFoodItemsId: attributes.pet_food_items?.data.map(petItem => petItem.id) || [],
-                  clothingItemsId: attributes.clothing_items?.data.map(clothingItem => clothingItem.id) || []
-              };
-  
-              switch (attributes.category) {
-                  case 'Shirt-item':
-                      categorizedItems.ShirtItem.push(itemDetails);
-                      break;
-                  case 'Pant-item':
-                      categorizedItems.PantItem.push(itemDetails);
-                      break;
-                  case 'Skin-item':
-                      categorizedItems.SkinItem.push(itemDetails);
-                      break;
-                  case 'Food-item':
-                      categorizedItems.FoodItem.push(itemDetails);
-                      break;
-                  default:
-                      console.warn("Unknown category:", attributes.category);
-                      break;
-              }
-          });
-  
-          setItemsData(categorizedItems);
-  
-          // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
-          await AsyncStorage.setItem('itemsData', JSON.stringify(categorizedItems));
+
+          switch (attributes.category) {
+            case 'Shirt-item':
+              categorizedItems.ShirtItem.push(itemDetails);
+              break;
+            case 'Pant-item':
+              categorizedItems.PantItem.push(itemDetails);
+              break;
+            case 'Skin-item':
+              categorizedItems.SkinItem.push(itemDetails);
+              break;
+            case 'Food-item':
+              categorizedItems.FoodItem.push(itemDetails);
+              break;
+            default:
+              console.warn("Unknown category:", attributes.category);
+              break;
+          }
+        });
+
+        setItemsData(categorizedItems);
+        await AsyncStorage.setItem('itemsData', JSON.stringify(categorizedItems)); // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
       } catch (error) {
-          console.error("Failed to fetch items data from API:", error);
+        console.error("Failed to fetch items data from API:", error);
       }
-  };
+    };
+
     loadItemsDataFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
     fetchAndUpdateItemsData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
   }, []);
 
   // ฟังก์ชันสำหรับการเพิ่มไอเท็มเริ่มต้นให้ผู้ใช้
   const handleBeginnerClothingItems = async (userId) => {
-    // console.log("Adding beginner clothing items...");
     try {
       // กำหนดรายการไอเท็มเริ่มต้นที่ต้องการเพิ่ม
       const beginnerItems = [
@@ -127,20 +136,31 @@ export default function ShopScreen() {
 
       for (const item of beginnerItems) {
         const result = await beginnerClothingItem(userId, item.id, item.label);
-        // console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
-
         if (result.success) {
-            setSelectedItems(prevState => ({
-                ...prevState,
-                [selectedCategory]: item,
-            }));
-            // console.log(`${item.label} added successfully.`);
+          setSelectedItems(prevState => ({
+            ...prevState,
+            [selectedCategory]: item,
+          }));
         } else {
-            console.error(`Failed to add ${item.label}:`, result.message);
+          console.error(`Failed to add ${item.label}:`, result.message);
         }
       }
     } catch (error) {
-        console.error("Error adding beginner items:", error.message);
+      console.error("Error adding beginner items:", error.message);
+    }
+  };
+
+  // ฟังก์ชันสำหรับบันทึกข้อมูลสินค้าที่ซื้อแล้ว
+  const savePurchasedItems = async (item) => {
+    try {
+      const updatedPurchasedItems = {
+        ...purchasedItems,
+        [item.label]: item
+      };
+      setPurchasedItems(updatedPurchasedItems); // อัปเดต state
+      await AsyncStorage.setItem('purchasedItems', JSON.stringify(updatedPurchasedItems)); // บันทึกลงใน AsyncStorage
+    } catch (error) {
+      console.error("Failed to save purchased item", error);
     }
   };
 
@@ -154,112 +174,79 @@ export default function ShopScreen() {
     console.log("Shop Item name:", item.name);
 
     if (!userId) {
-        console.error("User ID is not available.");
-        alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
-        return;
+      console.error("User ID is not available.");
+      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
+      return;
     }
 
     if (isNaN(itemPrice)) {
-        console.error("Invalid item price:", item.price);
-        alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
-        return;
+      console.error("Invalid item price:", item.price);
+      alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
+      return;
     }
 
     console.log("User Balance:", balance);
     console.log("Item Price:", itemPrice);
 
     if (balance < itemPrice) {
-        console.error("Insufficient balance. Required:", itemPrice, "Available:", balance);
-        alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
-        return;
-    }
-
-    try {
-        // ใช้ item.label โดยตรง
-        const clothingLabel = item.label;
-        if (!clothingLabel) {
-            throw new Error(`Clothing label for item '${item.name}' is not available.`);
-        }
-
-        console.log("Using Clothing Label:", clothingLabel);
-
-        const result = await buyClothingItem(userId, item.id, clothingLabel);
-
-        console.log("Purchase API Response:", result);
-
-        if (result.success) {
-            const newBalance = balance - itemPrice;
-            setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
-
-            setSelectedItems(prevState => ({
-                ...prevState,
-                [selectedCategory]: item,
-            }));
-
-            console.log("Purchase successful. New balance:", newBalance);
-        } else {
-            console.error("Purchase failed:", result.message);
-            alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
-        }
-    } catch (error) {
-        console.error("Error during purchase:", error.message);
-        alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า: " + error.message);
-    }
-  };
-
-  // ฟังก์ชันสำหรับการซื้ออาหาร
-  const handleBuyFoodItem = async (item) => {
-    const itemPrice = parseFloat(item.price);
-
-    if (!userId) {
-      alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
-      return;
-    }
-
-    if (isNaN(itemPrice)) {
-      alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
-      return;
-    }
-
-    if (balance < itemPrice) {
+      console.error("Insufficient balance. Required:", itemPrice, "Available:", balance);
       alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
       return;
     }
 
+    // ตรวจสอบว่าผู้ใช้มีสินค้าชิ้นนี้อยู่แล้วหรือไม่
+    const alreadyOwned = purchasedItems[item.label];
+
+    if (alreadyOwned) {
+      alert("คุณมีสินค้าชิ้นนี้แล้ว");
+      return;
+    }
+
     try {
-      const result = await buyFoodItem(userId, item.id, item.name);
+      const clothingLabel = item.label;
+      if (!clothingLabel) {
+        throw new Error(`Clothing label for item '${item.name}' is not available.`);
+      }
+
+      console.log("Using Clothing Label:", clothingLabel);
+
+      const result = await buyClothingItem(userId, item.id, clothingLabel);
+
+      console.log("Purchase API Response:", result);
 
       if (result.success) {
         const newBalance = balance - itemPrice;
         setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
 
-        // ตรวจสอบว่าหมวดหมู่เป็น FoodItem ก่อนอัปเดต
-        if (selectedCategory === 'FoodItem') {
-          setSelectedItems(prevState => ({
-            ...prevState,
-            [selectedCategory]: item,
-          }));
-        } else {
-          alert("หมวดหมู่สินค้าที่เลือกไม่ถูกต้อง");
-        }
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [selectedCategory]: item,
+        }));
+
+        await savePurchasedItems(item); // บันทึกสินค้าที่ซื้อแล้ว
+
+        console.log("Purchase successful. New balance:", newBalance);
       } else {
+        console.error("Purchase failed:", result.message);
         alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
       }
     } catch (error) {
-      alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
+      console.error("Error during purchase:", error.message);
+      alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า: " + error.message);
     }
   };
 
   // ฟังก์ชันสำหรับการซื้อหรือเพิ่มไอเท็มเริ่มต้น
-  const handleBuy = async (item) => {
-    if (item.isBeginnerItem) {
-      await handleBeginnerClothingItem(item);
-    } else if (selectedCategory === 'FoodItem') {
-      await handleBuyFoodItem(item);
-    } else {
-      await handleBuyClothingItem(item);
-    }
-  };
+const handleBuy = async (item) => {
+  if (item.isBeginnerItem) {
+    await handleBeginnerClothingItem(item);
+  } else if (selectedCategory === 'FoodItem') {
+    await handleBuyFoodItem(item);
+  } else {
+    await handleBuyClothingItem(item);
+  }
+};
+
 
   // การแสดงรายการสินค้า
   const renderItems = () => {
@@ -268,10 +255,11 @@ export default function ShopScreen() {
       if (a.label > b.label) return 1;
       return 0;
     });
-  
+
     return sortedItems.map((item, index) => {
       const isHidden = item.label === 'Z00';
-  
+      const alreadyOwned = purchasedItems[item.label]; // ตรวจสอบว่ามีสินค้านี้แล้วหรือไม่
+
       return (
         <View key={index} style={styles.item}>
           <View style={styles.insideitemImage}>
@@ -287,15 +275,20 @@ export default function ShopScreen() {
             </View>
           )}
           {!isHidden && (
-            <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
-              <Text style={styles.itemButtonText}>ซื้อ</Text>
+            <TouchableOpacity
+              style={[styles.itemButton, alreadyOwned && { backgroundColor: 'gray' }]} // เปลี่ยนสีปุ่มถ้ามีสินค้าแล้ว
+              onPress={() => handleBuy(item)}
+              disabled={alreadyOwned} // ปิดการใช้งานปุ่มถ้ามีสินค้าแล้ว
+            >
+              <Text style={styles.itemButtonText}>
+                {alreadyOwned ? 'มีแล้ว' : 'ซื้อ'}
+              </Text>
             </TouchableOpacity>
           )}
         </View>
       );
     });
   };
-  
 
   return (
     <View style={styles.container}>
