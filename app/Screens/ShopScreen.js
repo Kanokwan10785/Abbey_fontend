@@ -119,10 +119,11 @@ export default function ShopScreen() {
   const handleBuyClothingItem = async (item) => {
     const itemPrice = parseFloat(item.price);
 
-    console.log("Starting purchase process...");
+    console.log("Starting shop purchase process...");
     console.log("User ID:", userId);
     console.log("Shop Item ID:", item.id);
-    console.log("Clothing Label:", item.label); // แสดง label โดยตรง
+    console.log("Clothing Label:", item.label);
+    console.log("Shop Item name:", item.name);
 
     if (!userId) {
         console.error("User ID is not available.");

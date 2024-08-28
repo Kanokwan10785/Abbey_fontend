@@ -109,7 +109,7 @@ export default function ClothingScreen() {
 
   const renderItems = () => {
     if (!itemsData[selectedCategory].length) {
-      console.log(`No items found for category: ${selectedCategory}`);
+      // console.log(`No items found for category: ${selectedCategory}`);
       return null;
     }
 
