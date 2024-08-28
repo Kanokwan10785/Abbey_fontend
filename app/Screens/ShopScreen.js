@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { buyFoodItem, fetchItemsData, buyClothingItem } from './api'; // นำเข้า buyClothingItem ด้วย
+import { buyFoodItem, fetchItemsData, buyClothingItem, beginnerClothingItem } from './api'; // นำเข้า beginnerClothingItem
 import { ClothingContext } from './ClothingContext';
 import { BalanceContext } from './BalanceContext'; // Import BalanceContext
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
@@ -33,6 +33,8 @@ export default function ShopScreen() {
         const storedUserId = await AsyncStorage.getItem('userId');
         if (storedUserId) {
           setUserId(storedUserId);
+          // เรียกใช้ beginnerClothingItem สำหรับผู้ใช้ใหม่หรือผู้ใช้ที่มีอยู่แล้ว
+          await handleBeginnerClothingItems(storedUserId); // เรียกฟังก์ชันนี้ทันทีเมื่อโหลด User ID
         } else {
           console.error("No userId found in AsyncStorage");
         }
@@ -62,7 +64,6 @@ export default function ShopScreen() {
   
       try {
           const data = await fetchItemsData();
-          // console.log("Fetched Items Data:", data);
   
           const categorizedItems = {
               ShirtItem: [],
@@ -104,7 +105,6 @@ export default function ShopScreen() {
           });
   
           setItemsData(categorizedItems);
-          // console.log("Categorized Items Data:", categorizedItems);
   
           // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
           await AsyncStorage.setItem('itemsData', JSON.stringify(categorizedItems));
@@ -115,6 +115,36 @@ export default function ShopScreen() {
     loadItemsDataFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
     fetchAndUpdateItemsData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
   }, []);
+
+  // ฟังก์ชันสำหรับการเพิ่มไอเท็มเริ่มต้นให้ผู้ใช้
+  const handleBeginnerClothingItems = async (userId) => {
+    console.log("Adding beginner clothing items...");
+    try {
+      // กำหนดรายการไอเท็มเริ่มต้นที่ต้องการเพิ่ม
+      const beginnerItems = [
+        { id: 1, label: 'S01' }, // เสื้อพละสีขาว
+        { id: 3, label: 'P01' }, // กางเกงพละสีดำ
+        { id: 5, label: 'K00' }  // ลายทางสีเทา
+      ];
+
+      for (const item of beginnerItems) {
+        const result = await beginnerClothingItem(userId, item.id, item.label);
+        console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
+
+        if (result.success) {
+            setSelectedItems(prevState => ({
+                ...prevState,
+                [selectedCategory]: item,
+            }));
+            console.log(`${item.label} added successfully.`);
+        } else {
+            console.error(`Failed to add ${item.label}:`, result.message);
+        }
+      }
+    } catch (error) {
+        console.error("Error adding beginner items:", error.message);
+    }
+  };
 
   const handleBuyClothingItem = async (item) => {
     const itemPrice = parseFloat(item.price);
@@ -179,7 +209,6 @@ export default function ShopScreen() {
     }
   };
 
-
   // ฟังก์ชันสำหรับการซื้ออาหาร
   const handleBuyFoodItem = async (item) => {
     const itemPrice = parseFloat(item.price);
@@ -223,9 +252,11 @@ export default function ShopScreen() {
     }
   };
 
-  // ฟังก์ชันสำหรับการซื้อสินค้าทั้งหมด
+  // ฟังก์ชันสำหรับการซื้อหรือเพิ่มไอเท็มเริ่มต้น
   const handleBuy = async (item) => {
-    if (selectedCategory === 'FoodItem') {
+    if (item.isBeginnerItem) {
+      await handleBeginnerClothingItem(item);
+    } else if (selectedCategory === 'FoodItem') {
       await handleBuyFoodItem(item);
     } else {
       await handleBuyClothingItem(item);
@@ -239,10 +270,11 @@ export default function ShopScreen() {
       if (a.label > b.label) return 1;
       return 0;
     });
-
+  
     return sortedItems.map((item, index) => {
       const isHidden = item.label === 'Z00';
-
+      const isOwned = Object.values(selectedItems).some(selectedItem => selectedItem?.label === item.label);
+  
       return (
         <View key={index} style={styles.item}>
           <View style={styles.insideitemImage}>
@@ -258,14 +290,14 @@ export default function ShopScreen() {
             </View>
           )}
           {!isHidden && (
-            <TouchableOpacity style={styles.itemButton} onPress={() => handleBuy(item)}>
-              <Text style={styles.itemButtonText}>ซื้อ</Text>
+            <TouchableOpacity style={styles.itemButton} onPress={() => !isOwned && handleBuy(item)} disabled={isOwned}>
+              <Text style={styles.itemButtonText}>{isOwned ? 'มีแล้ว' : (item.isBeginnerItem ? 'รับฟรี' : 'ซื้อ')}</Text>
             </TouchableOpacity>
           )}
         </View>
       );
     });
-  };
+  };  
 
   return (
     <View style={styles.container}>

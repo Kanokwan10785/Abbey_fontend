@@ -377,7 +377,7 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
         return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
       } else {
         let clothingItemId = shopItem.attributes.clothing_items.data[0].id;
-                
+
         // เพิ่มเสื้อผ้าชิ้นใหม่ให้ผู้ใช้
         console.log("Adding clothing item to user.");
         console.log("Adding Shop item:", shopItem.id);
@@ -403,6 +403,73 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
     }
   } catch (error) {
     console.error('Error during purchase:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+//ฟังก์ชันการเพิ่มเสื้อผ้าเริ่มต้น
+export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) => {
+  try {
+    console.log("Starting process to add beginner clothing item...");
+    console.log("User ID:", userId);
+    console.log("Shop Item ID:", shopItemId);
+    console.log("Clothing Label:", clothingLabel);
+
+    // ดึงข้อมูลผู้ใช้และสินค้าที่จะเพิ่ม
+    const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
+    console.log("User Response:", userResponse.data);
+
+    const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=clothing_items`);
+    console.log("Shop Item Response:", shopItemResponse.data);
+
+    const user = userResponse.data;
+    const shopItem = shopItemResponse.data.data;
+
+    // ตรวจสอบว่าผู้ใช้มีเสื้อผ้าชิ้นนี้อยู่แล้วหรือไม่ในข้อมูลของ shopItem
+    const userOwnsItem = shopItem.attributes.clothing_items.data.some(item => 
+      item.attributes.buy_clothes === clothingLabel
+    );
+    console.log("User owns item:", userOwnsItem);
+
+    if (userOwnsItem) {
+      console.log("User already owns this clothing item.");
+      return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
+    } else {
+      let clothingItemId = shopItem.attributes.clothing_items.data[0].id;
+
+      // ตรวจสอบว่าผู้ใช้มีสกิลตัวละคร K00 อยู่แล้วหรือไม่
+      const hasK00Skill = shopItem.attributes.clothing_items.data.some(item =>
+        item.attributes.buy_clothes === 'K00'
+      );
+
+      if (hasK00Skill) {
+        console.log("User already has K00 skill.");
+      } else {
+        console.log("User does not have K00 skill. Setting id to 5 for grey skin.");
+        clothingItemId = 5; // Grey skin id
+      }
+
+      // เพิ่มไอเท็มเริ่มต้นให้ผู้ใช้
+      console.log("Adding clothing item to user.");
+      console.log("Adding Shop item:", shopItem.id);
+      console.log("Adding Clothing item:", clothingItemId);
+
+      await axios.put(`${API_URL}/api/clothing-items/${clothingItemId}`, {
+        data: {
+          users: {
+            connect: [
+              {
+                id: userId,
+              }
+            ]
+          }
+        },
+      });
+
+      return { success: true, message: 'เพิ่มไอเท็มเริ่มต้นสำเร็จ', hasItem: true };
+    }
+  } catch (error) {
+    console.error('Error during process:', error.response ? error.response.data : error.message);
     throw error;
   }
 };
