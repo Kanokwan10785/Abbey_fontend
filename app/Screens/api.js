@@ -459,3 +459,22 @@ export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) =>
     throw error;
   }
 };
+
+  // ฟังก์ชันสำหรับโหลดข้อมูลสินค้าที่ซื้อแล้ว
+  const loadPurchasedItems = async (userId) => {
+    try {
+      const response = await fetch(`http://192.168.1.115:1337/api/users/${userId}?populate=clothing_items`);
+      const data = await response.json();
+      const purchasedClothingItems = {};
+
+      if (data && data.clothing_items) {
+        data.clothing_items.forEach(item => {
+          purchasedClothingItems[item.label] = true;
+        });
+      }
+      
+      setPurchasedItems(purchasedClothingItems);
+    } catch (error) {
+      console.error("Failed to load purchased items from API", error);
+    }
+  };
