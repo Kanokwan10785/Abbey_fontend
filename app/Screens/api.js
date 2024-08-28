@@ -111,11 +111,11 @@ export const fetchUserClothingData = async (userId) => {
       throw new Error('Invalid userId');
     }
 
-    console.log('Fetching shop items...');
+    // console.log('Fetching shop items...');
     const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label&[fields][2]=category`);
     // console.log('Shop items:', shopResponse.data.data);
 
-    console.log('Fetching clothing items...');
+    // console.log('Fetching clothing items...');
     const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
     // console.log('Clothing items:', petClothingResponse.data.data);
 
@@ -273,13 +273,13 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
           'filters[choose_food][name]': foodName,
         },
       });
-      console.log("Pet Food Items Response:", petFoodItemsResponse.data);
+      // console.log("Pet Food Items Response:", petFoodItemsResponse.data);
 
       const petFoodItems = petFoodItemsResponse.data.data;
 
       if (petFoodItems.length > 0) {
         const petFoodItem = petFoodItems[0];
-        console.log("Updating quantity for existing item:", petFoodItem.id);
+        // console.log("Updating quantity for existing item:", petFoodItem.id);
 
         await axios.put(`${API_URL}/api/pet-food-items/${petFoodItem.id}`, {
           data: {
@@ -288,7 +288,7 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
         });
       } else {
         // เพิ่มรายการใหม่หากไม่พบรายการที่มีอยู่
-        console.log("Creating a new pet food item.");
+        // console.log("Creating a new pet food item.");
 
         const foodNameMap = {
           "แอปเปิล": "apple",
@@ -316,7 +316,7 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
 
       return { success: true };
     } else {
-      console.log("User does not have enough balance.");
+      // console.log("User does not have enough balance.");
       return { success: false, message: 'ยอดเงินไม่พอ' };
     }
   } catch (error) {
@@ -329,17 +329,17 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
 // ฟังก์ชันซื้อสินค้าเสื้อผ้า
 export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
   try {
-    console.log("Starting purchase process...");
-    console.log("User ID:", userId);
-    console.log("Shop Item ID:", shopItemId);
-    console.log("Clothing Label:", clothingLabel);
+    // console.log("Starting purchase process...");
+    // console.log("User ID:", userId);
+    // console.log("Shop Item ID:", shopItemId);
+    // console.log("Clothing Label:", clothingLabel);
 
     // ดึงข้อมูลผู้ใช้และสินค้าที่จะซื้อ
     const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
     // console.log("User Response:", userResponse.data);
 
     const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=clothing_items`);
-    console.log("Shop Item Response:", shopItemResponse.data);
+    // console.log("Shop Item Response:", shopItemResponse.data);
 
     const user = userResponse.data;
     const shopItem = shopItemResponse.data.data;
@@ -351,7 +351,7 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
 
     // ตรวจสอบยอดเงิน
     if (user.balance >= itemPrice) {
-      console.log("User has enough balance.");
+      // console.log("User has enough balance.");
 
       // คำนวณยอดเงินคงเหลือใหม่
       const newBalance = user.balance - itemPrice;
@@ -361,7 +361,7 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
       }
 
       // หักยอดเงินของผู้ใช้
-      console.log("Deducting balance from user.");
+      // console.log("Deducting balance from user.");
       await axios.put(`${API_URL}/api/users/${userId}`, {
         balance: newBalance,
       });
@@ -370,18 +370,18 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
       const userOwnsItem = shopItem.attributes.clothing_items.data.some(item => 
         item.attributes.buy_clothes === clothingLabel
       );
-      console.log("Deducting userOwnsItem:", userOwnsItem);
+      // console.log("Deducting userOwnsItem:", userOwnsItem);
 
       if (userOwnsItem) {
-        console.log("User already owns this clothing item.");
+        // console.log("User already owns this clothing item.");
         return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
       } else {
         let clothingItemId = shopItem.attributes.clothing_items.data[0].id;
 
         // เพิ่มเสื้อผ้าชิ้นใหม่ให้ผู้ใช้
-        console.log("Adding clothing item to user.");
-        console.log("Adding Shop item:", shopItem.id);
-        console.log("Adding Clothing item:", clothingItemId);
+        // console.log("Adding clothing item to user.");
+        // console.log("Adding Shop item:", shopItem.id);
+        // console.log("Adding Clothing item:", clothingItemId);
 
         await axios.put(`${API_URL}/api/clothing-items/${clothingItemId}`, {
           data: {
@@ -398,7 +398,7 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
         return { success: true, message: 'ซื้อสำเร็จ', hasItem: true };
       }
     } else {
-      console.log("User does not have enough balance.");
+      // console.log("User does not have enough balance.");
       return { success: false, message: 'ยอดเงินไม่พอ' };
     }
   } catch (error) {
@@ -410,17 +410,17 @@ export const buyClothingItem = async (userId, shopItemId, clothingLabel) => {
 //ฟังก์ชันการเพิ่มเสื้อผ้าเริ่มต้น
 export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) => {
   try {
-    console.log("Starting process to add beginner clothing item...");
-    console.log("User ID:", userId);
-    console.log("Shop Item ID:", shopItemId);
-    console.log("Clothing Label:", clothingLabel);
+    // console.log("Starting process to add beginner clothing item...");
+    // console.log("User ID:", userId);
+    // console.log("Shop Item ID:", shopItemId);
+    // console.log("Clothing Label:", clothingLabel);
 
     // ดึงข้อมูลผู้ใช้และสินค้าที่จะเพิ่ม
     const userResponse = await axios.get(`${API_URL}/api/users/${userId}`);
-    console.log("User Response:", userResponse.data);
+    // console.log("User Response:", userResponse.data);
 
     const shopItemResponse = await axios.get(`${API_URL}/api/shop-items/${shopItemId}?populate=clothing_items`);
-    console.log("Shop Item Response:", shopItemResponse.data);
+    // console.log("Shop Item Response:", shopItemResponse.data);
 
     const user = userResponse.data;
     const shopItem = shopItemResponse.data.data;
@@ -429,10 +429,10 @@ export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) =>
     const userOwnsItem = shopItem.attributes.clothing_items.data.some(item => 
       item.attributes.buy_clothes === clothingLabel
     );
-    console.log("User owns item:", userOwnsItem);
+    // console.log("User owns item:", userOwnsItem);
 
     if (userOwnsItem) {
-      console.log("User already owns this clothing item.");
+      // console.log("User already owns this clothing item.");
       return { success: false, message: 'ผู้ใช้มีสินค้านี้แล้ว' };
     } else {
       let clothingItemId = shopItem.attributes.clothing_items.data[0].id;
@@ -443,16 +443,16 @@ export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) =>
       );
 
       if (hasK00Skill) {
-        console.log("User already has K00 skill.");
+        // console.log("User already has K00 skill.");
       } else {
-        console.log("User does not have K00 skill. Setting id to 5 for grey skin.");
+        // console.log("User does not have K00 skill. Setting id to 5 for grey skin.");
         clothingItemId = 5; // Grey skin id
       }
 
       // เพิ่มไอเท็มเริ่มต้นให้ผู้ใช้
-      console.log("Adding clothing item to user.");
-      console.log("Adding Shop item:", shopItem.id);
-      console.log("Adding Clothing item:", clothingItemId);
+      // console.log("Adding clothing item to user.");
+      // console.log("Adding Shop item:", shopItem.id);
+      // console.log("Adding Clothing item:", clothingItemId);
 
       await axios.put(`${API_URL}/api/clothing-items/${clothingItemId}`, {
         data: {
