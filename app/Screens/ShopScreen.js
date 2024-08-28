@@ -236,6 +236,49 @@ export default function ShopScreen() {
     }
   };
 
+// ฟังก์ชันสำหรับการซื้ออาหาร
+const handleBuyFoodItem = async (item) => {
+  const itemPrice = parseFloat(item.price);
+
+  if (!userId) {
+    alert("ไม่สามารถทำการซื้อได้เนื่องจากไม่มี userId");
+    return;
+  }
+
+  if (isNaN(itemPrice)) {
+    alert("ราคาของสินค้าที่เลือกไม่ถูกต้อง");
+    return;
+  }
+
+  if (balance < itemPrice) {
+    alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+    return;
+  }
+
+  try {
+    const result = await buyFoodItem(userId, item.id, item.name);
+
+    if (result.success) {
+      const newBalance = balance - itemPrice;
+      setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
+
+      // ตรวจสอบว่าหมวดหมู่เป็น FoodItem ก่อนอัปเดต
+      if (selectedCategory === 'FoodItem') {
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [selectedCategory]: item,
+        }));
+      } else {
+        alert("หมวดหมู่สินค้าที่เลือกไม่ถูกต้อง");
+      }
+    } else {
+      alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
+    }
+  } catch (error) {
+    alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
+  }
+};
+
   // ฟังก์ชันสำหรับการซื้อหรือเพิ่มไอเท็มเริ่มต้น
 const handleBuy = async (item) => {
   if (item.isBeginnerItem) {
