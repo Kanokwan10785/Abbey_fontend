@@ -52,6 +52,25 @@ export const getDailyExercise = async () => {
   }
 };
 
+//ฟังก์ตรวจสอบ labay ของผู้ใช้ ที่มีสินค้าอยู่ในตู้เสื้อ
+export const fetchPurchasedItems = async (userId) => {
+  try {
+    const response = await api.get(`/api/users/${userId}?populate=clothing_items`);
+    const purchasedClothingItems = {};
+
+    if (response.data && response.data.clothing_items) {
+      response.data.clothing_items.forEach(item => {
+        purchasedClothingItems[item.label] = true;
+      });
+    }
+
+    return purchasedClothingItems;
+  } catch (error) {
+    console.error("Failed to load purchased items from API", error);
+    throw error;
+  }
+};
+
 // ฟังก์ชันการดึงข้อมูลอาหารที่ผู้ใช้มี
 export const fetchUserFoodData = async (userId) => {
   try {
@@ -460,21 +479,3 @@ export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) =>
   }
 };
 
-  // ฟังก์ชันสำหรับโหลดข้อมูลสินค้าที่ซื้อแล้ว
-  const loadPurchasedItems = async (userId) => {
-    try {
-      const response = await fetch(`http://192.168.1.115:1337/api/users/${userId}?populate=clothing_items`);
-      const data = await response.json();
-      const purchasedClothingItems = {};
-
-      if (data && data.clothing_items) {
-        data.clothing_items.forEach(item => {
-          purchasedClothingItems[item.label] = true;
-        });
-      }
-      
-      setPurchasedItems(purchasedClothingItems);
-    } catch (error) {
-      console.error("Failed to load purchased items from API", error);
-    }
-  };
