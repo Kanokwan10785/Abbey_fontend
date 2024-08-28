@@ -37,6 +37,10 @@ export default function ShopScreen() {
           setUserId(storedUserId);
           // เรียกใช้ beginnerClothingItem สำหรับผู้ใช้ใหม่หรือผู้ใช้ที่มีอยู่แล้ว
           await handleBeginnerClothingItems(storedUserId); // เรียกฟังก์ชันนี้ทันทีเมื่อโหลด User ID
+          const items = await fetchPurchasedItems(storedUserId);
+          setPurchasedItems(items);
+          console.log('Loaded userId from AsyncStorage:', storedUserId);
+          
         } else {
           console.error("No userId found in AsyncStorage");
         }
@@ -251,20 +255,7 @@ export default function ShopScreen() {
       alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
     }
   };
-
-    useEffect(() => {
-    const loadPurchasedItems = async () => {
-      try {
-        const items = await fetchPurchasedItems(userId);
-        setPurchasedItems(items);
-      } catch (error) {
-        console.error("Error loading purchased items", error);
-      }
-    };
-
-    loadPurchasedItems();
-  }, []);
-
+  
   // ฟังก์ชันสำหรับการซื้อหรือเพิ่มไอเท็มเริ่มต้น
   const handleBuy = async (item) => {
     if (item.isBeginnerItem) {
@@ -277,23 +268,23 @@ export default function ShopScreen() {
   };
 
 // ฟังก์ชันสำหรับดึงข้อมูล purchasedItems จาก API
-const fetchPurchasedItems = async (userId) => {
-  try {
-    const response = await fetch(`http://192.168.1.115:1337/api/users/${userId}?populate=clothing_items`);
-    const data = await response.json();
-    const purchasedClothingItems = {};
+// const fetchPurchasedItems = async (userId) => {
+//   try {
+//     const response = await fetch(`http://192.168.1.115:1337/api/users/${userId}?populate=clothing_items`);
+//     const data = await response.json();
+//     const purchasedClothingItems = {};
 
-    if (data && data.clothing_items) {
-      data.clothing_items.forEach(item => {
-        purchasedClothingItems[item.label] = true;
-      });
-    }
+//     if (data && data.clothing_items) {
+//       data.clothing_items.forEach(item => {
+//         purchasedClothingItems[item.label] = true;
+//       });
+//     }
     
-    setPurchasedItems(purchasedClothingItems);
-  } catch (error) {
-    console.error("Failed to load purchased items from API", error);
-  }
-};
+//     setPurchasedItems(purchasedClothingItems);
+//   } catch (error) {
+//     console.error("Failed to load purchased items from API", error);
+//   }
+// };
 
 // ฟังก์ชันสำหรับเรียงลำดับสินค้า
 const sortItems = () => {

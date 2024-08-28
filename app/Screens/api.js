@@ -55,19 +55,23 @@ export const getDailyExercise = async () => {
 //ฟังก์ตรวจสอบ labay ของผู้ใช้ ที่มีสินค้าอยู่ในตู้เสื้อ
 export const fetchPurchasedItems = async (userId) => {
   try {
+    if (!userId) {
+      throw new Error('Invalid userId');  // เพิ่มการตรวจสอบ userId ว่าเป็นค่าว่างหรือไม่
+    }
+
     const response = await api.get(`/api/users/${userId}?populate=clothing_items`);
     const purchasedClothingItems = {};
 
     if (response.data && response.data.clothing_items) {
       response.data.clothing_items.forEach(item => {
-        purchasedClothingItems[item.label] = true;
+        purchasedClothingItems[item.label] = true; // จัดเก็บข้อมูลของสินค้าที่ซื้อในรูปแบบที่ง่ายต่อการตรวจสอบ
       });
     }
 
-    return purchasedClothingItems;
+    return purchasedClothingItems; // ส่งคืนรายการสินค้าในรูปแบบของ object ที่ตรวจสอบได้ง่าย
   } catch (error) {
-    console.error("Failed to load purchased items from API", error);
-    throw error;
+    // console.error("Failed to load purchased items from API", error);
+    throw error; // ขว้างข้อผิดพลาดเพื่อให้ฟังก์ชันที่เรียกใช้สามารถจัดการได้
   }
 };
 
