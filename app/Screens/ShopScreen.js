@@ -120,9 +120,22 @@ export default function ShopScreen() {
           console.error("Failed to fetch items data from API:", error);
       }
   };
-    loadItemsDataFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
-    fetchAndUpdateItemsData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
-  }, []);
+  const loadPurchasedItems = async () => {
+    try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+            const items = await fetchPurchasedItems(storedUserId);
+            setPurchasedItems(items); // อัปเดตข้อมูลเสื้อผ้าที่ผู้ใช้มีแล้ว
+        }
+    } catch (error) {
+        console.error("Failed to load purchased items", error);
+    }
+  };
+
+  loadItemsDataFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
+  fetchAndUpdateItemsData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
+  loadPurchasedItems(); // โหลดข้อมูลเสื้อผ้าที่ผู้ใช้มีแล้วจาก API หลังจากดึง userId มาได้
+}, []);
 
   // ฟังก์ชันสำหรับการเพิ่มไอเท็มเริ่มต้นให้ผู้ใช้
   const handleBeginnerClothingItems = async (userId) => {
