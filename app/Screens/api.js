@@ -142,7 +142,6 @@ export const fetchUserClothingData = async (userId) => {
     const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
     // console.log('Clothing items:', petClothingResponse.data.data);
 
-    // สร้างแผนที่เพื่อให้เข้าถึง URL ได้ง่าย
     const shopItemsMap = shopResponse.data.data.reduce((map, item) => {
       if (item.attributes.name) {
         map[item.attributes.name] = {
@@ -190,6 +189,25 @@ export const fetchUserClothingData = async (userId) => {
   }
 };
 
+// ฟังก์ชันในการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง
+export const fetchClothingPets = async () => {
+  try {
+    const response = await api.get('/api/clothing-pets?populate[wearing_pet_clothes][fields][0]=url&[fields][1]=label');
+    
+    const clothingPetsData = response.data.data.map(item => {
+      return {
+        label: item.attributes.label,
+        url: item.attributes.wearing_pet_clothes.data.attributes.url
+      };
+    });
+    // console.log('Organized clothing items:',  clothingPetsData);
+    return clothingPetsData;
+
+  } catch (error) {
+    console.error('Error fetching clothing pets:', error);
+    throw error;
+  }
+};
 
 // ฟังก์ชันการดึงข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const fetchUserProfile = async (userId, config = {}) => {

@@ -5,7 +5,7 @@ import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
-import { fetchUserClothingData } from './api.js';
+import { fetchUserClothingData, fetchClothingPets } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -14,15 +14,11 @@ import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 
-const petImages = {
-  S00P00K00: require('../../assets/image/Clothing-Pet/S00P00K00.png'),
-  // ...other pet images
-};
-
 export default function ClothingScreen() {
   const { selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
+  const [petImageUrl, setPetImageUrl] = useState(null);
 
   useEffect(() => {
     const loadUserClothingData = async () => {
@@ -82,35 +78,74 @@ export default function ClothingScreen() {
   };
 
   useEffect(() => {
+    const updatePetImage = async () => {
+      const shirtLabel = selectedItems.shirt?.label || 'S00';
+      const pantLabel = selectedItems.pant?.label || 'P00';
+      const skinLabel = selectedItems.skin?.label || 'K00';
+  
+      const combinedLabel = `${shirtLabel}${pantLabel}${skinLabel}`;
+      console.log('Combined label:', combinedLabel);
+  
+      try {
+        const clothingPetsData = await fetchClothingPets();
+        const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
+        if (matchingPet) {
+          setPetImageUrl(matchingPet.url);
+        } else {
+          setPetImageUrl(null);
+        }
+      } catch (error) {
+        console.error('Error fetching pet image:', error);
+      }
+    };
+  
     updatePetImage();
-  }, [selectedItems.shirt, selectedItems.pant, selectedItems.skin]);
+  }, [selectedItems.shirt, selectedItems.pant, selectedItems.skin]); 
 
-  const handleWear = (category, image, name) => {
+  const handleWear = (category, image, name, label) => {
+    console.log(`หมวดหมู่: ${category}`);
+    console.log(`รูปภาพ: ${image}`);
+    console.log(`name: ${name}`);
+    console.log(`label: ${label}`);
+  
+    setSelectedItems(prevState => ({
+        ...prevState,
+        [category]: { image, label, name },
+    }));
+};
+
+const handleRemove = async (category) => {
+  if (category === 'skin') {
+    try {
+      const clothingPetsData = await fetchClothingPets();
+      const matchingPet = clothingPetsData.find(item => item.label === 'K00');
+      
+      if (matchingPet) {
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [category]: { image: matchingPet.url, name: 'K00' },
+        }));
+      } else {
+        console.error('No matching pet found for label K00');
+        setSelectedItems(prevState => ({
+          ...prevState,
+          [category]: null,
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching pet image for K00:', error);
+      setSelectedItems(prevState => ({
+        ...prevState,
+        [category]: null,
+      }));
+    }
+  } else {
     setSelectedItems(prevState => ({
       ...prevState,
-      [category]: { image, name },
+      [category]: null,
     }));
-  };
-
-  const handleRemove = (category) => {
-    setSelectedItems(prevState => ({
-      ...prevState,
-      [category]: category === 'skin' ? { image: require('../../assets/image/Clothing-Item/Skin/K00.png'), name: 'K00' } : null,
-    }));
-  };
-
-  const updatePetImage = () => {
-    const { shirt, pant, skin } = selectedItems;
-    const shirtName = shirt ? shirt.name : 'S00';
-    const pantName = pant ? pant.name : 'P00';
-    const skinName = skin ? skin.name : 'K00';
-
-    const petKey = `${shirtName}${pantName}${skinName}`;
-    setSelectedItems(prevState => ({
-      ...prevState,
-      mypet: petImages[petKey] || null,
-    }));
-  };
+  }
+};
 
   const renderItems = () => {
     if (!itemsData[selectedCategory].length) {
@@ -124,7 +159,7 @@ export default function ClothingScreen() {
             <Image source={item.image ? { uri: item.image } : empty} style={styles.itemImage} />
             <Text style={styles.itemName}>{item.name}</Text>
             {item.image && (
-              <TouchableOpacity style={styles.itemButton} onPress={() => handleWear(selectedCategory, item.image, item.name)}>
+              <TouchableOpacity style={styles.itemButton} onPress={() => handleWear(selectedCategory, item.image, item.name, item.label)}>
                 <Text style={styles.itemButtonText}>สวมใส่</Text>
               </TouchableOpacity>
             )}
@@ -143,7 +178,8 @@ export default function ClothingScreen() {
             <DollarIcon />
           </View>
           <View style={styles.petDisplay}>
-            <Image source={selectedItems.mypet ? selectedItems.mypet : empty} style={styles.petImage} />
+            {/* แก้ไขตรงนี้ โดยใช้ petImageUrl เป็น string */}
+            <Image source={petImageUrl ? { uri: petImageUrl } : empty} style={styles.petImage} />
           </View>
         </ImageBackground>
       </View>
@@ -153,19 +189,22 @@ export default function ClothingScreen() {
           <Text style={styles.wardrobeText}>ตู้เสื้อผ้า</Text>
         </View>
         <View style={styles.collectionWearMenu}>
-          {['shirt', 'pant', 'skin'].map((category, index) => (
-            <View key={index} style={styles.collectionWearButton}>
-              <View style={styles.insidecollectionWear}>
-                {selectedItems[category] && selectedItems[category].image !== empty && (
-                  <TouchableOpacity style={styles.crossButton} onPress={() => handleRemove(category)}>
-                    <Image source={cross} style={styles.crossIcon} />
-                  </TouchableOpacity>
-                )}
-                <Image source={selectedItems[category] ? selectedItems[category].image : empty} style={styles.collectionWearIcon} />
+            {['shirt', 'pant', 'skin'].map((category, index) => (
+              <View key={index} style={styles.collectionWearButton}>
+                <View style={styles.insidecollectionWear}>
+                  {selectedItems[category] && selectedItems[category].image !== empty && (
+                    <TouchableOpacity style={styles.crossButton} onPress={() => handleRemove(category)}>
+                      <Image source={cross} style={styles.crossIcon} />
+                    </TouchableOpacity>
+                  )}
+                  <Image 
+                    source={selectedItems[category] && selectedItems[category].image ? { uri: selectedItems[category].image.toString() } : empty}
+                    style={styles.collectionWearIcon}
+                  />
+                </View>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
         <View style={styles.collectionMenu}>
           <TouchableOpacity style={styles.collectionButton} onPress={() => setSelectedCategory("shirt")}>
             <View style={selectedCategory === "shirt" ? styles.afterinsidecollection : styles.beforeinsidecollection}>
