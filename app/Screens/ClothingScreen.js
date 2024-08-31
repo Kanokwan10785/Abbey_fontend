@@ -29,17 +29,21 @@ export default function ClothingScreen() {
           return;
         }
 
-        // Load data from AsyncStorage first
+        // โหลดข้อมูลการสวมใส่ล่าสุดจาก AsyncStorage
+        const savedOutfits = await AsyncStorage.getItem(`userOutfit-${userId}`);
+        if (savedOutfits) {
+          setSelectedItems(JSON.parse(savedOutfits));
+        }
+
+        // โหลดข้อมูลเสื้อผ้าจาก AsyncStorage ก่อน
         const cachedClothingData = await AsyncStorage.getItem(`clothingData-${userId}`);
         if (cachedClothingData) {
           organizeClothingData(JSON.parse(cachedClothingData));
         }
 
-        // Fetch updated data from the API
+        // อัปเดตข้อมูลจาก API และเก็บข้อมูลไว้ใน AsyncStorage
         const data = await fetchUserClothingData(userId);
         organizeClothingData(data);
-
-        // Cache the new data
         await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data));
       } catch (error) {
         console.error('Error loading user clothing data:', error.message);
@@ -102,19 +106,31 @@ export default function ClothingScreen() {
     updatePetImage();
   }, [selectedItems.shirt, selectedItems.pant, selectedItems.skin]); 
 
-  const handleWear = (category, image, name, label) => {
-    console.log(`หมวดหมู่: ${category}`);
-    console.log(`รูปภาพ: ${image}`);
-    console.log(`name: ${name}`);
-    console.log(`label: ${label}`);
-  
-    setSelectedItems(prevState => ({
-        ...prevState,
-        [category]: { image, label, name },
-    }));
+  const handleWear = async (category, image, name, label) => {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      console.error('User ID not found in AsyncStorage');
+      return;
+    }
+
+    const updatedItems = {
+      ...selectedItems,
+      [category]: { image, label, name },
+    };
+
+    setSelectedItems(updatedItems);
+
+    // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
+    await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
 };
 
 const handleRemove = async (category) => {
+  const userId = await AsyncStorage.getItem('userId');
+  if (!userId) {
+    console.error('User ID not found in AsyncStorage');
+    return;
+  }
+
   if (category === 'skin') {
     try {
       // ล็อกให้ K00 เป็นค่าเริ่มต้นเมื่อกดปุ่มปิดสำหรับ skin
@@ -122,30 +138,45 @@ const handleRemove = async (category) => {
       const matchingPet = clothingPetsData.find(item => item.label === 'K00');
       
       if (matchingPet) {
-        setSelectedItems(prevState => ({
-          ...prevState,
+        const updatedItems = {
+          ...selectedItems,
           [category]: { image: matchingPet.url, name: 'K00', label: 'K00' },
-        }));
+        };
+        setSelectedItems(updatedItems);
+
+        // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
+        await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
       } else {
         console.error('No matching pet found for label K00');
-        setSelectedItems(prevState => ({
-          ...prevState,
+        const updatedItems = {
+          ...selectedItems,
           [category]: { image: empty, name: 'Unknown', label: 'K00' }, // ตั้งค่าเป็นรูปภาพว่างถ้าไม่พบ K00
-        }));
+        };
+        setSelectedItems(updatedItems);
+
+        // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
+        await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
       }
     } catch (error) {
       console.error('Error fetching pet image for K00:', error);
-      setSelectedItems(prevState => ({
-        ...prevState,
+      const updatedItems = {
+        ...selectedItems,
         [category]: { image: empty, name: 'Unknown', label: 'K00' }, // ตั้งค่าเป็นรูปภาพว่างหากเกิดข้อผิดพลาด
-      }));
+      };
+      setSelectedItems(updatedItems);
+
+      // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
+      await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
     }
   } else {
-    // สำหรับหมวดหมู่อื่นๆ (shirt, pant) จะลบได้ตามปกติ
-    setSelectedItems(prevState => ({
-      ...prevState,
+    const updatedItems = {
+      ...selectedItems,
       [category]: null,
-    }));
+    };
+    setSelectedItems(updatedItems);
+
+    // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
+    await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
   }
 };
 
@@ -180,7 +211,6 @@ const handleRemove = async (category) => {
             <DollarIcon />
           </View>
           <View style={styles.petDisplay}>
-            {/* แก้ไขตรงนี้ โดยใช้ petImageUrl เป็น string */}
             <Image source={petImageUrl ? { uri: petImageUrl } : empty} style={styles.petImage} />
           </View>
         </ImageBackground>
