@@ -117,29 +117,31 @@ export default function ClothingScreen() {
 const handleRemove = async (category) => {
   if (category === 'skin') {
     try {
+      // ล็อกให้ K00 เป็นค่าเริ่มต้นเมื่อกดปุ่มปิดสำหรับ skin
       const clothingPetsData = await fetchClothingPets();
       const matchingPet = clothingPetsData.find(item => item.label === 'K00');
       
       if (matchingPet) {
         setSelectedItems(prevState => ({
           ...prevState,
-          [category]: { image: matchingPet.url, name: 'K00' },
+          [category]: { image: matchingPet.url, name: 'K00', label: 'K00' },
         }));
       } else {
         console.error('No matching pet found for label K00');
         setSelectedItems(prevState => ({
           ...prevState,
-          [category]: null,
+          [category]: { image: empty, name: 'Unknown', label: 'K00' }, // ตั้งค่าเป็นรูปภาพว่างถ้าไม่พบ K00
         }));
       }
     } catch (error) {
       console.error('Error fetching pet image for K00:', error);
       setSelectedItems(prevState => ({
         ...prevState,
-        [category]: null,
+        [category]: { image: empty, name: 'Unknown', label: 'K00' }, // ตั้งค่าเป็นรูปภาพว่างหากเกิดข้อผิดพลาด
       }));
     }
   } else {
+    // สำหรับหมวดหมู่อื่นๆ (shirt, pant) จะลบได้ตามปกติ
     setSelectedItems(prevState => ({
       ...prevState,
       [category]: null,
