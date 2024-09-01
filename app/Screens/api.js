@@ -225,13 +225,13 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
 // ฟังก์ชันการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง
 export const fetchClothingPets = async () => {
   try {
-    const response = await api.get('/api/clothing-pets?populate[wearing_pet_clothes][fields][0]=url&[fields][1]=label');
+    const response = await api.get('/api/clothing-pets?populate[clothing_pet][fields][0]=url&[fields][1]=label');
     
     const clothingPetsData = response.data.data.map(item => {
       return {
         id: item.id,
         label: item.attributes.label,
-        url: item.attributes.wearing_pet_clothes.data.attributes.url
+        url: item.attributes.clothing_pet.data.attributes.url
       };
     });
     
