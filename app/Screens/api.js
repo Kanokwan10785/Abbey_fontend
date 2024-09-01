@@ -242,6 +242,30 @@ export const fetchClothingPets = async () => {
   }
 };
 
+// ฟังก์ชันการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง หน้า home
+export const fetchHomePets = async () => {
+  try {
+    // เรียก API เพื่อดึงข้อมูล home_pet และ label
+    const response = await api.get('/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&[fields][1]=label');
+    
+    // จัดการกับข้อมูลที่ได้รับ
+    const homePetsData = response.data.data.map(item => {
+      return {
+        id: item.id,
+        name: item.attributes.home_pet?.data?.attributes?.name || 'Unknown',
+        label: item.attributes.label,
+        url: item.attributes.home_pet?.data?.attributes?.url || ''
+      };
+    });
+    
+    return homePetsData;
+  } catch (error) {
+    console.error('Error fetching home pets:', error);
+    throw error;
+  }
+};
+
+
 // ฟังก์ชันการดึงข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const fetchUserProfile = async (userId, config = {}) => {
   try {
