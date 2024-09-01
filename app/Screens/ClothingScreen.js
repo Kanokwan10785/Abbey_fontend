@@ -5,7 +5,7 @@ import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
-import { fetchUserClothingData, fetchClothingPets } from './api.js';
+import { fetchUserClothingData, fetchClothingPets, fetchAndUpdateClothingPets } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -29,19 +29,16 @@ export default function ClothingScreen() {
           return;
         }
 
-        // โหลดข้อมูลการสวมใส่ล่าสุดจาก AsyncStorage
         const savedOutfits = await AsyncStorage.getItem(`userOutfit-${userId}`);
         if (savedOutfits) {
           setSelectedItems(JSON.parse(savedOutfits));
         }
 
-        // โหลดข้อมูลเสื้อผ้าจาก AsyncStorage ก่อน
         const cachedClothingData = await AsyncStorage.getItem(`clothingData-${userId}`);
         if (cachedClothingData) {
           organizeClothingData(JSON.parse(cachedClothingData));
         }
 
-        // อัปเดตข้อมูลจาก API และเก็บข้อมูลไว้ใน AsyncStorage
         const data = await fetchUserClothingData(userId);
         organizeClothingData(data);
         await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data));
@@ -91,15 +88,24 @@ export default function ClothingScreen() {
       console.log('Combined label:', combinedLabel);
   
       try {
+        // ขั้นตอนที่ 1 และ 2
         const clothingPetsData = await fetchClothingPets();
         const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
+
         if (matchingPet) {
+          // ถ้าเจอชุดที่ตรงกัน ให้ทำการ PUT API เพื่อลิงก์ผู้ใช้กับเสื้อผ้านั้น
+          const userId = await AsyncStorage.getItem('userId');
+          if (userId) {
+            await fetchAndUpdateClothingPets(combinedLabel, userId);
+          }
+
+          // อัปเดต URL ของภาพสัตว์เลี้ยง
           setPetImageUrl(matchingPet.url);
         } else {
           setPetImageUrl(null);
         }
       } catch (error) {
-        console.error('Error fetching pet image:', error);
+        console.error('Error fetching and updating pet image:', error);
       }
     };
   
@@ -122,63 +128,58 @@ export default function ClothingScreen() {
 
     // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
     await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
-};
+  };
 
-const handleRemove = async (category) => {
-  const userId = await AsyncStorage.getItem('userId');
-  if (!userId) {
-    console.error('User ID not found in AsyncStorage');
-    return;
-  }
+  const handleRemove = async (category) => {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      console.error('User ID not found in AsyncStorage');
+      return;
+    }
 
-  if (category === 'skin') {
-    try {
-      // ล็อกให้ K00 เป็นค่าเริ่มต้นเมื่อกดปุ่มปิดสำหรับ skin
-      const clothingPetsData = await fetchClothingPets();
-      const matchingPet = clothingPetsData.find(item => item.label === 'K00');
-      
-      if (matchingPet) {
+    if (category === 'skin') {
+      try {
+        const clothingPetsData = await fetchClothingPets();
+        const matchingPet = clothingPetsData.find(item => item.label === 'K00');
+        
+        if (matchingPet) {
+          const updatedItems = {
+            ...selectedItems,
+            [category]: { image: matchingPet.url, name: 'K00', label: 'K00' },
+          };
+          setSelectedItems(updatedItems);
+
+          await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+        } else {
+          console.error('No matching pet found for label K00');
+          const updatedItems = {
+            ...selectedItems,
+            [category]: { image: empty, name: 'Unknown', label: 'K00' },
+          };
+          setSelectedItems(updatedItems);
+
+          await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+        }
+      } catch (error) {
+        console.error('Error fetching pet image for K00:', error);
         const updatedItems = {
           ...selectedItems,
-          [category]: { image: matchingPet.url, name: 'K00', label: 'K00' },
+          [category]: { image: empty, name: 'Unknown', label: 'K00' },
         };
         setSelectedItems(updatedItems);
 
-        // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
-        await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
-      } else {
-        console.error('No matching pet found for label K00');
-        const updatedItems = {
-          ...selectedItems,
-          [category]: { image: empty, name: 'Unknown', label: 'K00' }, // ตั้งค่าเป็นรูปภาพว่างถ้าไม่พบ K00
-        };
-        setSelectedItems(updatedItems);
-
-        // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
         await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
       }
-    } catch (error) {
-      console.error('Error fetching pet image for K00:', error);
+    } else {
       const updatedItems = {
         ...selectedItems,
-        [category]: { image: empty, name: 'Unknown', label: 'K00' }, // ตั้งค่าเป็นรูปภาพว่างหากเกิดข้อผิดพลาด
+        [category]: null,
       };
       setSelectedItems(updatedItems);
 
-      // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
       await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
     }
-  } else {
-    const updatedItems = {
-      ...selectedItems,
-      [category]: null,
-    };
-    setSelectedItems(updatedItems);
-
-    // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
-    await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
-  }
-};
+  };
 
   const renderItems = () => {
     if (!itemsData[selectedCategory].length) {
@@ -221,22 +222,22 @@ const handleRemove = async (category) => {
           <Text style={styles.wardrobeText}>ตู้เสื้อผ้า</Text>
         </View>
         <View style={styles.collectionWearMenu}>
-            {['shirt', 'pant', 'skin'].map((category, index) => (
-              <View key={index} style={styles.collectionWearButton}>
-                <View style={styles.insidecollectionWear}>
-                  {selectedItems[category] && selectedItems[category].image !== empty && (
-                    <TouchableOpacity style={styles.crossButton} onPress={() => handleRemove(category)}>
-                      <Image source={cross} style={styles.crossIcon} />
-                    </TouchableOpacity>
-                  )}
-                  <Image 
-                    source={selectedItems[category] && selectedItems[category].image ? { uri: selectedItems[category].image.toString() } : empty}
-                    style={styles.collectionWearIcon}
-                  />
-                </View>
+          {['shirt', 'pant', 'skin'].map((category, index) => (
+            <View key={index} style={styles.collectionWearButton}>
+              <View style={styles.insidecollectionWear}>
+                {selectedItems[category] && selectedItems[category].image !== empty && (
+                  <TouchableOpacity style={styles.crossButton} onPress={() => handleRemove(category)}>
+                    <Image source={cross} style={styles.crossIcon} />
+                  </TouchableOpacity>
+                )}
+                <Image 
+                  source={selectedItems[category] && selectedItems[category].image ? { uri: selectedItems[category].image.toString() } : empty}
+                  style={styles.collectionWearIcon}
+                />
               </View>
-            ))}
-          </View>
+            </View>
+          ))}
+        </View>
         <View style={styles.collectionMenu}>
           <TouchableOpacity style={styles.collectionButton} onPress={() => setSelectedCategory("shirt")}>
             <View style={selectedCategory === "shirt" ? styles.afterinsidecollection : styles.beforeinsidecollection}>
