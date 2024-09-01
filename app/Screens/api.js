@@ -134,13 +134,8 @@ export const fetchUserClothingData = async (userId) => {
       throw new Error('Invalid userId');
     }
 
-    // console.log('Fetching shop items...');
     const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label&[fields][2]=category`);
-    // console.log('Shop items:', shopResponse.data.data);
-
-    // console.log('Fetching clothing items...');
     const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
-    // console.log('Clothing items:', petClothingResponse.data.data);
 
     if (!shopResponse.data || !petClothingResponse.data) {
       throw new Error('Failed to fetch data from API');
@@ -185,7 +180,6 @@ export const fetchUserClothingData = async (userId) => {
       };
     }) || [];
 
-    // console.log('Organized clothing items:', clothingItems);
     return clothingItems;
   } catch (error) {
     console.error('Error fetching user clothes data:', error.response ? error.response.data : error.message);
@@ -193,35 +187,12 @@ export const fetchUserClothingData = async (userId) => {
   }
 };
 
-export const fetchClothingPets = async () => {
-  try {
-    const response = await api.get('/api/clothing-pets?populate[wearing_pet_clothes][fields][0]=url&[fields][1]=label');
-    
-    const clothingPetsData = response.data.data.map(item => {
-      return {
-        label: item.attributes.label,
-        url: item.attributes.wearing_pet_clothes.data.attributes.url
-      };
-    });
-    
-    return clothingPetsData;
-  } catch (error) {
-    console.error('Error fetching clothing pets:', error);
-    throw error;
-  }
-};
-
-
-// ฟังก์ชันในการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง
+// ฟังก์ชันการดึงข้อมูลเสื้อผ้าและอัปเดตผู้ใช้
 export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
   try {
-    // ขั้นตอนที่ 1: ดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง
-    const response = await api.get('/api/clothing-pets?populate[wearing_pet_clothes][fields][0]=url&[fields][1]=label');
-    
-    const clothingPetsData = response.data.data;
+    const clothingPetsData = await fetchClothingPets();
 
-    // หาว่า label ไหนตรงกับ combinedLabel
-    const matchedItem = clothingPetsData.find(item => item.attributes.label === combinedLabel);
+    const matchedItem = clothingPetsData.find(item => item.label === combinedLabel);
 
     if (!matchedItem) {
       throw new Error(`No matching clothing pet found for label: ${combinedLabel}`);
@@ -229,7 +200,7 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
 
     const clothingPetId = matchedItem.id;
 
-    // ขั้นตอนที่ 2: อัปเดตข้อมูลเพื่อเชื่อมโยง userId กับ clothingPetId
+    // อัปเดตข้อมูลเพื่อเชื่อมโยง userId กับ clothingPetId
     await api.put(`/api/clothing-pets/${clothingPetId}`, {
       data: {
         users: {
@@ -244,29 +215,32 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
 
     console.log(`Successfully linked user ${userId} to clothing pet ${clothingPetId}`);
 
-    // ขั้นตอนที่ 3: ตรวจสอบ clothing_pet ของผู้ใช้และดึง URL ที่ตรงกับ label
-    const userResponse = await api.get(`/api/users/${userId}?populate[clothing_pet][fields][0]=label`);
-
-    const userClothingPet = userResponse.data.clothing_pet;
-
-    if (userClothingPet && userClothingPet.label === combinedLabel) {
-      const matchingPet = clothingPetsData.find(item => item.attributes.label === combinedLabel);
-      if (matchingPet) {
-        const url = matchingPet.attributes.wearing_pet_clothes.data.attributes.url;
-        console.log(`Matching clothing pet URL: ${url}`);
-        return url;
-      }
-    }
-
-    console.log('No matching clothing pet found for the user');
-    return null;
-
+    return matchedItem.url;
   } catch (error) {
     console.error('Error processing clothing pets:', error);
     throw error;
   }
 };
 
+// ฟังก์ชันการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง
+export const fetchClothingPets = async () => {
+  try {
+    const response = await api.get('/api/clothing-pets?populate[wearing_pet_clothes][fields][0]=url&[fields][1]=label');
+    
+    const clothingPetsData = response.data.data.map(item => {
+      return {
+        id: item.id,
+        label: item.attributes.label,
+        url: item.attributes.wearing_pet_clothes.data.attributes.url
+      };
+    });
+    
+    return clothingPetsData;
+  } catch (error) {
+    console.error('Error fetching clothing pets:', error);
+    throw error;
+  }
+};
 
 // ฟังก์ชันการดึงข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const fetchUserProfile = async (userId, config = {}) => {
