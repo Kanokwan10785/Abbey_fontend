@@ -142,6 +142,10 @@ export const fetchUserClothingData = async (userId) => {
     const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
     // console.log('Clothing items:', petClothingResponse.data.data);
 
+    if (!shopResponse.data || !petClothingResponse.data) {
+      throw new Error('Failed to fetch data from API');
+    }
+
     const shopItemsMap = shopResponse.data.data.reduce((map, item) => {
       if (item.attributes.name) {
         map[item.attributes.name] = {
@@ -154,7 +158,7 @@ export const fetchUserClothingData = async (userId) => {
     }, {});
 
     const clothingItems = petClothingResponse.data.data?.map(item => {
-      const chooseClothesData = item.attributes.choose_clothe?.data; // เปลี่ยนเป็น choose_clothe ตามข้อมูล JSON
+      const chooseClothesData = item.attributes.choose_clothe?.data;
 
       if (!chooseClothesData) {
         console.error('No choose_clothe found for item:', item);
@@ -184,7 +188,7 @@ export const fetchUserClothingData = async (userId) => {
     // console.log('Organized clothing items:', clothingItems);
     return clothingItems;
   } catch (error) {
-    console.error('Error fetching user clothes data', error.response ? error.response.data : error.message);
+    console.error('Error fetching user clothes data:', error.response ? error.response.data : error.message);
     throw error;
   }
 };
