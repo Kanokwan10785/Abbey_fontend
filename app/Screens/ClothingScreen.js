@@ -29,9 +29,14 @@ export default function ClothingScreen() {
           return;
         }
 
+        // โหลดข้อมูลสำรองจาก AsyncStorage
         const savedOutfits = await AsyncStorage.getItem(`userOutfit-${userId}`);
+        const savedPetImageUrl = await AsyncStorage.getItem(`petImageUrl-${userId}`);
         if (savedOutfits) {
           setSelectedItems(JSON.parse(savedOutfits));
+        }
+        if (savedPetImageUrl) {
+          setPetImageUrl(savedPetImageUrl);
         }
 
         const cachedClothingData = await AsyncStorage.getItem(`clothingData-${userId}`);
@@ -39,6 +44,7 @@ export default function ClothingScreen() {
           organizeClothingData(JSON.parse(cachedClothingData));
         }
 
+        // ดึงข้อมูลล่าสุดจาก API และเก็บข้อมูลใน AsyncStorage
         const data = await fetchUserClothingData(userId);
         organizeClothingData(data);
         await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data));
@@ -99,8 +105,10 @@ export default function ClothingScreen() {
             await fetchAndUpdateClothingPets(combinedLabel, userId);
           }
 
-          // อัปเดต URL ของภาพสัตว์เลี้ยง
-          setPetImageUrl(matchingPet.url);
+          // อัปเดต URL ของภาพสัตว์เลี้ยง และบันทึกใน AsyncStorage
+          const petUrl = matchingPet.url;
+          setPetImageUrl(petUrl);
+          await AsyncStorage.setItem(`petImageUrl-${userId}`, petUrl);
         } else {
           setPetImageUrl(null);
         }
