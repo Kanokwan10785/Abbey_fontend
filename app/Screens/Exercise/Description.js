@@ -40,21 +40,26 @@ const Description = ({ route, navigation }) => {
   const currentItem = items[currentIndex];
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      <Image source={currentItem.image} style={styles.exerciseImage} />
-      <View style={styles.header}>
-        <Text style={styles.title}>{currentItem.name}</Text>
-        <View style={styles.timerContainer}>
-          <Icon name="timer" size={20} color="#FFA500" />
-          <Text style={styles.timerText}>{currentItem.duration}</Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <Image source={{ uri: currentItem.animation }} style={styles.exerciseImage} />
+  
+        <View style={styles.header}>
+          <Text style={styles.title}>{currentItem.name}</Text>      
+          <View style={styles.timerContainer}>
+            <Icon name="timer" size={20} color="#FFA500" />
+            <Text style={styles.timerText}>{currentItem.duration}</Text>
+          </View>
         </View>
-      </View>
-      <Text style={styles.description}>{currentItem.description}</Text>
-      <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
+        <Text style={styles.description}>{currentItem.description}</Text>
+        <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
+      </ScrollView>
+  
       <Image
-        source={require('../../../assets/image/exercise.png')}
+        source={{ uri: currentItem.image }}
         style={styles.muscleImage}
       />
+  
       <View style={styles.navigation}>
         <View style={styles.buttonnav}>
           <TouchableOpacity style={styles.navButton} onPress={handlePrevious} disabled={currentIndex === 0}>
@@ -71,7 +76,7 @@ const Description = ({ route, navigation }) => {
           <Text style={styles.closeText}>ปิด</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -83,7 +88,7 @@ const styles = StyleSheet.create({
   exerciseImage: {
     borderRadius: 20,
     width: '95%',
-    height: 300,
+    height: 250,
     marginTop: 40,
     alignSelf: 'center',
   },
@@ -125,7 +130,7 @@ const styles = StyleSheet.create({
   muscleImage: {
     borderRadius: 20,
     width: '95%',
-    height: 300,
+    height: 250,
     alignSelf: 'center',
     marginVertical: 20,
   },

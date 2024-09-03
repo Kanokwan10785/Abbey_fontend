@@ -4,70 +4,65 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../assets/image/cancel.png';
 
-const Exercise2 = () => {
+const Startex = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { item, items, currentIndex } = route.params || {};
+  const { items } = route.params || {};
 
-  if (!item || !items) {
+  // ใช้รายการแรกเป็น item ที่ต้องการแสดง
+  const item = items ? items[0] : null;
+
+  if (!item) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
-  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
+  const [isRunning, setIsRunning] = useState(true);
+  const [time, setTime] = useState(5); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
   const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
-    setTime(3); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
-  
-    const id = setInterval(() => {
-      setTime((prevTime) => {
-        if (prevTime > 0) {
-          return prevTime - 1;
-        } else {
-          clearInterval(id);
-          const nextIndex = currentIndex + 1;
-          console.log('Before navigating, nextIndex:', nextIndex);
-          if (nextIndex < items.length) {
-            navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
-          } else {
-            navigation.navigate('Exercise4'); // ไปยังหน้าสิ้นสุดการออกกำลังกาย
-          }
-          return 0;
-        }
-      });
-    }, 1000);
-    setIntervalId(id);
-  
-    return () => clearInterval(id);
-  }, [currentIndex, items, navigation]);
+    setTime(3);
+    setIsRunning(true);
+  }, [item]);
 
   useEffect(() => {
-    console.log('currentIndex after update:', currentIndex); // ตรวจสอบว่าข้อมูลถูกส่งมาหรือไม่
-  }, [currentIndex]);
+    if (isRunning) {
+      const id = setInterval(() => {
+        setTime((prevTime) => {
+          if (prevTime > 0) {
+            return prevTime - 1;
+          } else {
+            clearInterval(id);
+            setIsRunning(false);
+            navigation.navigate('Exercise1', { items, currentIndex: 0 }); // ไปยังหน้า Exercise1 หลังจากครบ 5 วินาที
+            return 0;
+          }
+        });
+      }, 1000);
+      setIntervalId(id);
+
+      return () => clearInterval(id);
+    } else if (intervalId) {
+      clearInterval(intervalId);
+    }
+  }, [isRunning, navigation]);
+
+  const handleStartPause = () => {
+    setIsRunning(!isRunning);
+  };
 
   const handleNext = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    const nextIndex = currentIndex + 1;
-    console.log('Next Index in handleNext:', nextIndex);
-    if (nextIndex < items.length) {
-      navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
-    } else {
-      navigation.navigate('Exercise4'); // ไปยังหน้าสิ้นสุดการออกกำลังกาย
-    }
+    navigation.navigate('Exercise1', { items, currentIndex: 0 }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
   };
 
   const handlePrevious = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-
-    if (currentIndex > 0) {
-      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
-    } else {
-      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0 });
-    }
+    navigation.navigate('ExerciseScreen'); // กลับไปยังหน้า ExerciseScreen เมื่อกดปุ่มไปข้างหลัง
   };
 
   const formatTime = (seconds) => {
@@ -83,15 +78,17 @@ const Exercise2 = () => {
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
         <View style={styles.exerciseImageContainer}>
-          <Image source={{ uri: items[currentIndex + 1]?.animation }} style={styles.exerciseImage} />
+          <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
         </View>
-        <View style={styles.exerciseDetails}>
-        <Text style={styles.exerciseCounter}>ท่าถัดไป</Text>
-        <Text style={styles.exerciseTitle}>{items[currentIndex + 1]?.name}</Text>
-        </View>
+        <Text style={styles.Title}>Ready go!</Text>
+        <Text style={styles.exerciseTitle}>{item.name}</Text>
       </View>
-      <Text style={styles.timer}>พักผ่อน</Text>
       <Text style={styles.timer}>{formatTime(time)}</Text>
+      <View style={styles.controlContainer}>
+        <TouchableOpacity style={styles.controlButton} onPress={handleStartPause}>
+          <Icon name={isRunning ? "pause" : "play"} size={50} color="#FFF" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
           <Icon name="chevron-left" size={60} color="#808080" />
@@ -124,8 +121,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   exerciseImageContainer: {
-    borderColor: '#FFA500',
     borderWidth: 3,
+    borderColor: '#FFA500',
     alignItems: 'center',
     marginVertical: 20,
   },
@@ -133,22 +130,15 @@ const styles = StyleSheet.create({
     width: 350,
     height: 250,
   },
-  exerciseDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 10,
-    marginHorizontal: 20,
+  Title: {
+    fontSize: 35,
+    color: '#FFA500',
+    fontFamily: 'appfont_02',
   },
   exerciseTitle: {
-    fontSize: 22,
+    fontSize: 25,
+    marginVertical: 20,
     fontFamily: 'appfont_01',
-
-  },
-  exerciseCounter: {
-    fontSize: 18,
-    color: '#808080',
-    fontFamily: 'appfont_01',
-    flex: 1,
   },
   timer: {
     fontSize: 48,
@@ -163,6 +153,17 @@ const styles = StyleSheet.create({
   navButton: {
     padding: 10,
   },
+  controlContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  controlButton: {
+    backgroundColor: '#FFA500',
+    padding: 10,
+    borderRadius: 20,
+    marginHorizontal: 10,
+  },
 });
 
-export default Exercise2;
+export default Startex;

@@ -7,90 +7,88 @@ import cancel from '../../../assets/image/cancel.png';
 const Exercise1 = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { item, items, currentIndex } = route.params || {};
+  const { items, currentIndex } = route.params || {};
 
-  if (!item || !items) {
-    return <View style={styles.container}><Text>Loading...</Text></View>;
+  useEffect(() => {
+    console.log('Received currentIndex in Exercise1:', currentIndex);
+  }, [currentIndex]);
+
+  if (!items || currentIndex === undefined) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
   }
 
-  const [isRunning, setIsRunning] = useState(true);
-  const [time, setTime] = useState(10); // นับถอยหลัง 10 วินาทีสำหรับการออกกำลังกาย
-  const [intervalId, setIntervalId] = useState(null);
+  const item = items[currentIndex];
+  const [isRunning, setIsRunning] = useState(false);
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
-    // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่หรือเปลี่ยนท่าทาง และเริ่มนับถอยหลังอัตโนมัติ
-    setTime(10);
-    setIsRunning(true);
+    const durationText = item.duration || '';
+    const durationInSeconds = parseDurationToSeconds(durationText);
 
-    const id = setInterval(() => {
-      setTime((prevTime) => {
-        if (prevTime > 0) {
-          return prevTime - 1;
-        } else {
-          clearInterval(id);
-          setIsRunning(false);
-          // ไปยังหน้าพักผ่อน 3 วินาทีถ้าไม่ใช่ท่าสุดท้าย
-          if (currentIndex < items.length - 1) {
-            navigation.navigate('Exercise2', { item, items, currentIndex });
-          } else {
-            navigation.navigate('Exercise4');
-          }
-          return 0;
-        }
-      });
-    }, 1000);
-    setIntervalId(id);
-
-    return () => clearInterval(id);
-  }, [currentIndex, navigation, items]);
-
-  useEffect(() => {
-    if (!isRunning) {
-      clearInterval(intervalId);
+    if (durationInSeconds > 0) {
+      setTime(durationInSeconds);
+      setIsRunning(true);
+    } else {
+      setTime(0);
     }
-  }, [isRunning]);
+  }, [item]);
 
-  const handleStart = () => {
-    setIsRunning(true);
-    const id = setInterval(() => {
-      setTime((prevTime) => {
-        if (prevTime > 0) {
-          return prevTime - 1;
-        } else {
-          clearInterval(id);
-          setIsRunning(false);
-          // ไปยังหน้าพักผ่อน 3 วินาทีถ้าไม่ใช่ท่าสุดท้าย
-          if (currentIndex < items.length - 1) {
-            navigation.navigate('Exercise2', { item, items, currentIndex });
+  useEffect(() => {
+    if (isRunning && time >= 0) {
+      const id = setInterval(() => {
+        setTime((prevTime) => {
+          if (prevTime > 0) {
+            return prevTime - 1;
           } else {
-            navigation.navigate('Exercise4');
+            clearInterval(id);
+            setIsRunning(false);
+            if (currentIndex < items.length - 1) {
+              navigation.navigate('Exercise2', { item, items, currentIndex });
+            } else {
+              navigation.navigate('Exercise4');
+            }
+            return 0;
           }
-          return 0;
-        }
-      });
-    }, 1000);
-    setIntervalId(id);
+        });
+      }, 1000);
+
+      return () => clearInterval(id);
+    }
+  }, [currentIndex, navigation, isRunning, time]);
+
+  const parseDurationToSeconds = (durationText) => {
+    const match = durationText.match(/(\d+)\s*(วินาที|นาที|ครั้ง)/);
+    if (match) {
+      const value = parseInt(match[1], 10);
+      const unit = match[2];
+      if (unit === 'วินาที') return value;
+      if (unit === 'นาที') return value * 60;
+      if (unit === 'ครั้ง') return 30;
+    }
+    return 30;
   };
 
-  const handlePause = () => {
-    setIsRunning(false);
+  const handleStartPause = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handleComplete = () => {
+    handleNext();
   };
 
   const handleNext = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Exercise2', { item, items, currentIndex });
+      navigation.navigate('Exercise2', { item: items[currentIndex + 1], items, currentIndex });
     } else {
       navigation.navigate('Exercise4');
     }
   };
 
   const handlePrevious = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
     if (currentIndex > 0) {
       navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
     } else {
@@ -103,7 +101,6 @@ const Exercise1 = () => {
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
@@ -111,19 +108,26 @@ const Exercise1 = () => {
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
         <View style={styles.exerciseImageContainer}>
-        <Image source={item.image} style={styles.exerciseImage} />
+          <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
         </View>
+        <View style={styles.exerciseDetails}>
         <Text style={styles.exerciseTitle}>{item.name}</Text>
         <Text style={styles.exerciseCounter}>{currentIndex + 1}/{items.length}</Text>
+        </View>
       </View>
-      <Text style={styles.timer}>{formatTime(time)}</Text>
+      <Text style={styles.timer}>
+        {item.duration.includes('ครั้ง') ? '15 ครั้ง' : formatTime(time)}
+      </Text>
       <View style={styles.controlContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={handleStart}>
-          <Icon name="play" size={50} color="#FFF" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={handlePause}>
-          <Icon name="stop" size={50} color="#FFF" />
-        </TouchableOpacity>
+        {item.duration.includes('ครั้ง') ? (
+          <TouchableOpacity style={styles.finButton} onPress={handleComplete}>
+            <Text style={styles.completeText}>เสร็จสิ้น</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.controlButton} onPress={handleStartPause}>
+            <Icon name={isRunning ? "pause" : "play"} size={50} color="#FFF" />
+          </TouchableOpacity>
+        )}
       </View>
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
@@ -166,15 +170,23 @@ const styles = StyleSheet.create({
     width: 350,
     height: 250,
   },
+  exerciseDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+    marginHorizontal: 20,
+  },
   exerciseTitle: {
-    fontSize: 25,
-    marginVertical: 20,
-    fontFamily: 'appfont_01',
+    fontSize: 22,
+    fontFamily: 'appfont_01', 
+    flex: 1,
+
   },
   exerciseCounter: {
     fontSize: 18,
     color: '#808080',
     fontFamily: 'appfont_01',
+   
   },
   timer: {
     fontSize: 48,
@@ -194,13 +206,27 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
+  finButton : {
+    backgroundColor: '#FFA500',
+    width: 200,
+    padding: 10,
+    borderRadius: 20,
+    marginHorizontal: 30,
+    marginBottom: 20,   
+  },
   controlButton: {
     backgroundColor: '#FFA500',
     padding: 10,
     borderRadius: 20,
-    marginHorizontal: 10,
+    marginHorizontal: 30,
+    marginBottom: 0,
+  },
+  completeText: {
+    color: '#FFF',
+    fontSize: 22,
+    fontFamily: 'appfont_01',
+    textAlign: 'center',
   },
 });
 
 export default Exercise1;
-  

@@ -1,6 +1,4 @@
-// ExerciseScreen.js
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../BottomBar';
@@ -11,19 +9,95 @@ import ex3 from '../../../assets/image/ex3.gif';
 import ex4 from '../../../assets/image/ex4.gif';
 import { useNavigation } from '@react-navigation/native';
 
-const exercises = [
-  { id: '1', image: ex1 ,name: 'ท่ากระโดดตบ', duration: '00:30 น', description: 'เริ่มจากอยู่ในท่ายืนเท้าชิด แขนแนบลำตัว จากนั้นกระโดดแยกขา และมือทั้งสองข้างแตะกันเหนือศีรษะ กลับสู่ท่าเตรียม และทำซ้ำ' },
-  { id: '2', image: ex2 ,name: 'ท่าปั่นขา', duration: '00:30 น', description: 'ท่าปั่นขาในลักษณะยกขาขึ้นในอากาศ คล้ายกับการปั่นจักรยาน ทำซ้ำหลาย ๆ ครั้ง' },
-  { id: '3', image: ex3 ,name: 'ท่าแพลงก์', duration: '00:30 น', description: 'อยู่ในท่านอนคว่ำลง ใช้ข้อศอกและปลายเท้ารับน้ำหนักตัว ค้างไว้ในท่านี้' },
-  { id: '4', image: ex4 ,name: 'ท่ายกขา', duration: '00:30 น', description: 'นอนหงายบนพื้น แล้วยกขาขึ้นลงตามจังหวะ เป็นการบริหารกล้ามเนื้อหน้าท้อง' },
-];
+// const exercises = [
+//   { id: '1', image: ex1 ,name: 'ท่ากระโดดตบ', duration: '00:30 น', description: 'เริ่มจากอยู่ในท่ายืนเท้าชิด แขนแนบลำตัว จากนั้นกระโดดแยกขา และมือทั้งสองข้างแตะกันเหนือศีรษะ กลับสู่ท่าเตรียม และทำซ้ำ' },
+//   { id: '2', image: ex2 ,name: 'ท่าปั่นขา', duration: '00:30 น', description: 'ท่าปั่นขาในลักษณะยกขาขึ้นในอากาศ คล้ายกับการปั่นจักรยาน ทำซ้ำหลาย ๆ ครั้ง' },
+//   { id: '3', image: ex3 ,name: 'ท่าแพลงก์', duration: '00:30 น', description: 'อยู่ในท่านอนคว่ำลง ใช้ข้อศอกและปลายเท้ารับน้ำหนักตัว ค้างไว้ในท่านี้' },
+//   { id: '4', image: ex4 ,name: 'ท่ายกขา', duration: '00:30 น', description: 'นอนหงายบนพื้น แล้วยกขาขึ้นลงตามจังหวะ เป็นการบริหารกล้ามเนื้อหน้าท้อง' },
+// ];
+
 
 const ExerciseScreen = () => {
+  const [exercises, setExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalTime, setTotalTime] = useState(0);
   const navigation = useNavigation();
+
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  const formattedDate = today.toLocaleDateString('th-TH', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  useEffect(() => {
+    fetchExercises(dayOfMonth);
+  }, [dayOfMonth]);
+
+  const fetchExercises = async (day) => {
+    try {
+      // const response = await fetch(`http://192.168.1.141:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day${day}&populate=exercises.animation,exercises.muscle`);
+      const response = await fetch(`http://192.168.1.141:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day1&populate=exercises.animation,exercises.muscle`);
+      const data = await response.json();
+
+      if (!data.data || data.data.length === 0) {
+        console.error("ไม่มีข้อมูลที่ต้องการจาก API");
+        setLoading(false);
+        return;
+      }
+
+      let totalDuration = 0;
+      const exerciseData = data.data[0]?.attributes?.exercises?.data.map(exercise => {
+        const imageData = exercise.attributes.muscle?.data?.[0]?.attributes?.formats?.thumbnail;
+        const imageUrl = imageData ? imageData.url : null;
+        const animationData = exercise.attributes.animation?.data?.[0]?.attributes;
+        const animationUrl = animationData ? animationData.url : null;
+
+        let displayText = '';
+        if (exercise.attributes.reps) {
+          displayText = `${exercise.attributes.reps} ครั้ง`;
+          totalDuration += 30;  // กำหนดให้ทุกท่าที่เป็นจำนวนครั้งมีค่าเท่ากับ 30 วินาที
+        } else if (exercise.attributes.duration) {
+          const durationInSeconds = Math.floor(exercise.attributes.duration * 60);
+          const minutes = Math.floor(durationInSeconds / 60);
+          const seconds = durationInSeconds % 60;
+
+          // หากเวลามีส่วนของวินาที
+          if (minutes > 0) {
+            displayText = seconds > 0 ? `${minutes} นาที ${seconds} วินาที` : `${minutes} นาที`;
+          } else {
+            displayText = `${seconds} วินาที`;
+          }
+
+          totalDuration += durationInSeconds;
+        }
+
+        return {
+          id: exercise.id.toString(),
+          animation: animationUrl,
+          name: exercise.attributes.name,
+          duration: displayText,
+          description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
+          image: imageUrl,
+        };
+      }) || [];
+
+      setExercises(exerciseData);
+      setTotalTime(totalDuration);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.exerciseItem} onPress={() => navigation.navigate('Description', { item, items: exercises })}>
-      <Image source={item.image} style={styles.exerciseImage} />
+      <Image
+        source={item.animation ? { uri: item.animation } : exercise}
+        style={styles.exerciseImage}
+      />
       <View style={styles.exerciseDetails}>
         <Text style={styles.exerciseName}>{item.name}</Text>
         <Text style={styles.exerciseInfo}>{item.duration}</Text>
@@ -46,24 +120,21 @@ const ExerciseScreen = () => {
         </TouchableOpacity>
       </View>
       <Image source={exercise} style={styles.mainImage} />
-      <Text style={styles.dateText}>วันที่ 14 ม.ค - ร่างกายทุกส่วน</Text>
+      <Text style={styles.dateText}>วันที่ {formattedDate} - ร่างกายทุกส่วน</Text>
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Icon name="clock-outline" size={24} color="#F6A444" />
-          <Text style={styles.statText}>2 min</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Icon name="fire" size={24} color="#F6A444" />
-          <Text style={styles.statText}>100 cal</Text>
+          {/* ตรวจสอบว่า totalTime ถูกต้องและนำไปใช้ใน Text */}
+          <Text style={styles.statText}>{Math.floor(totalTime / 60)} นาที {totalTime % 60} วินาที</Text>  
         </View>
         <View style={styles.statItem}>
           <Icon name="dumbbell" size={24} color="#F6A444" />
-          <Text style={styles.statText}>4 ท่า</Text>
+          <Text style={styles.statText}>{exercises.length} ท่า</Text>  
         </View>
       </View>
-      <TouchableOpacity 
-        style={styles.startButton} 
-        onPress={() => navigation.navigate('Exercise1', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false })}
+      <TouchableOpacity
+        style={styles.startButton}
+        onPress={() => navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false })}
       >
         <Text style={styles.startButtonText}>เริ่ม</Text>
       </TouchableOpacity>
@@ -187,7 +258,6 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 16,
-    fontWeight: 'bold',
     fontFamily: 'appfont_01',
   },
   exerciseInfo: {

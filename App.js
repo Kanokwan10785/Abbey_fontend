@@ -12,6 +12,7 @@ import HomeScreen from './app/Screens/HomeScreen.js';
 import BottomProfile from './app/Screens/BottomProfile.js';
 import Description from './app/Screens/Exercise/Description.js';
 import Question from './app/Screens/Question.js';
+import Startex from './app/Screens/Exercise/Startex.js';
 import Exercise1 from './app/Screens/Exercise/Exercise1.js';
 import Exercise2 from './app/Screens/Exercise/Exercise2.js';
 import Exercise4 from './app/Screens/Exercise/Exercise4.js';
@@ -56,6 +57,7 @@ const AppNavigator = () => (
       <Stack.Screen name="AnalysisScreen" component={AnalysisScreen} />
       <Stack.Screen name="Description" component={Description} />
       <Stack.Screen name="Question" component={Question} />
+      <Stack.Screen name="Startex" component={Startex} />
       <Stack.Screen name="Exercise1" component={Exercise1} />
       <Stack.Screen name="Exercise2" component={Exercise2} />
       <Stack.Screen name="Exercise4" component={Exercise4} />

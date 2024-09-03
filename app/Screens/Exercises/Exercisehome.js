@@ -29,7 +29,7 @@ export default function Exercisehome() {
   useEffect(() => {
     const fetchExercises = async () => {
       try {
-        const response = await axios.get('http://192.168.1.113:1337/api/exercises?populate=*');
+        const response = await axios.get('http://192.168.1.141:1337/api/exercises?populate=*');
         console.log("API Response:", response.data);
 
         const exercisesData = response.data.data.map(item => ({
