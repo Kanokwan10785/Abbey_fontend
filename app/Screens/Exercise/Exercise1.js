@@ -86,7 +86,7 @@ const Exercise1 = () => {
     if (currentIndex < items.length - 1) {
       navigation.navigate('Exercise2', { item: items[currentIndex + 1], items, currentIndex });
     } else {
-      navigation.navigate('Exercise4');
+      navigation.navigate('Exercise4', { item, items, currentIndex });
     }
   };
 
