@@ -17,7 +17,7 @@ const Startex = () => {
   }
 
   const [isRunning, setIsRunning] = useState(true);
-  const [time, setTime] = useState(5); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
+  const [time, setTime] = useState(3); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
   const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
@@ -137,18 +137,22 @@ const styles = StyleSheet.create({
   },
   exerciseTitle: {
     fontSize: 25,
-    marginVertical: 20,
+    marginTop: 20,
+    // marginVertical: 20,
     fontFamily: 'appfont_01',
   },
   timer: {
     fontSize: 48,
-    marginVertical: 20,
+    marginVertical: 10,
     fontFamily: 'appfont_01',
   },
-  navigationContainer: {
+navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%',
+    width: '100%',
+    position: 'absolute', // จัดตำแหน่งเป็นแบบ absolute
+    bottom: 60, // ชิดกับด้านล่างของหน้าจอ (ปรับค่าตามที่ต้องการ)
+    paddingHorizontal: 20, // เพิ่ม padding แนวนอนเพื่อให้มีระยะห่างจากขอบจอ
   },
   navButton: {
     padding: 10,
@@ -160,7 +164,7 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     backgroundColor: '#FFA500',
-    padding: 10,
+    padding: 20,
     borderRadius: 20,
     marginHorizontal: 10,
   },

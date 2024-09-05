@@ -37,6 +37,8 @@ const Exercise1 = () => {
     }
   }, [item]);
 
+  // console.log('Exercise1:', item);
+
   useEffect(() => {
     if (isRunning && time >= 0) {
       const id = setInterval(() => {
@@ -49,7 +51,7 @@ const Exercise1 = () => {
             if (currentIndex < items.length - 1) {
               navigation.navigate('Exercise2', { item, items, currentIndex });
             } else {
-              navigation.navigate('Exercise4');
+              navigation.navigate('Exercise4', { item, items, currentIndex });
             }
             return 0;
           }
@@ -193,10 +195,13 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     fontFamily: 'appfont_01',
   },
-  navigationContainer: {
+navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%',
+    width: '100%',
+    position: 'absolute', // จัดตำแหน่งเป็นแบบ absolute
+    bottom: 60, // ชิดกับด้านล่างของหน้าจอ (ปรับค่าตามที่ต้องการ)
+    paddingHorizontal: 20, // เพิ่ม padding แนวนอนเพื่อให้มีระยะห่างจากขอบจอ
   },
   navButton: {
     padding: 10,
@@ -216,7 +221,7 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     backgroundColor: '#FFA500',
-    padding: 10,
+    padding: 20,
     borderRadius: 20,
     marginHorizontal: 30,
     marginBottom: 0,

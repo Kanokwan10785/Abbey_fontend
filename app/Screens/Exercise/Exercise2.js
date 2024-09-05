@@ -1,60 +1,100 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react'; // นำเข้า useContext จาก react
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../assets/image/cancel.png';
+import coin from '../../../assets/image/coin.png';
+import { BalanceContext } from './../BalanceContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Exercise2 = () => {
   const navigation = useNavigation();
+  const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex } = route.params || {};
+
+  const [time, setTime] = useState(5);
+  const [intervalId, setIntervalId] = useState(null);
 
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
-  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
-  const [intervalId, setIntervalId] = useState(null);
-
   useEffect(() => {
-    setTime(3); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
+    setTime(5); 
+    const id = setInterval( async () => {
+
+      // เพิ่มค่า item.dollar เข้าไปใน balance
+      const updatedBalance = balance + item.dollar;
+      setBalance(updatedBalance);  // อัปเดต balance ใน state
   
-    const id = setInterval(() => {
+      // บันทึก balance ใหม่ลงใน AsyncStorage และส่งไปยังเซิร์ฟเวอร์
+      try {
+        await AsyncStorage.setItem('balance', updatedBalance.toString());
+        await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
+      } catch (error) {
+        console.error('Error saving balance:', error);
+      }
+
       setTime((prevTime) => {
         if (prevTime > 0) {
           return prevTime - 1;
         } else {
           clearInterval(id);
           const nextIndex = currentIndex + 1;
-          console.log('Before navigating, nextIndex:', nextIndex);
           if (nextIndex < items.length) {
             navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
           } else {
-            navigation.navigate('Exercise4'); // ไปยังหน้าสิ้นสุดการออกกำลังกาย
+            navigation.navigate('Exercise4'); 
           }
           return 0;
         }
       });
     }, 1000);
     setIntervalId(id);
-  
+
     return () => clearInterval(id);
   }, [currentIndex, items, navigation]);
 
-  useEffect(() => {
-    console.log('currentIndex after update:', currentIndex); // ตรวจสอบว่าข้อมูลถูกส่งมาหรือไม่
-  }, [currentIndex]);
-
-  const handleNext = () => {
+  const updateUserBalance = async (newBalance) => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
+      const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
+  
+      const response = await fetch(`http://192.168.1.141:1337/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
+          'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
+        },
+        body: JSON.stringify({
+          balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Balance updated successfully:', data);
+      } else {
+        console.log('Failed to update balance:', data.message);
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error);
+    }
+  };
+  
+  
+  const handleNext = async () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
+
     const nextIndex = currentIndex + 1;
-    console.log('Next Index in handleNext:', nextIndex);
     if (nextIndex < items.length) {
       navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
     } else {
-      navigation.navigate('Exercise4'); // ไปยังหน้าสิ้นสุดการออกกำลังกาย
+      navigation.navigate('Exercise4');
     }
   };
 
@@ -75,23 +115,36 @@ const Exercise2 = () => {
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
-        <Image source={cancel} style={styles.close} />
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
+          <Image source={cancel} style={styles.close} />
+        </TouchableOpacity>
+        <View style={styles.coinsContainer}>
+          <Image source={coin} style={styles.coin} />
+          <Text style={styles.coinsText}>{balance !== null ? balance.toLocaleString() : "0"}</Text>
+        </View>
+      </View>
       <View style={styles.exerciseContainer}>
         <View style={styles.exerciseImageContainer}>
           <Image source={{ uri: items[currentIndex + 1]?.animation }} style={styles.exerciseImage} />
         </View>
         <View style={styles.exerciseDetails}>
-        <Text style={styles.exerciseCounter}>ท่าถัดไป</Text>
-        <Text style={styles.exerciseTitle}>{items[currentIndex + 1]?.name}</Text>
+          <Text style={styles.exerciseCounter}>ท่าถัดไป</Text>
+          <Text style={styles.exerciseTitle}>{items[currentIndex + 1]?.name}</Text>
         </View>
       </View>
       <Text style={styles.timer}>พักผ่อน</Text>
       <Text style={styles.timer}>{formatTime(time)}</Text>
+      <View style={styles.trophyContainer}>
+        <View style={styles.coinRewardContainer}>
+          <Image source={coin} style={styles.coin} />
+          <Text style={styles.coinRewardText}>{item.dollar}</Text>
+        </View>
+      </View>
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
           <Icon name="chevron-left" size={60} color="#808080" />
@@ -103,6 +156,8 @@ const Exercise2 = () => {
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -152,16 +207,59 @@ const styles = StyleSheet.create({
   },
   timer: {
     fontSize: 48,
-    marginVertical: 20,
+    marginVertical: 10,
     fontFamily: 'appfont_01',
   },
-  navigationContainer: {
+navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%',
+    width: '100%',
+    position: 'absolute', // จัดตำแหน่งเป็นแบบ absolute
+    bottom: 60, // ชิดกับด้านล่างของหน้าจอ (ปรับค่าตามที่ต้องการ)
+    paddingHorizontal: 20, // เพิ่ม padding แนวนอนเพื่อให้มีระยะห่างจากขอบจอ
   },
   navButton: {
     padding: 10,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  coin: {
+    width: 30,
+    height: 30,
+  },
+  coinsContainer: {
+    backgroundColor: '#FFA500',
+    padding: 5,
+    margin: 10,
+    borderRadius: 25,
+    paddingHorizontal: 10,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coinsText: {
+    fontSize: 18,
+    marginLeft: 8,
+    fontFamily: 'appfont_01',
+    color: '#fff',
+  },
+  coinRewardContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFA500',
+    padding: 8,
+    borderRadius: 25,
+    marginVertical: 20,
+  },
+  coinRewardText: {
+    fontFamily: 'appfont_01',
+    fontSize: 18,
+    color: '#FFF',
+    marginLeft: 8,
+    marginHorizontal: 10,
   },
 });
 

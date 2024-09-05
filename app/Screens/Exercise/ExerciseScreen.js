@@ -8,6 +8,7 @@ import ex2 from '../../../assets/image/ex2.gif';
 import ex3 from '../../../assets/image/ex3.gif';
 import ex4 from '../../../assets/image/ex4.gif';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 // const exercises = [
 //   { id: '1', image: ex1 ,name: 'ท่ากระโดดตบ', duration: '00:30 น', description: 'เริ่มจากอยู่ในท่ายืนเท้าชิด แขนแนบลำตัว จากนั้นกระโดดแยกขา และมือทั้งสองข้างแตะกันเหนือศีรษะ กลับสู่ท่าเตรียม และทำซ้ำ' },
@@ -37,7 +38,7 @@ const ExerciseScreen = () => {
 
   const fetchExercises = async (day) => {
     try {
-      // const response = await fetch(`http://192.168.1.141:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day${day}&populate=exercises.animation,exercises.muscle`);
+      //const response = await fetch(`http://192.168.1.141:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day${day}&populate=exercises.animation,exercises.muscle`);
       const response = await fetch(`http://192.168.1.141:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day1&populate=exercises.animation,exercises.muscle`);
       const data = await response.json();
 
@@ -80,8 +81,12 @@ const ExerciseScreen = () => {
           duration: displayText,
           description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
           image: imageUrl,
+          dollar: exercise.attributes.dollar,
+          trophy: data.data[0]?.attributes?.trophy || 0,
         };
       }) || [];
+
+      // console.log('exerciseData:', exerciseData);
 
       setExercises(exerciseData);
       setTotalTime(totalDuration);
@@ -134,7 +139,7 @@ const ExerciseScreen = () => {
       </View>
       <TouchableOpacity
         style={styles.startButton}
-        onPress={() => navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false })}
+        onPress={() => navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0 , isRest: false })}
       >
         <Text style={styles.startButtonText}>เริ่ม</Text>
       </TouchableOpacity>
