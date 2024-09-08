@@ -57,7 +57,7 @@ export default function HomeScreen() {
         const skinLabel = selectedItems.skin ? selectedItems.skin.label : 'K00';
 
         const petKey = `${shirtLabel}${pantLabel}${skinLabel}`;
-        console.log("Generated Pet Key:", petKey); // ตรวจสอบค่า key ที่สร้างขึ้น
+        console.log("Generated Pet Home label:", petKey); // ตรวจสอบค่า key ที่สร้างขึ้น
 
         const homePetsData = await fetchHomePets(); // ดึงข้อมูลสัตว์เลี้ยงทั้งหมด
         // console.log("Home Pets Data:", homePetsData); // ตรวจสอบข้อมูลสัตว์เลี้ยงที่ได้รับ

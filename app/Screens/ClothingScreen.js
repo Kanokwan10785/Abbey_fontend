@@ -91,7 +91,7 @@ export default function ClothingScreen() {
       const skinLabel = selectedItems.skin?.label || 'K00';
   
       const combinedLabel = `${shirtLabel}${pantLabel}${skinLabel}`;
-      console.log('Combined label:', combinedLabel);
+      console.log('Combined Pet Clothing label:', combinedLabel);
   
       try {
         // ขั้นตอนที่ 1 และ 2
