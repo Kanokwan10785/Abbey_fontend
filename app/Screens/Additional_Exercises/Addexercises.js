@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ScrollView } from 'react-native';
+import React , { useEffect, useState }from 'react';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../BottomBar';
 import { useNavigation } from '@react-navigation/native';
@@ -13,32 +13,116 @@ import knee from '../../../assets/image/image-ex/knee.png';
 import Shoulder from '../../../assets/image/image-ex/Shoulder.webp';
 
 
-
-const exercises = [
-    { id: '1', image: backache ,name: 'บรรเทาอาการปวดหลัง', duration: '15:00 น', reps: '15 ท่า',},
-    { id: '2', image: neck ,name: 'บรรเทาอาการคอตึง', duration: '15:00 น', reps: '15 ท่า' },
-    { id: '3', image: Shoulder ,name: 'บรรเทาอาการตั้งไหล่', duration: '15:00 น', reps: '15 ท่า'  },
-    { id: '4', image: knee ,name: 'บรรเทาอาการปวดเข่า', duration: '15:00 น', reps: '15 ท่า'  },
-  ];
-
-const Addexercises = () => {
+  const Addexercises = () => {
     const navigation = useNavigation();
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+   
+    useEffect(() => {
+      fetchCourses();
+    }, []);
+  
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch(
+          `http://192.168.1.174:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
+        );
+        const data = await response.json();
+  
+        console.log("API Response:", data);
+  
+        if (!data || !data.data || data.data.length === 0) {
+          console.error("ไม่มีข้อมูลที่ต้องการจาก API");
+          setCourses([]);
+          setLoading(false);
+          return;
+        }
+  
+        const courseData = data.data.map((course) => {
+          const courseAttributes = course.attributes;
+          const courseImageUrl = courseAttributes?.image?.data?.[0]?.attributes?.url || null;
+  
+          let totalDuration = 0;
+  
+          const exerciseData = courseAttributes?.all_exercises?.data.map((exercise) => {
+            let displayText = '';
+    
+                // If exercise has reps, assume 30 seconds per rep
+                if (exercise.attributes.reps) {
+                    displayText = `${exercise.attributes.reps} ครั้ง`;
+                    totalDuration += 30;
+                } 
+                // If exercise has duration, convert it to seconds and display
+                else if (exercise.attributes.duration) {
+                    const durationInSeconds = Math.floor(exercise.attributes.duration * 60);
+                    const minutes = Math.floor(durationInSeconds / 60);
+                    const seconds = durationInSeconds % 60;
+    
+                    displayText = minutes > 0
+                        ? seconds > 0
+                            ? `${minutes} นาที ${seconds} วินาที`
+                            : `${minutes} นาที`
+                        : `${seconds} วินาที`;
+    
+                    totalDuration += durationInSeconds;
+                }
+  
+            return {
+              id: exercise.id,
+              name: exercise.attributes.name,
+              duration: displayText,
+            };
+          }) || [];
+  
+          return {
+            id: course.id,
+            name: courseAttributes.name,
+            trophy: courseAttributes.trophy || 0,
+            imageUrl: courseImageUrl,
+            totalExercises: exerciseData.length,
+            totalTime: totalDuration,
+          };
+        });
+  
+        setCourses(courseData);
+        setLoading(false);
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาด:", error);
+        setLoading(false);
+      }
+    };
+  
+    const formatTotalTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes} นาที ${remainingSeconds} วินาที`;
+    };
+  
     const renderItem = ({ item }) => (
-        <View style={styles.exerciseItem}>
-        <TouchableOpacity style={styles.course}>
-          <Image source={item.image} style={styles.courseImage} />
+      <View>
+        <TouchableOpacity style={styles.course} onPress={() => navigation.navigate('Couseexercies', { courseId: item.id })}>
+          <Image source={{ uri: item.imageUrl }} style={styles.courseImage} />
           <View style={styles.courseInfo}>
             <Text style={styles.courseText}>{item.name}</Text>
-            <View style={{flexDirection: 'row'}}>
-            <Icon name="clock" size={20} color="#F6A444" style={{marginTop: 5}} />
-            <Text style={styles.courseSubText}>{item.duration}</Text>
-            <Icon name="dumbbell" size={20} color="#F6A444" style={{marginTop: 5}} />
-            <Text style={styles.courseSubText}>{item.reps}</Text>
+            <View style={{ flexDirection: 'row' }}>
+              <Icon name="clock" size={20} color="#F6A444" style={{ marginTop: 5,marginRight:10 }} />
+              <Text style={styles.courseSubText}>{formatTotalTime(item.totalTime)}</Text>
+              <Icon name="dumbbell" size={20} color="#F6A444" style={{ marginTop: 5,marginRight:10 }} />
+              <Text style={styles.courseSubText}>{item.totalExercises}  ท่า</Text>
             </View>
           </View>
         </TouchableOpacity>
+      </View>
+    );
+
+    if (loading) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#F6A444" />
         </View>
       );
+    }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -83,10 +167,10 @@ const Addexercises = () => {
       </View>
     </View>
     <FlatList
-        data={exercises}
+        data={courses}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
-        style={styles.exerciseList}
+        keyExtractor={item => item.id.toString()}
+        style={styles.courseList}
       />
       <BottomBar />
     </View>
@@ -178,9 +262,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
+  courseList: {
+    marginHorizontal: 10,
+  },
   courseImage: {
-    width: 120,
-    height: 70,
+    width: 130,
+    height: 80,
     borderRadius: 8,
 },
   courseInfo: {
@@ -197,6 +284,7 @@ const styles = StyleSheet.create({
     color: '#000',
     marginTop: 5,
     marginEnd: 30,
+    marginRight: 30,
   },
   exerciseList: {
     marginHorizontal: 1,

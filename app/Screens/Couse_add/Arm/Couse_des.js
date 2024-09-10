@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const Arm_des = ({ route, navigation }) => {
+const Couse_des = ({ route, navigation }) => {
   const { item, items } = route.params;
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -197,4 +197,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default Arm_des;
+export default Couse_des;

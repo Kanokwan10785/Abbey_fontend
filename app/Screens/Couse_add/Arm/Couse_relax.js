@@ -1,34 +1,33 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useEffect, useContext } from 'react'; // นำเข้า useContext จาก react
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import cancel from '../../../assets/image/cancel.png';
-import coin from '../../../assets/image/coin.png';
-import { BalanceContext } from './../BalanceContext';
+import cancel from '../../../../assets/image/cancel.png';
+import { BalanceContext } from '../../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import coin from '../../../../assets/image/coin.png';
 
-const Exercise2 = () => {
+const Couse_relax = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex } = route.params || {};
 
-  const [time, setTime] = useState(5);
-  const [intervalId, setIntervalId] = useState(null);
-
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
+  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
+  const [intervalId, setIntervalId] = useState(null);
+
   useEffect(() => {
-    setTime(5); 
+    setTime(3); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
+
     const id = setInterval( async () => {
 
-      // เพิ่มค่า item.dollar เข้าไปใน balance
       const updatedBalance = balance + item.dollar;
-      setBalance(updatedBalance);  // อัปเดต balance ใน state
-  
-      // บันทึก balance ใหม่ลงใน AsyncStorage และส่งไปยังเซิร์ฟเวอร์
+      setBalance(updatedBalance);
+
       try {
         await AsyncStorage.setItem('balance', updatedBalance.toString());
         await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
@@ -41,11 +40,10 @@ const Exercise2 = () => {
           return prevTime - 1;
         } else {
           clearInterval(id);
-          const nextIndex = currentIndex + 1;
-          if (nextIndex < items.length) {
-            navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
+          if (currentIndex < items.length - 1) {
+            navigation.navigate('Arm_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1 }); // ไปยังท่าถัดไป
           } else {
-            navigation.navigate('Exercise4'); 
+            navigation.navigate('Arm_finish'); // ไปยังหน้าสิ้นสุดการออกกำลังกาย
           }
           return 0;
         }
@@ -54,7 +52,7 @@ const Exercise2 = () => {
     setIntervalId(id);
 
     return () => clearInterval(id);
-  }, [currentIndex, items, navigation]);
+  }, [currentIndex]);
 
   const updateUserBalance = async (newBalance) => {
     try {
@@ -83,18 +81,16 @@ const Exercise2 = () => {
       console.error('Error updating balance:', error);
     }
   };
-  
-  
-  const handleNext = async () => {
+
+
+  const handleNext = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < items.length) {
-      navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
+    if (currentIndex < items.length - 1) {
+      navigation.navigate('Arm_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1 });
     } else {
-      navigation.navigate('Exercise4');
+      navigation.navigate('Arm_finish');
     }
   };
 
@@ -102,11 +98,10 @@ const Exercise2 = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-
     if (currentIndex > 0) {
-      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
+      navigation.navigate('Arm_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
     } else {
-      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0 });
+      navigation.navigate('Arm_start', { item: items[0], items, currentIndex: 0 });
     }
   };
 
@@ -115,12 +110,11 @@ const Exercise2 = () => {
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-  
 
   return (
-    <View style={styles.container}>
+<View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Armexercies')}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -263,4 +257,4 @@ navigationContainer: {
   },
 });
 
-export default Exercise2;
+export default Couse_relax;

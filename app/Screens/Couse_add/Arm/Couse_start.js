@@ -4,7 +4,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../../assets/image/cancel.png';
 
-const Arm_start = () => {
+const Couse_start = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { items, currentIndex } = route.params || {};
@@ -235,5 +235,5 @@ navigationContainer: {
   },
 });
 
-export default Arm_start;
+export default Couse_start;
   

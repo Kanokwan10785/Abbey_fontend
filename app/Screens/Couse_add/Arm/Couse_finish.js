@@ -4,10 +4,10 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import coin from '../../../../assets/image/coin.png';
 import cancel from '../../../../assets/image/cancel.png'
 import { useRoute } from '@react-navigation/native';
-import { BalanceContext } from './../../BalanceContext';
+import { BalanceContext } from '../../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Arm_finish = () => {
+const Couse_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
@@ -177,4 +177,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Arm_finish;
+export default Couse_finish;

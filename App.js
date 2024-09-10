@@ -25,8 +25,9 @@ import ExerciseDetailScreen from './app/Screens/Exercises/ExerciseDetailScreen.j
 import ExerciseStartScreen from './app/Screens/Exercises/ExerciseStartScreen.js';
 import ExerciseCompletionScreen from './app/Screens/Exercises/ExerciseCompletionScreen.js';
 import Addexercises from './app/Screens/Additional_Exercises/Addexercises.js';
-import Bodyexercise from './app/Screens/Additional_Exercises/Bodyexercise.js';
+// import Bodyexercise from './app/Screens/Additional_Exercises/Bodyexercise.js';
 import Armexercies from './app/Screens/Additional_Exercises/Arm/Armexercies.js';
+import Arm_startarm from './app/Screens/Additional_Exercises/Arm/Arm_startarm.js';
 import Arm_start from './app/Screens/Additional_Exercises/Arm/Arm_start.js';
 import Arm_finish from './app/Screens/Additional_Exercises/Arm/Arm_finish.js';
 import Arm_relax from './app/Screens/Additional_Exercises/Arm/Arm_relax.js';
@@ -37,6 +38,12 @@ import Backexercises from './app/Screens/Additional_Exercises/Back/Backexercies.
 import FoodScreen from './app/Screens/FoodScreen.js';
 import { ClothingProvider } from './app/Screens/ClothingContext';
 import { BalanceProvider } from './app/Screens//BalanceContext';
+import Couseexercies from './app/Screens/Couse_add/Arm/Couseexercies.js';
+import Couse_start from './app/Screens/Couse_add/Arm/Couse_start.js';
+import Couse_startc from './app/Screens/Couse_add/Arm/Couse_startc.js';
+import Couse_relax from './app/Screens/Couse_add/Arm/Couse_relax.js';
+import Couse_finish from './app/Screens/Couse_add/Arm/Couse_finish.js';
+import Couse_des from './app/Screens/Couse_add/Arm/Couse_des.js';
 
 const Stack = createNativeStackNavigator();
 
@@ -66,9 +73,16 @@ const AppNavigator = () => (
       <Stack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} />
       <Stack.Screen name="ExerciseStart" component={ExerciseStartScreen} />
       <Stack.Screen name="ExerciseCompletion" component={ExerciseCompletionScreen} />
+      <Stack.Screen name="Couseexercies" component={Couseexercies} />
+      <Stack.Screen name='Couse_start' component={Couse_start} />
+      <Stack.Screen name='Couse_startc' component={Couse_startc} />
+      <Stack.Screen name='Couse_relax' component={Couse_relax} />
+      <Stack.Screen name='Couse_finish' component={Couse_finish} />
+      <Stack.Screen name='Couse_des' component={Couse_des} />
       <Stack.Screen name="Addexercises" component={Addexercises} />
-      <Stack.Screen name="Bodyexercise" component={Bodyexercise} />
+      {/* <Stack.Screen name="Bodyexercise" component={Bodyexercise} /> */}
       <Stack.Screen name="Armexercies" component={Armexercies} />
+      <Stack.Screen name="Arm_startarm" component={Arm_startarm} />
       <Stack.Screen name="Arm_start" component={Arm_start} />
       <Stack.Screen name="Arm_finish" component={Arm_finish} />
       <Stack.Screen name="Arm_relax" component={Arm_relax} />
