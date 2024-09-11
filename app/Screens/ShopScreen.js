@@ -304,10 +304,23 @@ export default function ShopScreen() {
 // ฟังก์ชันสำหรับเรียงลำดับสินค้า
 const sortItems = () => {
   const sorted = itemsData[selectedCategory].sort((a, b) => {
+    const specialLabels = ['Z00', 'S00', 'P00'];
+
+    // ถ้า a.label หรือ b.label เป็นหนึ่งใน specialLabels ให้เรียงไว้ท้ายสุด
+    const aIsSpecial = specialLabels.includes(a.label);
+    const bIsSpecial = specialLabels.includes(b.label);
+
+    // ถ้า a เป็น special แต่ b ไม่เป็น special ให้ b มาก่อน
+    if (aIsSpecial && !bIsSpecial) return 1;
+    // ถ้า b เป็น special แต่ a ไม่เป็น special ให้ a มาก่อน
+    if (!aIsSpecial && bIsSpecial) return -1;
+
+    // ถ้าไม่มีใครเป็น special label, ใช้การเรียงปกติ
     if (a.label < b.label) return -1;
     if (a.label > b.label) return 1;
     return 0;
   });
+
   setSortedItems(sorted);
 };
 
@@ -321,7 +334,7 @@ useEffect(() => {
 // การแสดงรายการสินค้า
 const renderItems = () => {
   return sortedItems.map((item, index) => {
-    const isHidden = item.label === 'Z00';
+    const isHidden = item.label === 'Z00' || item.label === 'S00' || item.label === 'P00';
     const alreadyOwned = purchasedItems[item.label] === true;
 
     return (
