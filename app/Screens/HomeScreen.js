@@ -39,7 +39,7 @@ export default function HomeScreen() {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("User Data:", userData); // ตรวจสอบข้อมูลผู้ใช้ที่ได้รับ
+        // console.log("User Data:", userData); // ตรวจสอบข้อมูลผู้ใช้ที่ได้รับ
         setBalance(userData.balance);
       } catch (error) {
         console.error("Error fetching user profile", error);
