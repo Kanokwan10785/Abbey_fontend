@@ -309,11 +309,22 @@ const ProfileButton = () => {
   };
 
   const logout = async () => {
-      await AsyncStorage.removeItem('token'); // ลบ token ออกจาก AsyncStorage
-      setModalVisible(false); // ปิดโมดอล
-      navigation.navigate('Login'); // เปลี่ยนไปใช้ navigate แทน replace
+    try {
+      // ลบ token ออกจาก AsyncStorage
+      await AsyncStorage.removeItem('token');
+      
+      // ปิดโมดอล (ถ้ามี)
+      setModalVisible(false);
+  
+      // เปลี่ยนหน้าไปยังหน้า Login
+      navigation.navigate('Login');
+  
       console.log('User logged out');
-  };
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // คุณสามารถแสดงข้อความแจ้งเตือนหรือจัดการข้อผิดพลาดได้ที่นี่
+    }
+  };  
 
   return (
     <View style={styles.profileContainer}>
