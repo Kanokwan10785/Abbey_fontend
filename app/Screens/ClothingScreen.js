@@ -19,38 +19,42 @@ export default function ClothingScreen() {
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
   const [petImageUrl, setPetImageUrl] = useState(null);
-
-  // ใช้ useRef เพื่อเก็บค่า previousCombinedLabel ข้ามรอบการเรนเดอร์
   const previousCombinedLabelRef = useRef(null);
 
+  // ใช้เพื่อเก็บข้อมูล cache สำหรับ clothing pets
+  const cachedClothingPetsData = useRef(null);
+
+  // ฟังก์ชัน helper เพื่อดึง userId จาก AsyncStorage
+  const getUserId = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) throw new Error('User ID not found in AsyncStorage');
+      return userId;
+    } catch (error) {
+      console.error('Error retrieving user ID:', error);
+      return null;
+    }
+  };
+
+  // โหลดข้อมูลเสื้อผ้าผู้ใช้จาก AsyncStorage และ API
   useEffect(() => {
     const loadUserClothingData = async () => {
       try {
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) {
-          console.error('User ID not found in AsyncStorage');
-          return;
-        }
-  
-        // Clear previous user's data before loading new data
-        setSelectedItems({ shirt: null, pant: null, skin: null });
-        setPetImageUrl(null);
-  
-        // Load saved outfits, pet image, and clothing data
+        const userId = await getUserId();
+        if (!userId) return;
+
         const savedOutfits = await AsyncStorage.getItem(`userOutfit-${userId}`);
-        const savedPetImageUrl = await AsyncStorage.getItem(`petImageUrl-${userId}`);
         const cachedClothingData = await AsyncStorage.getItem(`clothingData-${userId}`);
-  
+
         if (savedOutfits) {
           setSelectedItems(JSON.parse(savedOutfits));
         }
-        if (savedPetImageUrl) {
-          setPetImageUrl(savedPetImageUrl);
-        }
+
         if (cachedClothingData) {
           organizeClothingData(JSON.parse(cachedClothingData));
         }
-  
+
+        // ดึงข้อมูลจาก API และจัดเก็บใน AsyncStorage
         const data = await fetchUserClothingData(userId);
         if (data && data.length > 0) {
           organizeClothingData(data);
@@ -62,8 +66,9 @@ export default function ClothingScreen() {
     };
   
     loadUserClothingData();
-  }, []);
-  
+  }, [setSelectedItems]);
+
+  // จัดหมวดหมู่เสื้อผ้าผู้ใช้
   const organizeClothingData = (data) => {
     const organizedData = { shirt: [], pant: [], skin: [] };
 
@@ -92,33 +97,47 @@ export default function ClothingScreen() {
     setItemsData(organizedData);
   };
 
+  // โหลดข้อมูลเสื้อผ้าสัตว์เลี้ยงจาก cache หากมี
+  const fetchAndCacheClothingPets = async () => {
+    if (cachedClothingPetsData.current) {
+      return cachedClothingPetsData.current;
+    }
+    try {
+      const data = await fetchClothingPets();
+      cachedClothingPetsData.current = data;
+      return data;
+    } catch (error) {
+      console.error('Error fetching clothing pets:', error);
+      throw error;
+    }
+  };
+
+  // อัปเดตภาพสัตว์เลี้ยงเมื่อเสื้อผ้าเปลี่ยนแปลง
   useEffect(() => {
     const updatePetImage = async () => {
       const shirtLabel = selectedItems.shirt?.label || 'S00';
       const pantLabel = selectedItems.pant?.label || 'P00';
       const skinLabel = selectedItems.skin?.label || 'K00';
-    
       const combinedLabel = `${shirtLabel}${pantLabel}${skinLabel}`;
-  
-      // ตรวจสอบว่าค่า combinedLabel เปลี่ยนแปลงหรือไม่
+
       if (combinedLabel !== previousCombinedLabelRef.current) {
-        previousCombinedLabelRef.current = combinedLabel;  // อัปเดตค่าก่อนหน้า
-    
-        console.log('Combined Pet Clothing label:', combinedLabel);
-    
+        previousCombinedLabelRef.current = combinedLabel;
+        console.log('Generated Pet Clothes label:', combinedLabel);
+
         try {
-          const clothingPetsData = await fetchClothingPets();
+          const clothingPetsData = await fetchAndCacheClothingPets();
           const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
-    
+
           if (matchingPet) {
-            const userId = await AsyncStorage.getItem('userId');
-            if (userId) {
-              await fetchAndUpdateClothingPets(combinedLabel, userId);  // อัปเดต pet ของผู้ใช้
-            }
-  
-            const petUrl = matchingPet.url;
-            setPetImageUrl(petUrl);
-            await AsyncStorage.setItem(`petImageUrl-${userId}`, petUrl);
+            const userId = await getUserId();
+            if (!userId) return;
+
+            // ดึงข้อมูลจาก API ก่อนแล้วเก็บลงใน AsyncStorage หลังจากได้ข้อมูล
+            setPetImageUrl(matchingPet.url);
+            await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url); // บันทึกข้อมูลลง AsyncStorage หลังดึงสำเร็จ
+
+            // อัปเดตข้อมูลสัตว์เลี้ยงของผู้ใช้ในเซิร์ฟเวอร์
+            await fetchAndUpdateClothingPets(combinedLabel, userId);
           } else {
             setPetImageUrl(null);
           }
@@ -127,16 +146,14 @@ export default function ClothingScreen() {
         }
       }
     };
-  
-    updatePetImage();
-  }, [selectedItems.shirt, selectedItems.pant, selectedItems.skin]);  // เรียกฟังก์ชันเมื่อเสื้อผ้าเปลี่ยนแปลง  
 
+    updatePetImage();
+  }, [selectedItems]);
+
+  // ฟังก์ชันการสวมใส่เสื้อผ้า
   const handleWear = async (category, image, name, label) => {
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) {
-      console.error('User ID not found in AsyncStorage');
-      return;
-    }
+    const userId = await getUserId();
+    if (!userId) return;
 
     const updatedItems = {
       ...selectedItems,
@@ -144,50 +161,30 @@ export default function ClothingScreen() {
     };
 
     setSelectedItems(updatedItems);
-
-    // บันทึกข้อมูลการสวมใส่ล่าสุดใน AsyncStorage
     await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
   };
 
+  // ฟังก์ชันการถอดเสื้อผ้า
   const handleRemove = async (category) => {
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) {
-      console.error('User ID not found in AsyncStorage');
-      return;
-    }
+    const userId = await getUserId();
+    if (!userId) return;
 
     if (category === 'skin') {
       try {
-        const clothingPetsData = await fetchClothingPets();
+        const clothingPetsData = await fetchAndCacheClothingPets();
         const matchingPet = clothingPetsData.find(item => item.label === 'K00');
-        
-        if (matchingPet) {
-          const updatedItems = {
-            ...selectedItems,
-            [category]: { image: matchingPet.url, name: 'K00', label: 'K00' },
-          };
-          setSelectedItems(updatedItems);
-
-          await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
-        } else {
-          console.error('No matching pet found for label K00');
-          const updatedItems = {
-            ...selectedItems,
-            [category]: { image: empty, name: 'Unknown', label: 'K00' },
-          };
-          setSelectedItems(updatedItems);
-
-          await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
-        }
-      } catch (error) {
-        console.error('Error fetching pet image for K00:', error);
         const updatedItems = {
           ...selectedItems,
-          [category]: { image: empty, name: 'Unknown', label: 'K00' },
+          [category]: {
+            image: matchingPet ? matchingPet.url : empty,
+            name: 'K00',
+            label: 'K00',
+          },
         };
         setSelectedItems(updatedItems);
-
         await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+      } catch (error) {
+        console.error('Error fetching pet image for K00:', error);
       }
     } else {
       const updatedItems = {
@@ -195,31 +192,27 @@ export default function ClothingScreen() {
         [category]: null,
       };
       setSelectedItems(updatedItems);
-
       await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
     }
   };
 
+  // แสดงรายการเสื้อผ้า
   const renderItems = () => {
     if (!itemsData[selectedCategory].length) {
       return null;
     }
 
-    return (
-      <>
-        {itemsData[selectedCategory].map((item) => (
-          <View key={item.id} style={styles.item}>
-            <Image source={item.image ? { uri: item.image } : empty} style={styles.itemImage} />
-            <Text style={styles.itemName}>{item.name}</Text>
-            {item.image && (
-              <TouchableOpacity style={styles.itemButton} onPress={() => handleWear(selectedCategory, item.image, item.name, item.label)}>
-                <Text style={styles.itemButtonText}>สวมใส่</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-      </>
-    );
+    return itemsData[selectedCategory].map((item) => (
+      <View key={item.id} style={styles.item}>
+        <Image source={item.image ? { uri: item.image } : empty} style={styles.itemImage} />
+        <Text style={styles.itemName}>{item.name}</Text>
+        {item.image && (
+          <TouchableOpacity style={styles.itemButton} onPress={() => handleWear(selectedCategory, item.image, item.name, item.label)}>
+            <Text style={styles.itemButtonText}>สวมใส่</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    ));
   };
 
   return (

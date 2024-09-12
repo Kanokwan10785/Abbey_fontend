@@ -134,6 +134,7 @@ export const fetchUserClothingData = async (userId) => {
       throw new Error('Invalid userId');
     }
 
+    // เรียก API เพื่อนำข้อมูลสินค้าและเสื้อผ้าของผู้ใช้
     const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label&[fields][2]=category`);
     const petClothingResponse = await api.get(`/api/clothing-items?populate=*&filters[users][id][$eq]=${userId}`);
 
@@ -141,17 +142,19 @@ export const fetchUserClothingData = async (userId) => {
       throw new Error('Failed to fetch data from API');
     }
 
+    // จัดเก็บข้อมูลสินค้าเป็นแผนที่ (map)
     const shopItemsMap = shopResponse.data.data.reduce((map, item) => {
-      if (item.attributes.name) {
+      if (item.attributes?.name) {
         map[item.attributes.name] = {
-          label: item.attributes.label,
+          label: item.attributes.label || 'Unknown',
           imageUrl: item.attributes.image?.data?.attributes?.url || null,
-          category: item.attributes.category,
+          category: item.attributes.category || 'Unknown',
         };
       }
       return map;
     }, {});
 
+    // จัดเรียงข้อมูลเสื้อผ้าที่ผู้ใช้เลือก
     const clothingItems = petClothingResponse.data.data?.map(item => {
       const chooseClothesData = item.attributes.choose_clothe?.data;
 
@@ -183,7 +186,7 @@ export const fetchUserClothingData = async (userId) => {
     return clothingItems;
   } catch (error) {
     console.error('Error fetching user clothes data:', error.response ? error.response.data : error.message);
-    throw error;
+    throw new Error(`Failed to fetch user clothes data: ${error.message}`);
   }
 };
 
@@ -192,6 +195,7 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
   try {
     const clothingPetsData = await fetchClothingPets();
 
+    // หา item ที่มี label ตรงกับชุดเสื้อผ้าที่ผู้ใช้เลือก
     const matchedItem = clothingPetsData.find(item => item.label === combinedLabel);
 
     if (!matchedItem) {
@@ -200,51 +204,51 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
 
     const clothingPetId = matchedItem.id;
 
-    // ตรวจสอบว่าผู้ใช้ถูกเชื่อมโยงกับ clothing pet นี้แล้วหรือไม่
+    // ตรวจสอบว่าผู้ใช้ถูกเชื่อมโยงกับ clothing pet นี้แล้วหรือยัง
     const response = await api.get(`/api/clothing-pets/${clothingPetId}?filters[users][id][$eq]=${userId}`);
-    if (response.data.data.length > 0) {
-      console.log(`User ${userId} is already linked to clothing pet ${clothingPetId}`);
-      return matchedItem.url; // ถ้าเชื่อมโยงอยู่แล้ว ให้ return ทันที
+    if (response.data?.data?.length > 0) {
+      console.log(`GET User ${userId} is already linked to clothing pet ${clothingPetId}`);
+      return matchedItem.url; // ถ้าเชื่อมโยงแล้ว ให้คืนค่า URL ของสัตว์เลี้ยง
     }
 
-    // ถ้าไม่ถูกเชื่อมโยงมาก่อน ให้ทำการเชื่อมโยง userId กับ clothingPetId
+    // ถ้ายังไม่ถูกเชื่อมโยงมาก่อน ให้เชื่อมโยง userId กับ clothingPetId
     await api.put(`/api/clothing-pets/${clothingPetId}`, {
       data: {
         users: {
-          connect: [
-            {
-              id: userId,
-            }
-          ]
+          connect: [{ id: userId }]
         }
       }
     });
 
-    console.log(`Successfully linked user ${userId} to clothing pet ${clothingPetId}`);
+    console.log(`PUT Successfully linked user ${userId} to clothing pet ${clothingPetId}`);
     return matchedItem.url;
   } catch (error) {
-    console.error('Error processing clothing pets:', error);
-    throw error;
+    console.error('Error processing clothing pets:', error.response ? error.response.data : error.message);
+    throw new Error(`Failed to update clothing pet for user: ${error.message}`);
   }
 };
 
 // ฟังก์ชันการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง
 export const fetchClothingPets = async () => {
   try {
+    // เรียก API เพื่อนำข้อมูลเสื้อผ้าของสัตว์เลี้ยง
     const response = await api.get('/api/clothing-pets?populate[clothing_pet][fields][0]=url&[fields][1]=label');
     
-    const clothingPetsData = response.data.data.map(item => {
-      return {
-        id: item.id,
-        label: item.attributes.label,
-        url: item.attributes.clothing_pet.data.attributes.url
-      };
-    });
+    if (!response.data || !response.data.data) {
+      throw new Error('Failed to fetch clothing pets data');
+    }
+
+    // แปลงข้อมูลเสื้อผ้าของสัตว์เลี้ยงให้อยู่ในรูปแบบที่สามารถใช้งานได้ง่าย
+    const clothingPetsData = response.data.data.map(item => ({
+      id: item.id,
+      label: item.attributes.label,
+      url: item.attributes.clothing_pet?.data?.attributes?.url || null
+    }));
     
     return clothingPetsData;
   } catch (error) {
-    console.error('Error fetching clothing pets:', error);
-    throw error;
+    console.error('Error fetching clothing pets:', error.response ? error.response.data : error.message);
+    throw new Error(`Failed to fetch clothing pets: ${error.message}`);
   }
 };
 
