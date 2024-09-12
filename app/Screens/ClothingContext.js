@@ -6,7 +6,7 @@ export const ClothingProvider = ({ children }) => {
   const [selectedItems, setSelectedItems] = useState({
     shirt: null,
     pant: null,
-    skin: { image: require('../../assets/image/Clothing-Item/Skin/K00.png'), name: 'K00' },
+    skin: null,
   });
 
   return (

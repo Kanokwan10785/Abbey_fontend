@@ -255,19 +255,19 @@ export const fetchClothingPets = async () => {
 // ฟังก์ชันการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง หน้า home
 export const fetchHomePets = async () => {
   try {
-    // เรียก API เพื่อดึงข้อมูล home_pet และ label
     const response = await api.get('/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&[fields][1]=label');
     
-    // จัดการกับข้อมูลที่ได้รับ
+    // ตรวจสอบข้อมูลก่อนเข้าถึง attributes
     const homePetsData = response.data.data.map(item => {
+      const homePetData = item.attributes.home_pet?.data?.attributes || {};
       return {
         id: item.id,
-        name: item.attributes.home_pet?.data?.attributes?.name || 'Unknown',
-        label: item.attributes.label,
-        url: item.attributes.home_pet?.data?.attributes?.url || ''
+        name: homePetData.name || 'Unknown', // ตรวจสอบว่ามีค่า name หรือไม่
+        label: item.attributes.label || 'Unknown', // ตรวจสอบ label ด้วย
+        url: homePetData.url || '' // ถ้าไม่มี url ให้ตั้งค่าเป็นค่าว่าง
       };
     });
-    
+
     return homePetsData;
   } catch (error) {
     console.error('Error fetching home pets:', error);

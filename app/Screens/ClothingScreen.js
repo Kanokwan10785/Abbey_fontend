@@ -15,7 +15,7 @@ import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 
 export default function ClothingScreen() {
-  const { selectedItems, setSelectedItems } = useContext(ClothingContext);
+  const {selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
   const [petImageUrl, setPetImageUrl] = useState(null);

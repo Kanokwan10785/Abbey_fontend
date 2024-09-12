@@ -40,7 +40,7 @@ export default function HomeScreen() {
           },
         });
         // console.log("User Data:", userData); // ตรวจสอบข้อมูลผู้ใช้ที่ได้รับ
-        setBalance(userData.balance);
+        setBalance(userData.balance || 0);
       } catch (error) {
         console.error("Error fetching user profile", error);
       }
@@ -52,31 +52,30 @@ export default function HomeScreen() {
   useEffect(() => {
     const loadHomePetImage = async () => {
       try {
-        const shirtLabel = selectedItems.shirt ? selectedItems.shirt.label : 'S00';
-        const pantLabel = selectedItems.pant ? selectedItems.pant.label : 'P00';
-        const skinLabel = selectedItems.skin ? selectedItems.skin.label : 'K00';
-
+        const shirtLabel = selectedItems?.shirt?.label || 'S00';
+        const pantLabel = selectedItems?.pant?.label || 'P00';
+        const skinLabel = selectedItems?.skin?.label || 'K00';
+  
         const petKey = `${shirtLabel}${pantLabel}${skinLabel}`;
-        console.log("Generated Pet Home label:", petKey); // ตรวจสอบค่า key ที่สร้างขึ้น
-
-        const homePetsData = await fetchHomePets(); // ดึงข้อมูลสัตว์เลี้ยงทั้งหมด
-        // console.log("Home Pets Data:", homePetsData); // ตรวจสอบข้อมูลสัตว์เลี้ยงที่ได้รับ
-
-        const matchingPet = homePetsData.find(pet => pet.label === petKey); // หาสัตว์เลี้ยงที่ตรงกับ key
-        // console.log("Matching Pet:", matchingPet); // ตรวจสอบสัตว์เลี้ยงที่ตรงกับ key
-
-        if (matchingPet) {
-          setPetImageUrl(matchingPet.url); // ตั้งค่า url ของรูปภาพสัตว์เลี้ยง
+        console.log("Generated Pet Home label:", petKey);
+  
+        const homePetsData = await fetchHomePets();
+        const matchingPet = homePetsData.find(pet => pet.label === petKey);
+  
+        if (matchingPet && matchingPet.url) {
+          setPetImageUrl(matchingPet.url); // ตรวจสอบว่ามี URL ก่อนตั้งค่า
         } else {
-          setPetImageUrl(null); // ถ้าไม่พบให้ตั้งเป็น null หรือรูปภาพเริ่มต้น
+          setPetImageUrl(null); // ตั้งค่าเป็น null หรือรูปภาพเริ่มต้น
         }
       } catch (error) {
         console.error("Error loading home pet image", error);
       }
     };
-
-    loadHomePetImage();
-  }, [selectedItems.shirt, selectedItems.pant, selectedItems.skin]);
+  
+    if (selectedItems) {
+      loadHomePetImage(); // โหลดภาพสัตว์เลี้ยงเมื่อ selectedItems เปลี่ยน
+    }
+  }, [selectedItems]); // ทำงานทุกครั้งที่ selectedItems เปลี่ยน
 
   return (
     <ImageBackground source={gym} style={styles.background}>
