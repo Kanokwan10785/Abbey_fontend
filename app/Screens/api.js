@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://172.30.81.48:1337'; // Replace with your Strapi URL 
+const API_URL = 'http://192.168.1.179:1337'; // Replace with your Strapi URL 
 // const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL 
 
 const api = axios.create({
@@ -200,7 +200,14 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
 
     const clothingPetId = matchedItem.id;
 
-    // อัปเดตข้อมูลเพื่อเชื่อมโยง userId กับ clothingPetId
+    // ตรวจสอบว่าผู้ใช้ถูกเชื่อมโยงกับ clothing pet นี้แล้วหรือไม่
+    const response = await api.get(`/api/clothing-pets/${clothingPetId}?filters[users][id][$eq]=${userId}`);
+    if (response.data.data.length > 0) {
+      console.log(`User ${userId} is already linked to clothing pet ${clothingPetId}`);
+      return matchedItem.url; // ถ้าเชื่อมโยงอยู่แล้ว ให้ return ทันที
+    }
+
+    // ถ้าไม่ถูกเชื่อมโยงมาก่อน ให้ทำการเชื่อมโยง userId กับ clothingPetId
     await api.put(`/api/clothing-pets/${clothingPetId}`, {
       data: {
         users: {
@@ -214,7 +221,6 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
     });
 
     console.log(`Successfully linked user ${userId} to clothing pet ${clothingPetId}`);
-
     return matchedItem.url;
   } catch (error) {
     console.error('Error processing clothing pets:', error);
