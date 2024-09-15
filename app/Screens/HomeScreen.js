@@ -1,12 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { fetchUserProfile, fetchHomePets } from './api';
+import { fetchUserProfile, fetchUserProfileWithClothing, fetchHomePetUrlByLabel } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 
@@ -20,62 +19,60 @@ const FoodButton = () => {
 };
 
 export default function HomeScreen() {
-  const { selectedItems } = useContext(ClothingContext);
   const [balance, setBalance] = useState(0);
   const [petImageUrl, setPetImageUrl] = useState(null);
 
-  useEffect(() => {
-    const loadBalance = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      console.log("Token:", token); // ตรวจสอบ token
-      console.log("User ID:", userId); // ตรวจสอบ user ID
-
-      if (!token || !userId) return;
-
-      try {
-        const userData = await fetchUserProfile(userId, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // console.log("User Data:", userData); // ตรวจสอบข้อมูลผู้ใช้ที่ได้รับ
-        setBalance(userData.balance || 0);
-      } catch (error) {
-        console.error("Error fetching user profile", error);
-      }
-    };
-
-    loadBalance();
-  }, []);
-
-  useEffect(() => {
-    const loadHomePetImage = async () => {
-      try {
-        const shirtLabel = selectedItems?.shirt?.label || 'S00';
-        const pantLabel = selectedItems?.pant?.label || 'P00';
-        const skinLabel = selectedItems?.skin?.label || 'K00';
+  // ใช้ useFocusEffect แทน useEffect เพื่อให้โหลดข้อมูลใหม่ทุกครั้งที่เปิดหน้า HomeScreen
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadBalance = async () => {
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+        // console.log("Token:", token); // ตรวจสอบ token
+        // console.log("User ID:", userId); // ตรวจสอบ user ID
   
-        const petKey = `${shirtLabel}${pantLabel}${skinLabel}`;
-        console.log("Generated Pet Home label:", petKey);
+        if (!token || !userId) return;
   
-        const homePetsData = await fetchHomePets();
-        const matchingPet = homePetsData.find(pet => pet.label === petKey);
-  
-        if (matchingPet && matchingPet.url) {
-          setPetImageUrl(matchingPet.url); // ตรวจสอบว่ามี URL ก่อนตั้งค่า
-        } else {
-          setPetImageUrl(null); // ตั้งค่าเป็น null หรือรูปภาพเริ่มต้น
+        try {
+          const userData = await fetchUserProfile(userId, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          // console.log("User Data:", userData); // ตรวจสอบข้อมูลผู้ใช้ที่ได้รับ
+          setBalance(userData.balance || 0);
+        } catch (error) {
+          console.error("Error fetching user profile", error);
         }
-      } catch (error) {
-        console.error("Error loading home pet image", error);
-      }
-    };
+      };
+
+      const loadHomePetData = async () => {
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+    
+        if (!token || !userId) return;
+    
+        try {
+          // เรียก API ส่วนที่ 1 เพื่อดึงข้อมูลผู้ใช้และ clothing_pet.label
+          const userData = await fetchUserProfileWithClothing(userId, token);
+          const clothingLabel = userData.clothing_pet.label;
+    
+          // เรียก API ส่วนที่ 2 เพื่อหาข้อมูล URL ของ home_pet โดยใช้ clothingLabel
+          const petImageUrl = await fetchHomePetUrlByLabel(clothingLabel);
+    
+          // ตั้งค่า petImageUrl
+          setPetImageUrl(petImageUrl);
+          
+        } catch (error) {
+          console.error("Error fetching home pet data", error);
+        }
+      };
   
-    if (selectedItems) {
-      loadHomePetImage(); // โหลดภาพสัตว์เลี้ยงเมื่อ selectedItems เปลี่ยน
-    }
-  }, [selectedItems]); // ทำงานทุกครั้งที่ selectedItems เปลี่ยน
+      // โหลดข้อมูล balance และข้อมูลสัตว์เลี้ยง
+      loadBalance();
+      loadHomePetData();
+    }, [])  // dependencies array ว่างเพื่อให้ทำงานทุกครั้งที่หน้า HomeScreen เปิดขึ้น
+  );
 
   return (
     <ImageBackground source={gym} style={styles.background}>

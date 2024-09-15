@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.179:1337'; // Replace with your Strapi URL 
-// const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL 
+const API_URL = 'http://192.168.1.190:1337'; // Replace with your Strapi URL
+// const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -253,28 +253,41 @@ export const fetchClothingPets = async () => {
 };
 
 // ฟังก์ชันการดึงข้อมูลเสื้อผ้าของสัตว์เลี้ยง หน้า home
-export const fetchHomePets = async () => {
+export const fetchUserProfileWithClothing = async (userId, token) => {
   try {
-    const response = await api.get('/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&[fields][1]=label');
-    
-    // ตรวจสอบข้อมูลก่อนเข้าถึง attributes
-    const homePetsData = response.data.data.map(item => {
-      const homePetData = item.attributes.home_pet?.data?.attributes || {};
-      return {
-        id: item.id,
-        name: homePetData.name || 'Unknown', // ตรวจสอบว่ามีค่า name หรือไม่
-        label: item.attributes.label || 'Unknown', // ตรวจสอบ label ด้วย
-        url: homePetData.url || '' // ถ้าไม่มี url ให้ตั้งค่าเป็นค่าว่าง
-      };
+    const response = await api.get(`/api/users/${userId}?populate=*&populate[clothing_pet][fields][0]=id&populate[clothing_pet][fields][1]=label`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
-
-    return homePetsData;
+    
+    // ดึงข้อมูลจาก response
+    return response.data;  // ส่งข้อมูล user กลับมาพร้อมกับ clothing_pet
   } catch (error) {
-    console.error('Error fetching home pets:', error);
+    console.error("Error fetching user profile with clothing", error);
     throw error;
   }
 };
 
+export const fetchHomePetUrlByLabel = async (label) => {
+  try {
+    // แทนที่การใช้ fetch ด้วย api.get
+    const response = await api.get(`/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&[fields][1]=label`);
+    
+    const data = response.data;
+
+    // ค้นหา pet ที่มี label ตรงกับที่ต้องการ
+    const matchingPet = data.data.find(pet => pet.attributes.label === label);
+    if (matchingPet && matchingPet.attributes.home_pet.data) {
+      return matchingPet.attributes.home_pet.data.attributes.url;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching home pet URL by label", error);
+    throw error;
+  }
+};
 
 // ฟังก์ชันการดึงข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const fetchUserProfile = async (userId, config = {}) => {
