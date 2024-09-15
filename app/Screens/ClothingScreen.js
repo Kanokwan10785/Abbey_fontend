@@ -206,8 +206,11 @@ export default function ClothingScreen() {
       <View key={item.id} style={styles.item}>
         <Image source={item.image ? { uri: item.image } : empty} style={styles.itemImage} />
         <Text style={styles.itemName}>{item.name}</Text>
-        {item.image && (
-          <TouchableOpacity style={styles.itemButton} onPress={() => handleWear(selectedCategory, item.image, item.name, item.label)}>
+        {item.image && selectedItems[selectedCategory]?.label !== item.label && (
+          <TouchableOpacity
+            style={styles.itemButton}
+            onPress={() => handleWear(selectedCategory, item.image, item.name, item.label)}
+          >
             <Text style={styles.itemButtonText}>สวมใส่</Text>
           </TouchableOpacity>
         )}
