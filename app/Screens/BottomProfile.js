@@ -97,11 +97,11 @@ const ProfileButton = () => {
     try {
       const storedUsername = await AsyncStorage.getItem('username');
       const storedLevel = await AsyncStorage.getItem('level');
-      const storedProfileImage = await AsyncStorage.getItem('profileImage');
+      // const storedProfileImage = await AsyncStorage.getItem('profileImage');
 
       if (storedUsername) setUsername(storedUsername);
       if (storedLevel !== null) setLevel(JSON.parse(storedLevel)); // แปลงค่า level กลับจาก string เป็น number
-      if (storedProfileImage) setProfileImage({ uri: storedProfileImage });
+      // if (storedProfileImage) setProfileImage({ uri: storedProfileImage });
     } catch (error) {
       console.error("Failed to load user profile from storage", error);
     }
