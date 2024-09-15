@@ -176,7 +176,7 @@ export default function ClothingScreen() {
         const updatedItems = {
           ...selectedItems,
           [category]: {
-            image: matchingPet ? matchingPet.url : empty,
+            image: matchingPet ? matchingPet.url : 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png',
             name: 'K00',
             label: 'K00',
           },
@@ -237,11 +237,11 @@ export default function ClothingScreen() {
           {['shirt', 'pant', 'skin'].map((category, index) => (
             <View key={index} style={styles.collectionWearButton}>
               <View style={styles.insidecollectionWear}>
-                {selectedItems[category] && selectedItems[category].image !== empty && (
-                  <TouchableOpacity style={styles.crossButton} onPress={() => handleRemove(category)}>
-                    <Image source={cross} style={styles.crossIcon} />
-                  </TouchableOpacity>
-                )}
+              {selectedItems[category] && selectedItems[category].image !== empty && selectedItems[category].label !== 'K00' && (
+                <TouchableOpacity style={styles.crossButton} onPress={() => handleRemove(category)}>
+                  <Image source={cross} style={styles.crossIcon} />
+                </TouchableOpacity>
+              )}
                 <Image 
                   source={selectedItems[category] && selectedItems[category].image ? { uri: selectedItems[category].image.toString() } : empty}
                   style={styles.collectionWearIcon}
