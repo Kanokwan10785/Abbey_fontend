@@ -172,7 +172,7 @@ const FoodScreen = ({ navigation }) => {
     return (
       <>
         {sortedFoodData.map((item) => {
-          const hideButtonAndQuantity = item.label === "Z00";
+          const hideButtonAndQuantity = item.name === "ว่างเปล่า";
 
           return (
             <View key={item.id} style={styles.item}>
