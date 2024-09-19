@@ -7,7 +7,7 @@ import cancel from '../../../../assets/image/cancel.png';
 const Couse_startc = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items } = route.params || {};
+  const { items,courseId } = route.params || {};
 
   // ใช้รายการแรกเป็น item ที่ต้องการแสดง
   const item = items ? items[0] : null;
@@ -17,13 +17,12 @@ const Couse_startc = () => {
   }
 
   const [isRunning, setIsRunning] = useState(true);
-  const [time, setTime] = useState(3); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
-  const [intervalId, setIntervalId] = useState(null);
+  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการออกกำลังกาย
 
   useEffect(() => {
-    setTime(3);
+    setTime(3); // รีเซ็ตเวลาเป็น 3 วินาทีเมื่อเริ่มใหม่
     setIsRunning(true);
-  }, [item]);
+  }, [item]); // ทำงานเฉพาะเมื่อ item เปลี่ยน
 
   useEffect(() => {
     if (isRunning) {
@@ -32,37 +31,29 @@ const Couse_startc = () => {
           if (prevTime > 0) {
             return prevTime - 1;
           } else {
-            clearInterval(id);
+            clearInterval(id);  // ให้แน่ใจว่า interval ถูกล้างเมื่อเวลาหมด
             setIsRunning(false);
-            navigation.navigate('Arm_start', { items, currentIndex: 0 }); // ไปยังหน้า Arm_start หลังจากครบ 5 วินาที
+            navigation.navigate('Couse_start', { items, currentIndex: 0,courseId });
             return 0;
           }
         });
       }, 1000);
-      setIntervalId(id);
-
-      return () => clearInterval(id);
-    } else if (intervalId) {
-      clearInterval(intervalId);
+  
+      return () => clearInterval(id);  // ล้าง interval เมื่อคอมโพเนนต์ unmount หรือเมื่อ `isRunning` เปลี่ยนค่า
     }
-  }, [isRunning, navigation, intervalId]);
+  }, [isRunning, navigation, items]);
+  
 
   const handleStartPause = () => {
     setIsRunning(!isRunning);
   };
 
   const handleNext = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-    navigation.navigate('Arm_start', { items, currentIndex: 0 }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
+    navigation.navigate('Couse_start', { items, currentIndex: 0 });
   };
 
   const handlePrevious = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-    navigation.navigate('Armexercies'); // กลับไปยังหน้า Armexercies เมื่อกดปุ่มไปข้างหลัง
+    navigation.navigate('Couseexercies');
   };
 
   const formatTime = (seconds) => {
@@ -73,7 +64,7 @@ const Couse_startc = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Armexercies')}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies')}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
@@ -138,7 +129,6 @@ const styles = StyleSheet.create({
   exerciseTitle: {
     fontSize: 25,
     marginTop: 20,
-    // marginVertical: 20,
     fontFamily: 'appfont_01',
   },
   timer: {
@@ -146,13 +136,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     fontFamily: 'appfont_01',
   },
-navigationContainer: {
+  navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    position: 'absolute', // จัดตำแหน่งเป็นแบบ absolute
-    bottom: 60, // ชิดกับด้านล่างของหน้าจอ (ปรับค่าตามที่ต้องการ)
-    paddingHorizontal: 20, // เพิ่ม padding แนวนอนเพื่อให้มีระยะห่างจากขอบจอ
+    position: 'absolute',
+    bottom: 60,
+    paddingHorizontal: 20,
   },
   navButton: {
     padding: 10,

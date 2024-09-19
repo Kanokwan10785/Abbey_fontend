@@ -25,7 +25,7 @@ import Shoulder from '../../../assets/image/image-ex/Shoulder.webp';
     const fetchCourses = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.174:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://192.168.1.196:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
   

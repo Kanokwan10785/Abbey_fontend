@@ -19,7 +19,7 @@ export default function ExerciseDetailScreen({ route }) {
   useEffect(() => {
     const fetchExercise = async () => {
       try {
-        const response = await axios.get(`http://192.168.1.174:1337/api/exercises/${exerciseId}`);
+        const response = await axios.get(`http://192.168.1.196:1337/api/exercises/${exerciseId}`);
         console.log("Exercise Response:", response.data);
         const exerciseData = response.data.data.attributes;
         setExercise({

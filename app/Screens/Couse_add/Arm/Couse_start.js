@@ -7,16 +7,16 @@ import cancel from '../../../../assets/image/cancel.png';
 const Couse_start = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items, currentIndex } = route.params || {};
+  const { items, currentIndex,courseId } = route.params || {};
 
   useEffect(() => {
-    console.log('Received currentIndex in Arm:', currentIndex);
+    console.log('Received currentIndex in couse :', currentIndex);
   }, [currentIndex]);
 
   if (!items || currentIndex === undefined) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text>Loading123...</Text>
       </View>
     );
   }
@@ -49,9 +49,9 @@ const Couse_start = () => {
             clearInterval(id);
             setIsRunning(false);
             if (currentIndex < items.length - 1) {
-              navigation.navigate('Arm_relax', { item, items, currentIndex });
+              navigation.navigate('Couse_relax', { item, items, currentIndex,courseId });
             } else {
-              navigation.navigate('Arm_finish', { item, items, currentIndex });
+              navigation.navigate('Couse_finish', { item, items, currentIndex });
             }
             return 0;
           }
@@ -84,17 +84,17 @@ const Couse_start = () => {
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Arm_relax', { item: items[currentIndex + 1], items, currentIndex });
+      navigation.navigate('Couse_relax', { item: items[currentIndex + 1], items, currentIndex,courseId });
     } else {
-      navigation.navigate('Arm_finish', { item, items, currentIndex });
+      navigation.navigate('Couse_finish', { item, items, currentIndex });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      navigation.navigate('Arm_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
+      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
     } else {
-      navigation.navigate('Armexercies');
+      navigation.navigate('Couseexercies');
     }
   };
 
@@ -106,7 +106,7 @@ const Couse_start = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Armexercies')}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies')}>
       <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

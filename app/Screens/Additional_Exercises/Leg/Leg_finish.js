@@ -2,30 +2,21 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import coin from '../../../../assets/image/coin.png';
-import cancel from '../../../../assets/image/cancel.png';
+import cancel from '../../../../assets/image/cancel.png'
 import { useRoute } from '@react-navigation/native';
 import { BalanceContext } from '../../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Couse_finish = () => {
+const Leg_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const [intervalId, setIntervalId] = useState(null);
-  const { item, items, currentIndex,courseId } = route.params || {};
- 
-  console.log("route.params:", route.params);
-  console.log("item:", item);
+  const { item,items, currentIndex} = route.params || {};
 
-
-  if (!item) {
-    console.log("Item is undefined");
-    return <View style={styles.container}><Text>Loading item...</Text></View>;
-  }
-
-  if (!item.trophy) {
-    console.log("Trophy is undefined in item");
-    return <View style={styles.container}><Text>Loading trophy...</Text></View>;
+   // ตรวจสอบว่า item ถูกกำหนดค่าหรือไม่
+   if (!item || !item.trophy) {
+    return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
   useEffect(() => {
@@ -78,11 +69,15 @@ const Couse_finish = () => {
     }
   };
 
+
+
+
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton}
-          onPress={() => navigation.navigate('Couseexercies')}>
+        onPress={() => navigation.navigate('Legexercies')}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -97,13 +92,10 @@ const Couse_finish = () => {
           <Text style={styles.coinRewardText}>{item.trophy}</Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.finishButton}
-        onPress={() => navigation.navigate('Couseexercies', { item, items, currentIndex,courseId })} // ส่ง courseId กลับไปยังหน้า Couseexercies
-      >
+      <TouchableOpacity style={styles.finishButton}
+        onPress={() => navigation.navigate('Legexercies')}>
         <Text style={styles.finishButtonText}>เสร็จสิ้น</Text>
       </TouchableOpacity>
-
     </View>
   );
 };
@@ -185,4 +177,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Couse_finish;
+export default Leg_finish;

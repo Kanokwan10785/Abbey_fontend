@@ -17,11 +17,10 @@ const Arm_startarm = () => {
   }
 
   const [isRunning, setIsRunning] = useState(true);
-  const [time, setTime] = useState(3); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
-  const [intervalId, setIntervalId] = useState(null);
+  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการออกกำลังกาย
 
   useEffect(() => {
-    setTime(3);
+    setTime(3);  // รีเซ็ตเวลาเมื่อ item เปลี่ยน
     setIsRunning(true);
   }, [item]);
 
@@ -32,36 +31,28 @@ const Arm_startarm = () => {
           if (prevTime > 0) {
             return prevTime - 1;
           } else {
-            clearInterval(id);
+            clearInterval(id);  // ให้แน่ใจว่า interval ถูกล้างเมื่อเวลาหมด
             setIsRunning(false);
-            navigation.navigate('Arm_start', { items, currentIndex: 0 }); // ไปยังหน้า Arm_start หลังจากครบ 5 วินาที
+            navigation.navigate('Arm_start', { items, currentIndex: 0 });
             return 0;
           }
         });
       }, 1000);
-      setIntervalId(id);
-
+  
+      // ล้าง interval เมื่อคอมโพเนนต์ unmount หรือ `isRunning` เปลี่ยนค่า
       return () => clearInterval(id);
-    } else if (intervalId) {
-      clearInterval(intervalId);
     }
-  }, [isRunning, navigation, intervalId]);
+  }, [isRunning, navigation, items]);
 
   const handleStartPause = () => {
     setIsRunning(!isRunning);
   };
 
   const handleNext = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
     navigation.navigate('Arm_start', { items, currentIndex: 0 }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
   };
 
   const handlePrevious = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
     navigation.navigate('Armexercies'); // กลับไปยังหน้า Armexercies เมื่อกดปุ่มไปข้างหลัง
   };
 

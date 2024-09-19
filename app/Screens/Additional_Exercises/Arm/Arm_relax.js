@@ -22,44 +22,52 @@ const Arm_relax = () => {
 
   useEffect(() => {
     setTime(3); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
-
-    const id = setInterval( async () => {
-
+  
+    // อัปเดต balance ก่อนเริ่มนับเวลา
+    const updateBalance = async () => {
       const updatedBalance = balance + item.dollar;
       setBalance(updatedBalance);
-
+  
       try {
         await AsyncStorage.setItem('balance', updatedBalance.toString());
         await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
       } catch (error) {
         console.error('Error saving balance:', error);
       }
-
+    };
+  
+    // เรียกใช้งานการอัปเดต balance หนึ่งครั้งก่อนเริ่ม interval
+    updateBalance();
+  
+    // เริ่มนับถอยหลังหลังจากอัปเดต balance เสร็จ
+    const id = setInterval(() => {
       setTime((prevTime) => {
         if (prevTime > 0) {
           return prevTime - 1;
         } else {
           clearInterval(id);
           if (currentIndex < items.length - 1) {
-            navigation.navigate('Arm_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1 }); // ไปยังท่าถัดไป
+            navigation.navigate('Arm_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1 });
           } else {
-            navigation.navigate('Arm_finish'); // ไปยังหน้าสิ้นสุดการออกกำลังกาย
+            navigation.navigate('Arm_finish');
           }
           return 0;
         }
       });
     }, 1000);
+  
     setIntervalId(id);
-
+  
     return () => clearInterval(id);
   }, [currentIndex]);
+  
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
   
-      const response = await fetch(`http://192.168.1.174:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.196:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์

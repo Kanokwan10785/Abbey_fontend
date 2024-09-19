@@ -13,15 +13,16 @@ const Couseexercies = ({ route }) => {
     const [totalTime, setTotalTime] = useState(0);
     const navigation = useNavigation();
     const [courseImage, setCourseImage] = useState(null);
-  
-    useEffect(() => {
+
+    useEffect(() => {      
+      // ดึงข้อมูลเมื่อ courseId ถูกส่งมา
       fetchexercises();
-    }, []);
+    }, [courseId]);
   
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.174:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://192.168.1.196:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
         console.log("API Response:", data);
@@ -67,13 +68,19 @@ const Couseexercies = ({ route }) => {
                 }
   
           return {
-            id: exercise.id,
-            name: exercise.attributes.name,
-            duration: displayText,
-            animation: animationUrl,
-            image: imageUrl,
+                    id: exercise.id.toString(),
+                    animation: animationUrl,
+                    name: exercise.attributes.name,
+                    duration: displayText,
+                    description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
+                    image: imageUrl,
+                    dollar: exercise.attributes.dollar,
+                    trophy: data.data.attributes.trophy || 0,
+                    exname: data.data.attributes.name,
           };
         });
+
+        console.log("Exercise Data:", exerciseData);
   
         setExercises(exerciseData);
         setTotalTime(totalDuration);
@@ -100,7 +107,7 @@ const Couseexercies = ({ route }) => {
           </TouchableOpacity>
           <View style={styles.Title}>
             <Text style={styles.headerTitle}>
-              {exercises.length > 0 ? exercises[0].name : 'ไม่มีชื่อ'}
+              {exercises.length > 0 ? exercises[0].exname : 'ไม่มีชื่อ'}
             </Text>
           </View>
         </View>
@@ -121,7 +128,7 @@ const Couseexercies = ({ route }) => {
         <TouchableOpacity
           style={styles.startButton}
           onPress={() =>
-            navigation.navigate('Arm_startarm', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false })
+            navigation.navigate('Couse_startc', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false ,courseId})
           }
         >
           <Text style={styles.startButtonText}>เริ่ม</Text>
@@ -129,12 +136,13 @@ const Couseexercies = ({ route }) => {
         <FlatList
           data={exercises}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.exerciseItem}>
+            <TouchableOpacity style={styles.exerciseItem} onPress={() => navigation.navigate('Couse_des', { item, items: exercises })}>
               <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
               <View style={styles.exerciseDetails}>
                 <Text style={styles.exerciseName}>{item.name}</Text>
                 <Text style={styles.exerciseInfo}>{item.duration}</Text>
               </View>
+              <Icon name="menu" size={24} color="#000" />
             </TouchableOpacity>
           )}
           keyExtractor={(item) => item.id.toString()}
