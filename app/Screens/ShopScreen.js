@@ -52,6 +52,31 @@ export default function ShopScreen() {
     loadUserId();
   }, []);
 
+  useEffect(() => {
+    const loadUserClothingData = async () => {
+      try {
+        const userId = await getUserId();
+        if (!userId) return;
+  
+        // ดึงข้อมูลไอเท็มจาก AsyncStorage หรือ API
+        const savedOutfits = await AsyncStorage.getItem(`userOutfit-${userId}`);
+        if (savedOutfits) {
+          setSelectedItems(JSON.parse(savedOutfits));  // อัปเดต selectedItems ทันที
+        } else {
+          const data = await fetchUserClothingData(userId);
+          if (data && data.length > 0) {
+            setSelectedItems(data);
+            await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(data));  // บันทึกลง AsyncStorage
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user clothing data:', error.message);
+      }
+    };
+  
+    loadUserClothingData();
+  }, []); 
+
   // ดึงข้อมูลรายการสินค้า
   useEffect(() => {
     const loadItemsDataFromStorage = async () => {
