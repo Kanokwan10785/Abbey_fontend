@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, ImageBackground } from 'react-native'; // เพิ่ม ActivityIndicator
 import React, { useState } from 'react';
 import Colors from '../Shared/Colors';
 import loginImage from '../../assets/image/login.png';
+import grass from '../../assets/image/Background-Theme/gym-03.gif';
 import { login } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +11,7 @@ export default function Loginpage() {
     const navigation = useNavigation();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);  // สถานะสำหรับ Loading Screen
 
     const handleLogin = async () => {
         if (!username || !password) {
@@ -18,6 +20,7 @@ export default function Loginpage() {
         }
     
         try {
+            setLoading(true);  // เริ่มการโหลดข้อมูล
             const response = await login(username, password);
             const userId = response.user.id; 
             // console.log('User profile', userId);
@@ -25,13 +28,17 @@ export default function Loginpage() {
             console.log('Login successful', response);
             await AsyncStorage.setItem('jwt', response.jwt); // เก็บข้อมูล
             // ตรวจสอบว่าข้อมูลถูกเก็บแล้วหรือไม่
-            const storedJwt = await AsyncStorage.getItem('jwt');
+            // const storedJwt = await AsyncStorage.getItem('jwt');
             // console.log('Stored JWT:', storedJwt);
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
             // ตรวจสอบว่าข้อมูลถูกเก็บแล้วหรือไม่
-            const storedUserId = await AsyncStorage.getItem('userId');
+            // const storedUserId = await AsyncStorage.getItem('userId');
             // console.log('Stored UserId:', storedUserId);
-            navigation.navigate('HomeScreen');
+            // แสดงหน้ารอดาวน์โหลดข้อมูล
+            setTimeout(() => {
+                setLoading(false);  // หยุดการโหลดหลังจากเสร็จสิ้น
+                navigation.navigate('HomeScreen');  // เปลี่ยนไปยังหน้า HomeScreen
+            }, 8000);  // จำลองการโหลด 8 วินาที
         } catch (error) {
             console.error('Login error details:', error.response ? error.response.data : error.message);
             Alert.alert('Login failed', error.response ? error.response.data.message : error.message);
@@ -57,6 +64,14 @@ export default function Loginpage() {
         }
     };
     
+    if (loading) {
+        return (
+            <ImageBackground source={grass} style={styles.loadingContainer}>
+                {/* <ActivityIndicator size="large" color="#00ff00" />
+                <Text style={styles.loadingText}>กำลังโหลดข้อมูล...</Text> */}
+            </ImageBackground>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -154,5 +169,10 @@ const styles = StyleSheet.create({
     registerText: {
         color: Colors.yellow,
         fontFamily: 'appfont_01',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
