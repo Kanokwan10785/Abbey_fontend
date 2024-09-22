@@ -28,6 +28,19 @@ export default function ShopScreen() {
   const [purchasedItems, setPurchasedItems] = useState({});
   const [sortedItems, setSortedItems] = useState([]);
 
+  const getUserId = async () => {
+    try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+            throw new Error('User ID not found in AsyncStorage');
+        }
+        return userId;
+    } catch (error) {
+        console.error('Error retrieving user ID:', error);
+        return null;
+    }
+  };
+
   // ดึงรหัสผู้ใช้จาก AsyncStorage
   useEffect(() => {
     const loadUserId = async () => {
