@@ -23,44 +23,27 @@ export default function Loginpage() {
             setLoading(true);  // เริ่มการโหลดข้อมูล
             const response = await login(username, password);
             const userId = response.user.id; 
-            // console.log('User profile', userId);
-            // console.log('User token', response.jwt);   
             console.log('Login successful', response);
             await AsyncStorage.setItem('jwt', response.jwt); // เก็บข้อมูล
-            // ตรวจสอบว่าข้อมูลถูกเก็บแล้วหรือไม่
-            // const storedJwt = await AsyncStorage.getItem('jwt');
-            // console.log('Stored JWT:', storedJwt);
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
-            // ตรวจสอบว่าข้อมูลถูกเก็บแล้วหรือไม่
-            // const storedUserId = await AsyncStorage.getItem('userId');
-            // console.log('Stored UserId:', storedUserId);
+
             // แสดงหน้ารอดาวน์โหลดข้อมูล
             setTimeout(() => {
                 setLoading(false);  // หยุดการโหลดหลังจากเสร็จสิ้น
                 navigation.navigate('HomeScreen');  // เปลี่ยนไปยังหน้า HomeScreen
             }, 8000);  // จำลองการโหลด 8 วินาที
         } catch (error) {
-            console.error('Login error details:', error.response ? error.response.data : error.message);
-            Alert.alert('Login failed', error.response ? error.response.data.message : error.message);
-            // if (error.response) {    
-            //     const errorMessage = error.response.data.message;
+            // แสดงข้อความที่ละเอียดมากขึ้น
+            if (error.response && error.response.data && error.response.data.error) {
+                const errorMessage = error.response.data.error.message;
+                Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', errorMessage);
+            } else {
+                Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+            }
     
-            //     if (errorMessage === "Invalid identifier or password") {
-            //         if (username && password) {
-            //             // กรณีที่ 2: ชื่อถูก แต่รหัสผ่านผิด
-            //             Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกรหัสผ่านให้ถูกต้อง');
-            //         } else {
-            //             // กรณีที่ 3: ชื่อไม่ถูกต้อง
-            //             Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
-            //         }
-            //     } else {
-            //         Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', errorMessage);
-            //     }
-            // } else if (error.request) {
-            //     Alert.alert('Login failed', 'No response from server');
-            // } else {
-            //     Alert.alert('Login failed', error.message);
-            // }
+            // หยุดการแสดง Loading เมื่อเกิดข้อผิดพลาด
+            setLoading(false);
+            console.error('Login error details:', error.response ? error.response.data : error.message);
         }
     };
     
