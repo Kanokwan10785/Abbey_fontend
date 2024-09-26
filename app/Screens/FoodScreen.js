@@ -8,77 +8,7 @@ import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
-import { updateFoodQuantity, fetchUserFoodData } from './api'; // Import ฟังก์ชันจาก api.js
-
-// const initialFoodData = [
-//   { id: 1, image: require('../../assets/image/Clothing-Item/Food/F01.png'), name: 'F01', quantity: 12 },
-//   { id: 2, image: require('../../assets/image/Clothing-Item/Food/F02.png'), name: 'F02', quantity: 0 },
-//   { id: 3, image: require('../../assets/image/Clothing-Item/Food/F03.png'), name: 'F03', quantity: 0 },
-//   { id: 4, image: require('../../assets/image/Clothing-Item/Food/F04.png'), name: 'F04', quantity: 8 },
-//   { id: 5, image: require('../../assets/image/Clothing-Item/Food/F05.png'), name: 'F05', quantity: 0 },
-//   { id: 6, image: require('../../assets/image/Clothing-Item/Food/F06.png'), name: 'F06', quantity: 0 },
-// ];
-
-const defaultPetImages = {
-  S00P00K00: require('../../assets/image/Food-Pet/S00P00K00.gif'),
-  S00P00K01: require('../../assets/image/Food-Pet/S00P00K01.gif'),
-  S00P01K00: require('../../assets/image/Food-Pet/S00P01K00.gif'),
-  S00P01K01: require('../../assets/image/Food-Pet/S00P01K01.gif'),
-  S00P02K00: require('../../assets/image/Food-Pet/S00P02K00.gif'),
-  S00P02K01: require('../../assets/image/Food-Pet/S00P02K01.gif'),
-  S01P00K00: require('../../assets/image/Food-Pet/S01P00K00.gif'),
-  S01P00K01: require('../../assets/image/Food-Pet/S01P00K01.gif'),
-  S01P01K00: require('../../assets/image/Food-Pet/S01P01K00.gif'),
-  S01P01K01: require('../../assets/image/Food-Pet/S01P01K01.gif'),
-  S01P02K00: require('../../assets/image/Food-Pet/S01P02K00.gif'),
-  S01P02K01: require('../../assets/image/Food-Pet/S01P02K01.gif'),
-  S02P00K00: require('../../assets/image/Food-Pet/S02P00K00.gif'),
-  S02P00K01: require('../../assets/image/Food-Pet/S02P00K01.gif'),
-  S02P01K00: require('../../assets/image/Food-Pet/S02P01K00.gif'),
-  S02P01K01: require('../../assets/image/Food-Pet/S02P01K01.gif'),
-  S02P02K00: require('../../assets/image/Food-Pet/S02P02K00.gif'),
-  S02P02K01: require('../../assets/image/Food-Pet/S02P02K01.gif'),
-};
-
-const eatingPetImages = {
-  S00P00K00F01: require('../../assets/image/Food-Pet/S00P00K00F01.gif'),
-  S00P00K01F01: require('../../assets/image/Food-Pet/S00P00K01F01.gif'),
-  S00P01K00F01: require('../../assets/image/Food-Pet/S00P01K00F01.gif'),
-  S00P01K01F01: require('../../assets/image/Food-Pet/S00P01K01F01.gif'),
-  S00P02K00F01: require('../../assets/image/Food-Pet/S00P02K00F01.gif'),
-  S00P02K01F01: require('../../assets/image/Food-Pet/S00P02K01F01.gif'),
-  S01P00K00F01: require('../../assets/image/Food-Pet/S01P00K00F01.gif'),
-  S01P00K01F01: require('../../assets/image/Food-Pet/S01P00K01F01.gif'),
-  S01P01K00F01: require('../../assets/image/Food-Pet/S01P01K00F01.gif'),
-  S01P01K01F01: require('../../assets/image/Food-Pet/S01P01K01F01.gif'),
-  S01P02K00F01: require('../../assets/image/Food-Pet/S01P02K00F01.gif'),
-  S01P02K01F01: require('../../assets/image/Food-Pet/S01P02K01F01.gif'),
-  S02P00K00F01: require('../../assets/image/Food-Pet/S02P00K00F01.gif'),
-  S02P00K01F01: require('../../assets/image/Food-Pet/S02P00K01F01.gif'),
-  S02P01K00F01: require('../../assets/image/Food-Pet/S02P01K00F01.gif'),
-  S02P01K01F01: require('../../assets/image/Food-Pet/S02P01K01F01.gif'),
-  S02P02K00F01: require('../../assets/image/Food-Pet/S02P02K00F01.gif'),
-  S02P02K01F01: require('../../assets/image/Food-Pet/S02P02K01F01.gif'),
-
-  S00P00K00F04: require('../../assets/image/Food-Pet/S00P00K00F04.gif'),
-  S00P00K01F04: require('../../assets/image/Food-Pet/S00P00K01F04.gif'),
-  S00P01K00F04: require('../../assets/image/Food-Pet/S00P01K00F04.gif'),
-  S00P01K01F04: require('../../assets/image/Food-Pet/S00P01K01F04.gif'),
-  S00P02K00F04: require('../../assets/image/Food-Pet/S00P02K00F04.gif'),
-  S00P02K01F04: require('../../assets/image/Food-Pet/S00P02K01F04.gif'),
-  S01P00K00F04: require('../../assets/image/Food-Pet/S01P00K00F04.gif'),
-  S01P00K01F04: require('../../assets/image/Food-Pet/S01P00K01F04.gif'),
-  S01P01K00F04: require('../../assets/image/Food-Pet/S01P01K00F04.gif'),
-  S01P01K01F04: require('../../assets/image/Food-Pet/S01P01K01F04.gif'),
-  S01P02K00F04: require('../../assets/image/Food-Pet/S01P02K00F04.gif'),
-  S01P02K01F04: require('../../assets/image/Food-Pet/S01P02K01F04.gif'),
-  S02P00K00F04: require('../../assets/image/Food-Pet/S02P00K00F04.gif'),
-  S02P00K01F04: require('../../assets/image/Food-Pet/S02P00K01F04.gif'),
-  S02P01K00F04: require('../../assets/image/Food-Pet/S02P01K00F04.gif'),
-  S02P01K01F04: require('../../assets/image/Food-Pet/S02P01K01F04.gif'),
-  S02P02K00F04: require('../../assets/image/Food-Pet/S02P02K00F04.gif'),
-  S02P02K01F04: require('../../assets/image/Food-Pet/S02P02K01F04.gif'),
-};
+import { updateFoodQuantity, fetchUserFoodData, fetchUserProfileWithClothing, fetchFoodPetUrlByLabel } from './api'; // Import ฟังก์ชันจาก api.js
 
 const FoodScreen = ({ navigation }) => {
   const { selectedItems } = useContext(ClothingContext);
@@ -86,6 +16,7 @@ const FoodScreen = ({ navigation }) => {
   const [currentPetImage, setCurrentPetImage] = useState(null);
   const [isEating, setIsEating] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [clothingLabel, setClothingLabel] = useState('S00P00K00'); // State สำหรับเก็บ clothingLabel
 
   useEffect(() => {
     const loadFoodDataFromStorage = async () => {
@@ -114,55 +45,88 @@ const FoodScreen = ({ navigation }) => {
 
     loadFoodDataFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
     fetchAndUpdateFoodData();  // อัปเดตข้อมูลจาก API หลังจากนั้น
-    updatePetImage();
+    updatePetImage();          // อัปเดตภาพสัตว์เลี้ยง
   }, [selectedItems]);
 
-  useEffect(() => {
-    if (isEating) {
-      const { shirt, pant, skin } = selectedItems;
-      const shirtName = shirt ? shirt.name : 'S00';
-      const pantName = pant ? pant.name : 'P00';
-      const skinName = skin ? skin.name : 'K00';
-      setTimeout(() => {
-        setCurrentPetImage(`${shirtName}${pantName}${skinName}`);
-        setIsEating(false);
-        setIsButtonDisabled(false);
-      }, 2800);
-    }
-  }, [isEating]);
+  // ฟังก์ชันสำหรับลดจำนวนอาหาร
+  const updateFoodQuantityAndSave = async (itemId, newQuantity) => {
+    await updateFoodQuantity(itemId, newQuantity);
 
-  const handleEat = async (item) => {
-    if (item.quantity <= 0 || isButtonDisabled) {
-      return;
+    const updatedFoodData = foodData.map(foodItem =>
+      foodItem.id === itemId ? { ...foodItem, quantity: newQuantity } : foodItem
+    );
+    setFoodData(updatedFoodData);
+
+    await AsyncStorage.setItem('foodData', JSON.stringify(updatedFoodData)); // บันทึกลง AsyncStorage
+  };
+
+  // ฟังก์ชันสำหรับการตั้งค่าภาพสัตว์เลี้ยง
+  const updatePetImage = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const token = await AsyncStorage.getItem('jwt');
+      
+      const userData = await fetchUserProfileWithClothing(userId, token);
+      const fetchedClothingLabel = userData.clothing_pet?.label || 'S00P00K00';
+      setClothingLabel(fetchedClothingLabel); // เก็บ clothingLabel ใน state
+
+      // ดึง URL ภาพสัตว์เลี้ยง (ค่าเริ่มต้นเป็น F00)
+      const { url: petImageUrl } = await fetchFoodPetUrlByLabel(fetchedClothingLabel, 'F00');
+      
+      // ตั้งค่า URL ของภาพเริ่มต้น หากภาพที่ดึงมาไม่ตรงกับภาพปัจจุบัน
+      if (petImageUrl && petImageUrl !== currentPetImage) {
+        setCurrentPetImage(petImageUrl);
+      }
+
+    } catch (error) {
+      console.error("Error fetching home pet data", error);
     }
+  };
+
+  // ฟังก์ชันการจัดการเมื่อกดปุ่มกิน
+  const handleEat = async (item) => {
+    if (item.quantity <= 0 || isButtonDisabled || isEating) return; // ป้องกันการกดซ้ำหรือตอนปุ่มถูกปิด
+
+    setIsButtonDisabled(true);
+    setIsEating(true);
 
     try {
+      // สร้าง foodLabel เช่น F01, F04
+      const foodLabel = `F${item.id.toString().padStart(2, '0')}`;
+      const { url: eatingPetImageUrl } = await fetchFoodPetUrlByLabel(clothingLabel, foodLabel);
+
+      if (eatingPetImageUrl) {
+        setCurrentPetImage(eatingPetImageUrl); // เปลี่ยนเป็นภาพอนิเมชันการกิน
+
+        // ตั้ง Timeout เพื่อให้แสดงอนิเมชันการกินเป็นเวลา 3 วินาที
+        setTimeout(async () => {
+          // เปลี่ยนภาพเป็น F00 ก่อนเรียก updatePetImage เพื่ออัปเดตข้อมูลอื่น
+          const defaultImageUrl = await fetchFoodPetUrlByLabel(clothingLabel, 'F00');
+          
+          if (defaultImageUrl?.url) {
+            setCurrentPetImage(defaultImageUrl.url); // เปลี่ยนเป็นภาพปกติ (F00)
+          }
+
+          // อัปเดตข้อมูลสัตว์เลี้ยงในฐานข้อมูลหรือทำงานอื่นที่ต้องรอการเปลี่ยนภาพเสร็จสิ้น
+          await updatePetImage(); 
+          console.log('Returning to default pet image (F00) after eating.');
+
+          setIsEating(false); 
+          setIsButtonDisabled(false); // เปิดใช้งานปุ่มใหม่หลังจากเปลี่ยนกลับเป็นภาพปกติ
+        }, 2450); // แสดงอนิเมชันการกินเป็นเวลา 3 วินาที
+      }
+
+      // ลดจำนวนอาหารและบันทึก
       const newQuantity = item.quantity - 1;
-
-      await updateFoodQuantity(item.id, newQuantity);
-
-      const updatedFoodData = foodData.map(foodItem =>
-        foodItem.id === item.id ? { ...foodItem, quantity: newQuantity } : foodItem
-      );
-      setFoodData(updatedFoodData);
-
-      // อัปเดตข้อมูลใน AsyncStorage ด้วย
-      await AsyncStorage.setItem('foodData', JSON.stringify(updatedFoodData));
+      await updateFoodQuantityAndSave(item.id, newQuantity);
 
     } catch (error) {
       console.error('Error while eating', error);
-      setIsButtonDisabled(false); // Enable button if error
+      setIsEating(false); 
+      setIsButtonDisabled(false); 
     }
   };
-
-  const updatePetImage = () => {
-    const { shirt, pant, skin } = selectedItems;
-    const shirtName = shirt ? shirt.name : 'S00';
-    const pantName = pant ? pant.name : 'P00';
-    const skinName = skin ? skin.name : 'K00';
-
-    setCurrentPetImage(`${shirtName}${pantName}${skinName}`);
-  };
+  
   const renderItems = () => {
     const sortedFoodData = [...foodData].sort((a, b) => {
       if (a.label < b.label) return -1;
@@ -204,7 +168,7 @@ const FoodScreen = ({ navigation }) => {
             <DollarIcon />
           </View>
           <View style={styles.petDisplay}>
-            <Image source={isEating ? eatingPetImages[currentPetImage] : defaultPetImages[currentPetImage]} style={styles.petImage} />
+            <Image source={{ uri: currentPetImage }} style={styles.petImage} />
           </View>
         </ImageBackground>
       </View>
@@ -225,7 +189,7 @@ const FoodScreen = ({ navigation }) => {
       <BottomBar />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -252,8 +216,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   petImage: {
-    width: "100%",
-    height: "100%",
+    width: "92%",
+    height: "92%",
     resizeMode: "contain",
   },
   wardrobeIcon: {

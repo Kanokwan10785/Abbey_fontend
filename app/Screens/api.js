@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.109:1337'; // Replace with your Strapi URL
+const API_URL = 'http://192.168.1.100:1337'; // Replace with your Strapi URL
 // const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
@@ -285,6 +285,69 @@ export const fetchHomePetUrlByLabel = async (label) => {
     }
   } catch (error) {
     console.error("Error fetching home pet URL by label", error);
+    throw error;
+  }
+};
+
+export const fetchFoodPetUrlByLabel = async (label, foodLabel = 'F00') => {
+  try {
+    // แสดง log เริ่มต้นเมื่อมีการดึงข้อมูล
+    console.log(`--- Fetching food pet URL ---`);
+    console.log(`Label: ${label}, Food Label: ${foodLabel}`);
+
+    // เรียก API เพื่อดึงข้อมูล
+    const response = await api.get('/api/clothing-pets?populate[food_pet][fields][0]=url&populate[food_pet][fields][1]=name&[fields][1]=label');
+    const data = response.data;
+
+    // ค้นหา pet ที่ตรงกับ label
+    const matchingPet = data.data.find(pet => pet.attributes.label === label);
+    if (!matchingPet) {
+      console.log(`No matching pet found for label: ${label}`);
+      return null;
+    }
+
+    // console.log('Matching pet found:', matchingPet);
+
+    // ตรวจสอบว่ามี food_pet หรือไม่
+    if (matchingPet.attributes.food_pet && matchingPet.attributes.food_pet.data.length > 0) {
+      console.log(`Food data found for pet with label: ${label}`);
+
+      // ค้นหาอาหารที่ตรงกับ foodLabel
+      const matchingFood = matchingPet.attributes.food_pet.data.find(food => 
+        food.attributes.name === `${label}${foodLabel}` // รวม label และ foodLabel
+      );
+
+      // ถ้าเจออาหารที่ตรงกัน
+      if (matchingFood) {
+        console.log('Found matching food:', matchingFood.attributes);
+        return {
+          url: matchingFood.attributes.url,
+          name: matchingFood.attributes.name
+        };
+      } else {
+        // ถ้าไม่เจออาหารที่ตรงกัน
+        console.log(`No matching food found for label: ${label} and foodLabel: ${foodLabel}`);
+      }
+    } else {
+      console.log(`No food_pet data available for pet with label: ${label}`);
+    }
+
+    // ถ้าไม่เจออาหารที่ตรง ให้คืนค่าเริ่มต้นเป็น F00
+    if (matchingPet.attributes.food_pet && matchingPet.attributes.food_pet.data.length > 0) {
+      const defaultFood = matchingPet.attributes.food_pet.data[0];
+      console.log('Returning default food (F00):', defaultFood.attributes);
+      return {
+        url: defaultFood.attributes.url,
+        name: `${label}F00`
+      };
+    }
+
+    // กรณีที่ไม่เจออะไรเลย
+    console.log('No default food found, returning null.');
+    return null;
+
+  } catch (error) {
+    console.error("Error fetching food pet URL by label", error);
     throw error;
   }
 };
