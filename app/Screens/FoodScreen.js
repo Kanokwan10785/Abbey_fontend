@@ -70,12 +70,23 @@ const FoodScreen = ({ navigation }) => {
       const fetchedClothingLabel = userData.clothing_pet?.label || 'S00P00K00';
       setClothingLabel(fetchedClothingLabel); // เก็บ clothingLabel ใน state
 
-      // ดึง URL ภาพสัตว์เลี้ยง (ค่าเริ่มต้นเป็น F00)
-      const { url: petImageUrl } = await fetchFoodPetUrlByLabel(fetchedClothingLabel, 'F00');
-      
-      // ตั้งค่า URL ของภาพเริ่มต้น หากภาพที่ดึงมาไม่ตรงกับภาพปัจจุบัน
-      if (petImageUrl && petImageUrl !== currentPetImage) {
-        setCurrentPetImage(petImageUrl);
+      // ตรวจสอบใน AsyncStorage ว่ามีภาพสัตว์เลี้ยงที่เคยบันทึกไว้หรือไม่
+      const cachedPetImageUrl = await AsyncStorage.getItem(`petImage_${fetchedClothingLabel}_F00`);
+
+      if (cachedPetImageUrl) {
+        // ถ้ามี URL ใน AsyncStorage, ใช้ URL นั้นโดยไม่ต้องดึงจาก API
+        console.log('Loaded pet image from AsyncStorage:', cachedPetImageUrl);
+        setCurrentPetImage(cachedPetImageUrl);
+      } else {
+        // ดึง URL ภาพสัตว์เลี้ยง (ค่าเริ่มต้นเป็น F00) จาก API หากไม่มีใน AsyncStorage
+        const { url: petImageUrl } = await fetchFoodPetUrlByLabel(fetchedClothingLabel, 'F00');
+        
+        // ตั้งค่า URL ของภาพเริ่มต้น หากภาพที่ดึงมาไม่ตรงกับภาพปัจจุบัน และบันทึกลงใน AsyncStorage
+        if (petImageUrl && petImageUrl !== currentPetImage) {
+          setCurrentPetImage(petImageUrl);
+          await AsyncStorage.setItem(`petImage_${fetchedClothingLabel}_F00`, petImageUrl); // บันทึก URL ใน AsyncStorage
+          console.log('Fetched and saved pet image from API:', petImageUrl);
+        }
       }
 
     } catch (error) {
@@ -93,7 +104,22 @@ const FoodScreen = ({ navigation }) => {
     try {
       // สร้าง foodLabel เช่น F01, F04
       const foodLabel = `F${item.id.toString().padStart(2, '0')}`;
-      const { url: eatingPetImageUrl } = await fetchFoodPetUrlByLabel(clothingLabel, foodLabel);
+
+      // ตรวจสอบใน AsyncStorage ว่ามีภาพการกินสัตว์เลี้ยงที่เคยบันทึกไว้หรือไม่
+      const cachedEatingImageUrl = await AsyncStorage.getItem(`petImage_${clothingLabel}_${foodLabel}`);
+
+      let eatingPetImageUrl;
+      if (cachedEatingImageUrl) {
+        // ใช้ URL จาก AsyncStorage ถ้ามี
+        eatingPetImageUrl = cachedEatingImageUrl;
+        console.log('Loaded eating pet image from AsyncStorage:', eatingPetImageUrl);
+      } else {
+        // ดึง URL ภาพสัตว์เลี้ยงจาก API และบันทึกใน AsyncStorage
+        const { url } = await fetchFoodPetUrlByLabel(clothingLabel, foodLabel);
+        eatingPetImageUrl = url;
+        await AsyncStorage.setItem(`petImage_${clothingLabel}_${foodLabel}`, eatingPetImageUrl);
+        console.log('Fetched and saved eating pet image from API:', eatingPetImageUrl);
+      }
 
       if (eatingPetImageUrl) {
         setCurrentPetImage(eatingPetImageUrl); // เปลี่ยนเป็นภาพอนิเมชันการกิน
@@ -105,6 +131,7 @@ const FoodScreen = ({ navigation }) => {
           
           if (defaultImageUrl?.url) {
             setCurrentPetImage(defaultImageUrl.url); // เปลี่ยนเป็นภาพปกติ (F00)
+            await AsyncStorage.setItem(`petImage_${clothingLabel}_F00`, defaultImageUrl.url); // บันทึกใน AsyncStorage
           }
 
           // อัปเดตข้อมูลสัตว์เลี้ยงในฐานข้อมูลหรือทำงานอื่นที่ต้องรอการเปลี่ยนภาพเสร็จสิ้น
