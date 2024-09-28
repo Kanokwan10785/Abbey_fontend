@@ -13,20 +13,18 @@ const Exercise4 = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const [intervalId, setIntervalId] = useState(null);
-  const { item,items, currentIndex} = route.params || {};
+  const {item} = route.params || {};
 
   // ตรวจสอบว่า item ถูกกำหนดค่าหรือไม่
   if (!item || !item.trophy) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
   
-  console.log('Exercise4:', item);
+  // console.log('Exercise4:', item);
   
   useEffect(() => {
-
-    const id = setInterval(async () => {
-
-      // เพิ่มค่า item.dollar เข้าไปใน balance
+    const updateBalanceOnce = async () => {
+      // เพิ่มค่า item.trophy เข้าไปใน balance
       const updatedBalance = balance + item.trophy;
       setBalance(updatedBalance);  // อัปเดต balance ใน state
 
@@ -36,20 +34,19 @@ const Exercise4 = () => {
         await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
       } catch (error) {
         console.error('Error saving balance:', error);
-
       }
-    }, 1000);
-    setIntervalId(id);
+    };
 
-    return () => clearInterval(id);
-  }, [currentIndex, items, navigation]);
+    // เรียกใช้งานฟังก์ชันนี้ครั้งเดียว
+    updateBalanceOnce();
+  }, []);
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://192.168.1.196:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์

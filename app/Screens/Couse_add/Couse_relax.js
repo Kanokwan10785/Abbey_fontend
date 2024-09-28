@@ -2,16 +2,18 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import cancel from '../../../../assets/image/cancel.png';
-import { BalanceContext } from '../../BalanceContext';
+import cancel from '../../../assets/image/cancel.png';
+import { BalanceContext } from '../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import coin from '../../../../assets/image/coin.png';
+import coin from '../../../assets/image/coin.png';
 
 const Couse_relax = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const { item, items, currentIndex } = route.params || {};
+  const { item, items, currentIndex, courseId } = route.params || {};
+
+  console.log('courseId in couse relax:', courseId);
 
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -21,35 +23,23 @@ const Couse_relax = () => {
   const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
-    setTime(3); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
+    setTime(5); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
   
-    // อัปเดต balance ก่อนเริ่มนับเวลา
-    const updateBalance = async () => {
-      const updatedBalance = balance + item.dollar;
-      setBalance(updatedBalance);
-  
-      try {
-        await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
-      } catch (error) {
-        console.error('Error saving balance:', error);
-      }
-    };
-  
-    // เรียกใช้งานการอัปเดต balance หนึ่งครั้งก่อนเริ่ม interval
-    updateBalance();
-  
-    // เริ่มนับถอยหลังหลังจากอัปเดต balance เสร็จ
     const id = setInterval(() => {
       setTime((prevTime) => {
+        if (prevTime === 3) {
+          // อัปเดต balance เมื่อเหลือเวลา 3 วินาที
+          updateBalance();
+        }
+
         if (prevTime > 0) {
           return prevTime - 1;
         } else {
           clearInterval(id);
           if (currentIndex < items.length - 1) {
-            navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1 });
+            navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, courseId });
           } else {
-            navigation.navigate('Couse_finish');
+            navigation.navigate('Couse_finish', { item, items, currentIndex, courseId });
           }
           return 0;
         }
@@ -61,20 +51,31 @@ const Couse_relax = () => {
     return () => clearInterval(id);
   }, [currentIndex]);
 
+  const updateBalance = async () => {
+    const updatedBalance = balance + item.dollar;
+    setBalance(updatedBalance);
+
+    try {
+      await AsyncStorage.setItem('balance', updatedBalance.toString());
+      await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
+    } catch (error) {
+      console.error('Error saving balance:', error);
+    }
+  };
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
   
-      const response = await fetch(`http://192.168.1.196:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
-          'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
+          balance: newBalance,
         }),
       });
   
@@ -90,15 +91,14 @@ const Couse_relax = () => {
     }
   };
 
-
   const handleNext = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    if (currentIndex < items.length - 1) {
-      navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1 });
+    if (currentIndex < items.length) {
+      navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, courseId });
     } else {
-      navigation.navigate('Couse_finish');
+      navigation.navigate('Couse_finish', { item, items, currentIndex, courseId });
     }
   };
 
@@ -107,9 +107,9 @@ const Couse_relax = () => {
       clearInterval(intervalId);
     }
     if (currentIndex > 0) {
-      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
+      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, courseId });
     } else {
-      navigation.navigate('Couse_start', { item: items[0], items, currentIndex: 0 });
+      navigation.navigate('Couse_start', { item: items[0], items, currentIndex: 0, courseId });
     }
   };
 
@@ -120,9 +120,9 @@ const Couse_relax = () => {
   };
 
   return (
-<View style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies')}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies', { courseId })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -158,8 +158,6 @@ const Couse_relax = () => {
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -199,7 +197,6 @@ const styles = StyleSheet.create({
   exerciseTitle: {
     fontSize: 22,
     fontFamily: 'appfont_01',
-
   },
   exerciseCounter: {
     fontSize: 18,
@@ -212,13 +209,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     fontFamily: 'appfont_01',
   },
-navigationContainer: {
+  navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    position: 'absolute', // จัดตำแหน่งเป็นแบบ absolute
-    bottom: 60, // ชิดกับด้านล่างของหน้าจอ (ปรับค่าตามที่ต้องการ)
-    paddingHorizontal: 20, // เพิ่ม padding แนวนอนเพื่อให้มีระยะห่างจากขอบจอ
+    position: 'absolute',
+    bottom: 60,
+    paddingHorizontal: 20,
   },
   navButton: {
     padding: 10,
@@ -238,7 +235,6 @@ navigationContainer: {
     margin: 10,
     borderRadius: 25,
     paddingHorizontal: 10,
-
     flexDirection: 'row',
     alignItems: 'center',
   },

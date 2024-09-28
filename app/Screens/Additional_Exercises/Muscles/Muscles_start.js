@@ -4,13 +4,14 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../../assets/image/cancel.png';
 
-const Couse_start = () => {
+const Muscles_start = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items, currentIndex,courseId } = route.params || {};
+  const { items, currentIndex,musclesId } = route.params || {};
 
   useEffect(() => {
-    console.log('Received currentIndex in couse :', currentIndex);
+    // console.log('Received currentIndex in couse :', currentIndex);
+    console.log('musclesId in couse start :', musclesId);
   }, [currentIndex]);
 
   if (!items || currentIndex === undefined) {
@@ -49,9 +50,9 @@ const Couse_start = () => {
             clearInterval(id);
             setIsRunning(false);
             if (currentIndex < items.length - 1) {
-              navigation.navigate('Couse_relax', { item, items, currentIndex,courseId });
+              navigation.navigate('Muscles_relax', { item, items, currentIndex,musclesId });
             } else {
-              navigation.navigate('Couse_finish', { item, items, currentIndex });
+              navigation.navigate('Muscles_finish', { item, items, currentIndex,musclesId });
             }
             return 0;
           }
@@ -84,17 +85,17 @@ const Couse_start = () => {
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Couse_relax', { item: items[currentIndex + 1], items, currentIndex,courseId });
+      navigation.navigate('Muscles_relax', { item: items[currentIndex + 1], items, currentIndex,musclesId });
     } else {
-      navigation.navigate('Couse_finish', { item, items, currentIndex });
+      navigation.navigate('Muscles_finish', { item, items, currentIndex,musclesId });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
+      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,musclesId });
     } else {
-      navigation.navigate('Couseexercies');
+      navigation.navigate('Musclesexercies',{musclesId});
     }
   };
 
@@ -106,7 +107,7 @@ const Couse_start = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies')}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies',{musclesId})}>
       <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
@@ -235,5 +236,5 @@ navigationContainer: {
   },
 });
 
-export default Couse_start;
+export default Muscles_start;
   

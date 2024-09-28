@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import BottomBar from '../../BottomBar';
-import exercise from '../../../../assets/image/exercise.png';
-import previous from '../../../../assets/image/previous.png';
+import BottomBar from '../BottomBar';
+import exercise from '../../../assets/image/exercise.png';
+import previous from '../../../assets/image/previous.png';
 import { useNavigation } from '@react-navigation/native';
 
 const Couseexercies = ({ route }) => {
-    const { courseId } = route.params;  // Get courseId from navigation
+  const { courseId } = route.params;  // Get courseId from navigation
     const [exercises, setExercises] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalTime, setTotalTime] = useState(0);
@@ -22,10 +22,10 @@ const Couseexercies = ({ route }) => {
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.196:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://192.168.1.125:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
-        console.log("API Response:", data);
+        // console.log("API Response:", data);
   
         if (!data || !data.data) {
           console.error("ไม่มีข้อมูลที่ต้องการจาก API");
@@ -80,7 +80,7 @@ const Couseexercies = ({ route }) => {
           };
         });
 
-        console.log("Exercise Data:", exerciseData);
+        // console.log("Exercise Data:", exerciseData);
   
         setExercises(exerciseData);
         setTotalTime(totalDuration);
@@ -136,7 +136,7 @@ const Couseexercies = ({ route }) => {
         <FlatList
           data={exercises}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.exerciseItem} onPress={() => navigation.navigate('Couse_des', { item, items: exercises })}>
+            <TouchableOpacity style={styles.exerciseItem} onPress={() => navigation.navigate('Couse_des', { item, items: exercises ,courseId})}>
               <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
               <View style={styles.exerciseDetails}>
                 <Text style={styles.exerciseName}>{item.name}</Text>

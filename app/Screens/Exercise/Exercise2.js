@@ -21,47 +21,52 @@ const Exercise2 = () => {
   }
 
   useEffect(() => {
-    setTime(5); 
-    const id = setInterval( async () => {
-
-      // เพิ่มค่า item.dollar เข้าไปใน balance
-      const updatedBalance = balance + item.dollar;
-      setBalance(updatedBalance);  // อัปเดต balance ใน state
+    setTime(5); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
   
-      // บันทึก balance ใหม่ลงใน AsyncStorage และส่งไปยังเซิร์ฟเวอร์
-      try {
-        await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
-      } catch (error) {
-        console.error('Error saving balance:', error);
-      }
-
+    const id = setInterval(() => {
       setTime((prevTime) => {
+        if (prevTime === 3) {
+          // อัปเดต balance เมื่อเหลือเวลา 3 วินาที
+          updateBalance();
+        }
+
         if (prevTime > 0) {
           return prevTime - 1;
         } else {
           clearInterval(id);
-          const nextIndex = currentIndex + 1;
-          if (nextIndex < items.length) {
-            navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
+          if (currentIndex < items.length - 1) {
+            navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1});
           } else {
-            navigation.navigate('Exercise4'); 
+            navigation.navigate('Exercise4', { item, items, currentIndex });
           }
           return 0;
         }
       });
     }, 1000);
+  
     setIntervalId(id);
-
+  
     return () => clearInterval(id);
-  }, [currentIndex, items, navigation]);
+  }, [currentIndex]);
+
+  const updateBalance = async () => {
+    const updatedBalance = balance + item.dollar;
+    setBalance(updatedBalance);
+
+    try {
+      await AsyncStorage.setItem('balance', updatedBalance.toString());
+      await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
+    } catch (error) {
+      console.error('Error saving balance:', error);
+    }
+  };
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
   
-      const response = await fetch(`http://192.168.1.196:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์

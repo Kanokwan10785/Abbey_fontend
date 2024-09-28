@@ -1,22 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import coin from '../../../../assets/image/coin.png';
-import cancel from '../../../../assets/image/cancel.png';
+import coin from '../../../assets/image/coin.png';
+import cancel from '../../../assets/image/cancel.png';
 import { useRoute } from '@react-navigation/native';
-import { BalanceContext } from '../../BalanceContext';
+import { BalanceContext } from '../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Couse_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const [intervalId, setIntervalId] = useState(null);
-  const { item, items, currentIndex,courseId } = route.params || {};
- 
-  console.log("route.params:", route.params);
-  console.log("item:", item);
-
+  const { item, items, currentIndex, courseId } = route.params || {};
 
   if (!item) {
     console.log("Item is undefined");
@@ -28,11 +23,10 @@ const Couse_finish = () => {
     return <View style={styles.container}><Text>Loading trophy...</Text></View>;
   }
 
+  // อัปเดต balance เมื่อหน้า Couse_finish ถูกโหลดครั้งแรก
   useEffect(() => {
-
-    const id = setInterval(async () => {
-
-      // เพิ่มค่า item.dollar เข้าไปใน balance
+    const updateBalanceOnce = async () => {
+      // เพิ่มค่า item.trophy เข้าไปใน balance
       const updatedBalance = balance + item.trophy;
       setBalance(updatedBalance);  // อัปเดต balance ใน state
 
@@ -42,20 +36,19 @@ const Couse_finish = () => {
         await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
       } catch (error) {
         console.error('Error saving balance:', error);
-
       }
-    }, 1000);
-    setIntervalId(id);
+    };
 
-    return () => clearInterval(id);
-  }, [currentIndex, items, navigation]);
+    // เรียกใช้งานฟังก์ชันนี้ครั้งเดียว
+    updateBalanceOnce();
+  }, []); // ใช้ dependency array ที่ว่างเปล่าเพื่อให้ฟังก์ชันทำงานแค่ครั้งเดียว
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://192.168.1.196:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -82,7 +75,7 @@ const Couse_finish = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton}
-          onPress={() => navigation.navigate('Couseexercies')}>
+          onPress={() => navigation.navigate('Couseexercies', { courseId })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -91,7 +84,7 @@ const Couse_finish = () => {
         </View>
       </View>
       <View style={styles.trophyContainer}>
-        <Image source={require('../../../../assets/image/trophy.png')} style={styles.trophyImage} />
+        <Image source={require('../../../assets/image/trophy.png')} style={styles.trophyImage} />
         <View style={styles.coinRewardContainer}>
           <Image source={coin} style={styles.coin} />
           <Text style={styles.coinRewardText}>{item.trophy}</Text>
@@ -99,11 +92,10 @@ const Couse_finish = () => {
       </View>
       <TouchableOpacity
         style={styles.finishButton}
-        onPress={() => navigation.navigate('Couseexercies', { item, items, currentIndex,courseId })} // ส่ง courseId กลับไปยังหน้า Couseexercies
+        onPress={() => navigation.navigate('Couseexercies1', { item, items, currentIndex, courseId })}
       >
         <Text style={styles.finishButtonText}>เสร็จสิ้น</Text>
       </TouchableOpacity>
-
     </View>
   );
 };

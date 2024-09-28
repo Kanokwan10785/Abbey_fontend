@@ -2,12 +2,13 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import cancel from '../../../../assets/image/cancel.png';
+import cancel from '../../../assets/image/cancel.png';
 
 const Couse_startc = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { items,courseId } = route.params || {};
+  console.log('courseId in couse :', courseId);
 
   // ใช้รายการแรกเป็น item ที่ต้องการแสดง
   const item = items ? items[0] : null;
@@ -49,11 +50,11 @@ const Couse_startc = () => {
   };
 
   const handleNext = () => {
-    navigation.navigate('Couse_start', { items, currentIndex: 0 });
+    navigation.navigate('Couse_start', { items, currentIndex: 0,courseId });
   };
 
   const handlePrevious = () => {
-    navigation.navigate('Couseexercies');
+    navigation.navigate('Couseexercies',{courseId});
   };
 
   const formatTime = (seconds) => {
@@ -64,7 +65,7 @@ const Couse_startc = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies')}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies',{courseId})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

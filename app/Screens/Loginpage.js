@@ -31,7 +31,7 @@ export default function Loginpage() {
             setTimeout(() => {
                 setLoading(false);  // หยุดการโหลดหลังจากเสร็จสิ้น
                 navigation.navigate('HomeScreen');  // เปลี่ยนไปยังหน้า HomeScreen
-            }, 8000);  // จำลองการโหลด 8 วินาที
+            }, 500);  // จำลองการโหลด 8 วินาที
         } catch (error) {
             // แสดงข้อความที่ละเอียดมากขึ้น
             if (error.response && error.response.data && error.response.data.error) {
