@@ -75,7 +75,7 @@ const FoodScreen = ({ navigation }) => {
 
       if (cachedPetImageUrl) {
         // ถ้ามี URL ใน AsyncStorage, ใช้ URL นั้นโดยไม่ต้องดึงจาก API
-        console.log('Loaded pet image from AsyncStorage:', cachedPetImageUrl);
+        // console.log('Loaded pet image from AsyncStorage:', cachedPetImageUrl);
         setCurrentPetImage(cachedPetImageUrl);
       } else {
         // ดึง URL ภาพสัตว์เลี้ยง (ค่าเริ่มต้นเป็น F00) จาก API หากไม่มีใน AsyncStorage
@@ -96,14 +96,28 @@ const FoodScreen = ({ navigation }) => {
 
   // ฟังก์ชันการจัดการเมื่อกดปุ่มกิน
   const handleEat = async (item) => {
-    if (item.quantity <= 0 || isButtonDisabled || isEating) return; // ป้องกันการกดซ้ำหรือตอนปุ่มถูกปิด
-
+    if (item.quantity <= 0 || isButtonDisabled || isEating) {
+      console.log('Cannot eat. Either quantity is 0, button is disabled, or pet is already eating.');
+      return; // ป้องกันการกดซ้ำหรือตอนปุ่มถูกปิด
+    }
+  
+    console.log('Attempting to eat food:', {
+      foodLabel: item.label, //
+      foodName: item.name,
+      foodId: item.id,
+      foodQuantity: item.quantity,
+      clothingLabel: clothingLabel,
+      isButtonDisabled: isButtonDisabled,
+      isEating: isEating,
+    });
+  
     setIsButtonDisabled(true);
     setIsEating(true);
 
     try {
       // สร้าง foodLabel เช่น F01, F04
-      const foodLabel = `F${item.id.toString().padStart(2, '0')}`;
+      const foodLabel = item.label;
+      console.log("Eating food:", foodLabel);
 
       // ตรวจสอบใน AsyncStorage ว่ามีภาพการกินสัตว์เลี้ยงที่เคยบันทึกไว้หรือไม่
       const cachedEatingImageUrl = await AsyncStorage.getItem(`petImage_${clothingLabel}_${foodLabel}`);
@@ -130,6 +144,7 @@ const FoodScreen = ({ navigation }) => {
           const defaultImageUrl = await fetchFoodPetUrlByLabel(clothingLabel, 'F00');
           
           if (defaultImageUrl?.url) {
+            console.log('Returning to default pet image:', defaultImageUrl.url);
             setCurrentPetImage(defaultImageUrl.url); // เปลี่ยนเป็นภาพปกติ (F00)
             await AsyncStorage.setItem(`petImage_${clothingLabel}_F00`, defaultImageUrl.url); // บันทึกใน AsyncStorage
           }
@@ -145,6 +160,7 @@ const FoodScreen = ({ navigation }) => {
 
       // ลดจำนวนอาหารและบันทึก
       const newQuantity = item.quantity - 1;
+      console.log("Updating food quantity. New quantity:", newQuantity);
       await updateFoodQuantityAndSave(item.id, newQuantity);
 
     } catch (error) {
