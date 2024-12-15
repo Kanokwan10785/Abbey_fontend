@@ -20,7 +20,7 @@ const Armexercies = () => {
         try {
             // Fetch from the API
             // const response = await fetch(`http://172.30.81.201:1337/api/addexercises?filters[exercise][$eq]=Arm&populate=armexercies.animation,armexercies.muscle`
-            const response = await fetch(`http://192.168.1.125:1337/api/addexercises?filters[exercise][$eq]=Arm&populate=all_exercises.animation,all_exercises.muscle`
+            const response = await fetch(`http://172.30.81.165:1337/api/addexercises?filters[exercise][$eq]=Arm&populate=all_exercises.animation,all_exercises.muscle`
             );
             const data = await response.json();
     

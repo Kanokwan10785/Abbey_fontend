@@ -19,7 +19,7 @@ const Addexercises = () => {
   const fetchCourses = async () => {
     try {
       const response = await fetch(
-        `http://192.168.1.125:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
+        `http://172.30.81.165:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
 
@@ -87,7 +87,7 @@ const Addexercises = () => {
   // เรียกข้อมูลการออกกำลังกายจาก API
   const fetchExercises = async () => {
     try {
-      const response = await fetch('http://192.168.1.125:1337/api/addexercises?populate=*');
+      const response = await fetch('http://172.30.81.165:1337/api/addexercises?populate=*');
       const data = await response.json();
 
       if (data && data.data) {

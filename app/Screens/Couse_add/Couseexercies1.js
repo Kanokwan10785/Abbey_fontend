@@ -26,7 +26,7 @@ const Couseexercies1 = ({ route }) => {
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.125:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://172.30.81.165:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
 

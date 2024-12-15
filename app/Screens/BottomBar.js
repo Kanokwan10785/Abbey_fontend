@@ -38,7 +38,7 @@ const BottomBar = () => {
         <Text style={styles.label}>ภารกิจ</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={isActive('AnalysisScreen') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('AnalysisScreen')}>
+        style={isActive('Homeexercise') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('Homeexercise')}>
         <Image source={bar05} style={styles.icon} />
         <Text style={styles.label}>วิเคราะห์</Text>
       </TouchableOpacity>
