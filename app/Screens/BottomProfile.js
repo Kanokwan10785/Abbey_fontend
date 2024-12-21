@@ -79,6 +79,7 @@ const ProfileButton = () => {
   const [username, setUsername] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
+  const [bmi, setBmi] = useState(null);
   const [birthday, setBirthday] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
@@ -123,6 +124,7 @@ const ProfileButton = () => {
       setUsername(userData.username);
       setWeight(userData.weight);
       setHeight(userData.height);
+      setBmi(userData.BMI);
       setBirthday(userData.birthday);
       setAge(userData.age);
       setGender(transformGenderToThai(userData.selectedGender));
@@ -138,6 +140,7 @@ const ProfileButton = () => {
         username: userData.username,
         weight: userData.weight,
         height: userData.height,
+        bmi: userData.BMI,
         birthday: userData.birthday,
         age: userData.age,
         gender: transformGenderToThai(userData.selectedGender),
@@ -170,6 +173,49 @@ const ProfileButton = () => {
         return gender;
     }
   };
+
+  // ฟังก์ชันสำหรับคำนวณ BMI
+  const calculateBMI = (weight, height) => {
+    if (!weight || !height || isNaN(weight) || isNaN(height) || height <= 0) {
+      return null;
+    }
+    const heightInMeters = height / 100; // แปลงจากเซนติเมตรเป็นเมตร
+    return (weight / (heightInMeters * heightInMeters)).toFixed(2); // คืนค่า BMI พร้อมทศนิยม 2 ตำแหน่ง
+  };
+
+  // useEffect สำหรับคำนวณ BMI และ PUT ไปยังเซิร์ฟเวอร์เมื่อ weight หรือ height เปลี่ยน
+  useEffect(() => {
+    const updateBMIOnServer = async () => {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      if (!token || !userId || !weight || !height) return;
+
+      const calculatedBMI = calculateBMI(weight, height);
+      setBmi(calculatedBMI);
+
+      try {
+        setIsSaving(true);
+        const updatedData = { weight, height, BMI: calculatedBMI }; // อัปเดตน้ำหนัก ส่วนสูง และ BMI
+        const response = await updateUserProfile(userId, updatedData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200) {
+          // console.log("BMI updated successfully on server:", calculatedBMI);
+        } else {
+          console.error("Failed to update BMI on server:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error updating BMI on server:", error);
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    updateBMIOnServer();
+  }, [weight, height]); // Trigger useEffect when weight or height changes
 
   const pickImage = async () => {
     try {
@@ -264,6 +310,10 @@ const ProfileButton = () => {
         pictureId = uploadData[0].id;
       }
 
+      // คำนวณค่า BMI
+      const calculatedBMI = calculateBMI(weight, height);
+      setBmi(calculatedBMI); // อัปเดต BMI ใน state
+
       // สร้างอ็อบเจ็กต์สำหรับอัปเดตโปรไฟล์ผู้ใช้
       const updatedData = {
         username: username,
@@ -272,6 +322,7 @@ const ProfileButton = () => {
         birthday: birthday,
         age: age,
         selectedGender: gender === 'ชาย' ? 'male' : 'female',
+        BMI: calculatedBMI,
       };
 
       if (pictureId) {
@@ -432,6 +483,7 @@ const ProfileButton = () => {
                       {/* <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text> */}
                       <Text style={styles.detailText}>อายุ: {age || "ไม่มีข้อมูล"} ปี</Text>
                       <Text style={styles.detailText}>เพศ: {gender || "ไม่มีข้อมูล"}</Text>
+                      <Text style={styles.detailText}>BMI: {bmi || "ไม่มีข้อมูล"}</Text>
                     </>
                   )}
                   {!isEditing && (
