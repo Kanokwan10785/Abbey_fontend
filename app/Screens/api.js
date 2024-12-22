@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.182:1337'; // Replace with your Strapi URL
-// const API_URL = 'http://192.168.255.3:1337'; // Replace with your Strapi URL
+const API_URL = 'http://192.168.1.100:1337'; // Replace with your Strapi URL
+// const API_URL = 'http://172.28.151.236:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -221,6 +221,7 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
     });
 
     console.log(`PUT Successfully linked user ${userId} to clothing pet ${clothingPetId}`);
+    console.log(`Returning URL after PUT: ${matchedItem.url}`); // Log URL after linking
     return matchedItem.url;
   } catch (error) {
     console.error('Error processing clothing pets:', error.response ? error.response.data : error.message);
@@ -232,7 +233,7 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
 export const fetchClothingPets = async () => {
   try {
     // เรียก API เพื่อนำข้อมูลเสื้อผ้าของสัตว์เลี้ยง
-    const response = await api.get('/api/clothing-pets?populate[clothing_pet][fields][0]=url&[fields][1]=label');
+    const response = await api.get('/api/clothing-pets?populate[clothing_pet][fields][0]=url&[fields][1]=label&pagination[limit]=100');
     
     if (!response.data || !response.data.data) {
       throw new Error('Failed to fetch clothing pets data');
@@ -242,7 +243,7 @@ export const fetchClothingPets = async () => {
     const clothingPetsData = response.data.data.map(item => ({
       id: item.id,
       label: item.attributes.label,
-      url: item.attributes.clothing_pet?.data?.attributes?.url || null
+      url: item.attributes.clothing_pet?.data?.[0]?.attributes?.url || null
     }));
     
     return clothingPetsData;

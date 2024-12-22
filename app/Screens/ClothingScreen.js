@@ -5,7 +5,7 @@ import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
-import { fetchUserClothingData, fetchClothingPets, fetchAndUpdateClothingPets } from './api.js';
+import { fetchUserClothingData, fetchClothingPets, fetchUserProfile, fetchAndUpdateClothingPets } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -20,6 +20,7 @@ export default function ClothingScreen() {
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
   const [petImageUrl, setPetImageUrl] = useState(null);
   const previousCombinedLabelRef = useRef(null);
+  const [bmi, setBmi] = useState(null);
 
   // ใช้เพื่อเก็บข้อมูล cache สำหรับ clothing pets
   const cachedClothingPetsData = useRef(null);
@@ -98,6 +99,39 @@ export default function ClothingScreen() {
     setItemsData(organizedData); // อัปเดตข้อมูลใน state
   };
 
+  // ฟังก์ชันเพื่อดึงข้อมูล BMI
+  const fetchAndStoreBMI = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId'); // ดึง userId จาก AsyncStorage
+      const token = await AsyncStorage.getItem('jwt'); // ดึง token จาก AsyncStorage
+      if (!userId || !token) {
+        console.error('User ID or Token not found');
+        return;
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const profileData = await fetchUserProfile(userId, config); // เรียกใช้ฟังก์ชัน fetchUserProfile
+      // console.log('Fetched Profile Data:', profileData); // ตรวจสอบข้อมูลที่ดึงมา
+
+      if (profileData && profileData.BMI) {
+        setBmi(profileData.BMI); // อัปเดต BMI ใน state
+        await AsyncStorage.setItem(`bmi-${userId}`, profileData.BMI.toString()); // เก็บ BMI ใน AsyncStorage
+      }
+    } catch (error) {
+      console.error('Error fetching and storing BMI:', error);
+    }
+  };
+
+  // เรียกใช้ฟังก์ชันใน useEffect
+  useEffect(() => {
+    fetchAndStoreBMI(); // ดึงข้อมูล BMI เมื่อเริ่มต้น
+  }, [selectedItems]);
+
   // โหลดข้อมูลเสื้อผ้าสัตว์เลี้ยงจาก cache หากมี
   const fetchAndCacheClothingPets = async () => {
     if (cachedClothingPetsData.current) {
@@ -119,7 +153,13 @@ export default function ClothingScreen() {
       const shirtLabel = selectedItems.shirt?.label || 'S00';
       const pantLabel = selectedItems.pant?.label || 'P00';
       const skinLabel = selectedItems.skin?.label || 'K00';
-      const combinedLabel = `${shirtLabel}${pantLabel}${skinLabel}`;
+
+      // คำนวณ BMI Category
+      const userId = await getUserId();
+      const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`); // ดึง BMI จาก AsyncStorage
+      const bmiCategory = getBMICategory(parseFloat(storedBmi)); // คำนวณระดับ BMI
+
+      const combinedLabel = `${bmiCategory}${shirtLabel}${pantLabel}${skinLabel}`;
 
       if (combinedLabel !== previousCombinedLabelRef.current) {
         previousCombinedLabelRef.current = combinedLabel;
@@ -133,11 +173,16 @@ export default function ClothingScreen() {
             const userId = await getUserId();
             if (!userId) return;
 
-            // ดึงข้อมูลจาก API ก่อนแล้วเก็บลงใน AsyncStorage หลังจากได้ข้อมูล
-            setPetImageUrl(matchingPet.url);
-            await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url); // บันทึกข้อมูลลง AsyncStorage หลังดึงสำเร็จ
-
-            // อัปเดตข้อมูลสัตว์เลี้ยงของผู้ใช้ในเซิร์ฟเวอร์
+             // บันทึกเฉพาะกรณีที่ URL มีค่า
+            if (matchingPet.url) {
+              setPetImageUrl(matchingPet.url);
+              await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url); // บันทึก URL ที่ถูกต้อง
+            } else {
+              setPetImageUrl(null); // ตั้งค่าใน state เป็น null
+              await AsyncStorage.removeItem(`petImageUrl-${userId}`); // ลบค่า URL ที่ไม่ถูกต้องออกจาก AsyncStorage
+            }
+            
+            // อัปเดตข้อมูลสัตว์เลี้ยงในเซิร์ฟเวอร์
             await fetchAndUpdateClothingPets(combinedLabel, userId);
           } else {
             setPetImageUrl(null);
@@ -177,6 +222,15 @@ export default function ClothingScreen() {
 
     setSelectedItems(updatedItems); // อัปเดตข้อมูลการถอดเสื้อผ้าใน state
     await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems)); // จัดเก็บการอัปเดตลงใน AsyncStorage
+  };
+
+  const getBMICategory = (bmi) => {
+    // console.log('Received BMI for categorization:', bmi);
+    if (!bmi || isNaN(bmi)) return 'BMI00'; 
+    if (bmi >= 30.0) return 'BMI04';
+    if (bmi >= 25.0) return 'BMI03';
+    if (bmi >= 18.6) return 'BMI02';
+    return 'BMI01';
   };
 
   // แสดงรายการเสื้อผ้า
@@ -290,8 +344,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   petImage: {
-    width: 210,
-    height: 210,
+    width: 280,
+    height: 280,
     resizeMode: "contain",
   },
   wardrobeIcon: {
