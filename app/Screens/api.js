@@ -270,18 +270,68 @@ export const fetchUserProfileWithClothing = async (userId, token) => {
   }
 };
 
-export const fetchHomePetUrlByLabel = async (label) => {
+export const fetchHomePetUrlByLabel = async (label, userId) => {
   try {
-    // แทนที่การใช้ fetch ด้วย api.get
-    const response = await api.get(`/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&[fields][1]=label`);
-    
+    console.log("Fetching home pet URL for label:", label, "and userId:", userId);
+
+    // ดึงข้อมูลผู้ใช้พร้อม exercise_levels
+    const userResponse = await api.get(`/api/users/${userId}?populate[exercise_levels][fields][1]=label`);
+    const userData = userResponse.data;
+    console.log("User exercise levels:", userData.exercise_levels);
+
+    // สร้างเงื่อนไข EX_ _ ตาม exercise_levels
+    let conditions = ['EX00']; // เริ่มต้นด้วย EX00
+    if (userData.exercise_levels && Array.isArray(userData.exercise_levels)) {
+      userData.exercise_levels.forEach((level) => {
+        if (level.label.includes('chest') && !conditions.includes('EX01')) {
+          conditions.push('EX01');
+        } else if (level.label.includes('arms') && !conditions.includes('EX02')) {
+          conditions.push('EX02');
+        } else if (level.label.includes('legs') && !conditions.includes('EX03')) {
+          conditions.push('EX03');
+        }
+      });
+    }
+    console.log("Search conditions:", conditions);
+
+    // ดึงข้อมูล clothing-pets พร้อม home_pet
+    const response = await api.get(`/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&fields[1]=label&pagination[limit]=100`);
     const data = response.data;
 
     // ค้นหา pet ที่มี label ตรงกับที่ต้องการ
     const matchingPet = data.data.find(pet => pet.attributes.label === label);
-    if (matchingPet && matchingPet.attributes.home_pet.data) {
-      return matchingPet.attributes.home_pet.data.attributes.url;
+    if (!matchingPet) {
+      console.warn("No matching pet found for label:", label);
+      return null;
+    }
+
+    if (matchingPet && Array.isArray(matchingPet.attributes.home_pet.data) && matchingPet.attributes.home_pet.data.length > 0) {
+      console.log("Matching pet found:", matchingPet);
+
+      // ทำการ map เฉพาะ home_pet ที่ตรงกับเงื่อนไข
+      const matchingNames = conditions
+        .map(condition => `${label}${condition}`) // สร้างชื่อเต็มตามเงื่อนไข
+        .filter(name =>
+          matchingPet.attributes.home_pet.data.some(homePet => homePet.attributes.name === name)
+        );
+
+      console.log("Filtered names matching conditions:", matchingNames);
+
+      // คืนค่า URL ของ home_pet ที่ตรงกับเงื่อนไขแรกสุด (EX00 -> EX01 -> ...)
+      for (const condition of conditions) {
+        const nameToMatch = `${label}${condition}`;
+        const homePet = matchingPet.attributes.home_pet.data.find(homePet => homePet.attributes.name === nameToMatch);
+
+        if (homePet?.attributes?.url) {
+          console.log(`Returning URL for condition: ${condition} -> ${homePet.attributes.url}`);
+          return homePet.attributes.url;
+        }
+      }
+
+      console.warn("No URL found for any of the specified conditions.");
+      return null;
     } else {
+      console.warn("No home_pet data found or it's not an array.");
       return null;
     }
   } catch (error) {

@@ -55,10 +55,12 @@ export default function HomeScreen() {
         try {
           // เรียก API ส่วนที่ 1 เพื่อดึงข้อมูลผู้ใช้และ clothing_pet.label
           const userData = await fetchUserProfileWithClothing(userId, token);
-          const clothingLabel = userData.clothing_pet?.label || 'S00P00K00';
+          // console.log("Matching userData found:", userData); 
+          const clothingLabel = userData.clothing_pet?.label || 'BMI00S00P00K00';
+          console.log("Matching pet found:", clothingLabel);
     
           // เรียก API ส่วนที่ 2 เพื่อหาข้อมูล URL ของ home_pet โดยใช้ clothingLabel
-          const petImageUrl = await fetchHomePetUrlByLabel(clothingLabel);
+          const petImageUrl = await fetchHomePetUrlByLabel(clothingLabel, userId);
     
           // ตั้งค่า petImageUrl
           setPetImageUrl(petImageUrl);
@@ -135,8 +137,8 @@ const styles = StyleSheet.create({
     height: 50,
   },
   petImages: {
-    width: '280%',
-    height: '280%',
+    width: '250%',
+    height: '250%',
     resizeMode: 'contain',
   },
 });
