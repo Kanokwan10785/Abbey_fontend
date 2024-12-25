@@ -1,5 +1,6 @@
 import React, { useContext, useEffect } from "react";
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { Image } from 'expo-image';
+import { View, Text, StyleSheet } from 'react-native';
 import dollar from '../../assets/image/dollar-01.png';
 import { BalanceContext } from './BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';

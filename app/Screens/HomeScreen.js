@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
+import { Image, ImageBackground } from 'expo-image';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';

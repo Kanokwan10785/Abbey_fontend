@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Platform, TextInput, Alert, LogBox } from "react-native";
+import { Image } from 'expo-image';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, TextInput, Alert, LogBox } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';

@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, ImageBackground } from 'react-native'; // เพิ่ม ActivityIndicator
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native'; // เพิ่ม ActivityIndicator
+import { Image, ImageBackground } from 'expo-image';
 import React, { useState } from 'react';
 import Colors from '../Shared/Colors';
 import loginImage from '../../assets/image/login.png';

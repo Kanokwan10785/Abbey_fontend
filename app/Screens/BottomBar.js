@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { Image } from 'expo-image';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import bar01 from '../../assets/image/bar-01.png';
 import bar02 from '../../assets/image/bar-02.png';
