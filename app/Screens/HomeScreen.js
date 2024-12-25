@@ -21,26 +21,20 @@ const FoodButton = () => {
 
 export default function HomeScreen() {
   const [balance, setBalance] = useState(0);
-  const [petImageUrl, setPetImageUrl] = useState(null);
+  const [petImageUrls, setPetImageUrls] = useState([]);
+  const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
 
-  // ใช้ useFocusEffect แทน useEffect เพื่อให้โหลดข้อมูลใหม่ทุกครั้งที่เปิดหน้า HomeScreen
   useFocusEffect(
     React.useCallback(() => {
       const loadBalance = async () => {
         const token = await AsyncStorage.getItem('jwt');
         const userId = await AsyncStorage.getItem('userId');
-        // console.log("Token:", token); // ตรวจสอบ token
-        // console.log("User ID:", userId); // ตรวจสอบ user ID
-  
         if (!token || !userId) return;
   
         try {
           const userData = await fetchUserProfile(userId, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           });
-          // console.log("User Data:", userData); // ตรวจสอบข้อมูลผู้ใช้ที่ได้รับ
           setBalance(userData.balance || 0);
         } catch (error) {
           console.error("Error fetching user profile", error);
@@ -50,31 +44,37 @@ export default function HomeScreen() {
       const loadHomePetData = async () => {
         const token = await AsyncStorage.getItem('jwt');
         const userId = await AsyncStorage.getItem('userId');
-    
         if (!token || !userId) return;
     
         try {
-          // เรียก API ส่วนที่ 1 เพื่อดึงข้อมูลผู้ใช้และ clothing_pet.label
           const userData = await fetchUserProfileWithClothing(userId, token);
           // console.log("Matching userData found:", userData); 
-          const clothingLabel = userData.clothing_pet?.label || 'BMI00S00P00K00';
+          const clothingLabel = userData.clothing_pet?.label || 'BMI03S00P00K00';
           console.log("Matching pet found:", clothingLabel);
-    
-          // เรียก API ส่วนที่ 2 เพื่อหาข้อมูล URL ของ home_pet โดยใช้ clothingLabel
-          const petImageUrl = await fetchHomePetUrlByLabel(clothingLabel, userId);
-    
-          // ตั้งค่า petImageUrl
-          setPetImageUrl(petImageUrl);
-          
+          const urls = await fetchHomePetUrlByLabel(clothingLabel, userId);
+
+          if (urls) {
+            setPetImageUrls(urls.map(item => item.url));
+          }
         } catch (error) {
           console.error("Error fetching home pet data", error);
         }
       };
   
-      // โหลดข้อมูล balance และข้อมูลสัตว์เลี้ยง
       loadBalance();
       loadHomePetData();
-    }, [])  // dependencies array ว่างเพื่อให้ทำงานทุกครั้งที่หน้า HomeScreen เปิดขึ้น
+    }, []) 
+  );
+  useFocusEffect(
+    React.useCallback(() => {
+      if (petImageUrls.length > 0) {
+        const interval = setInterval(() => {
+          setCurrentUrlIndex(prevIndex => (prevIndex + 1) % petImageUrls.length);
+        }, 10200);
+
+        return () => clearInterval(interval);
+      }
+    }, [petImageUrls])
   );
 
   return (
@@ -87,8 +87,8 @@ export default function HomeScreen() {
         <View style={styles.sectionpetImages} />
         <View style={styles.sectionpetImages} />
         <View style={styles.sectionpetImages}>
-          {petImageUrl ? (
-            <Image source={{ uri: petImageUrl }} style={styles.petImages} />
+          {petImageUrls.length > 0 ?(
+             <Image source={{ uri: petImageUrls[currentUrlIndex] }} style={styles.petImages} />
           ) : (
             <Text style={styles.noImageText}>No Image Available</Text>
           )}
