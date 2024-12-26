@@ -328,7 +328,7 @@ export const fetchFoodPetUrlByLabel = async (label, foodLabel = 'F00') => {
     console.log(`Label: ${label}, Food Label: ${foodLabel}`);
 
     // เรียก API เพื่อดึงข้อมูล
-    const response = await api.get('/api/clothing-pets?populate[food_pet][fields][0]=url&populate[food_pet][fields][1]=name&[fields][1]=label');
+    const response = await api.get('/api/clothing-pets?populate[food_pet][fields][0]=url&populate[food_pet][fields][1]=name&[fields][1]=label&pagination[limit]=100');
     const data = response.data;
 
     // ค้นหา pet ที่ตรงกับ label

@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   petImage: {
-    width: "92%",
-    height: "92%",
+    width: "110%",
+    height: "110%",
     resizeMode: "contain",
   },
   wardrobeIcon: {
