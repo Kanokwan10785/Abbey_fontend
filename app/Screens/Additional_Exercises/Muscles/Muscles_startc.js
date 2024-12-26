@@ -19,6 +19,7 @@ const Muscles_startc = () => {
 
   const [isRunning, setIsRunning] = useState(true);
   const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการออกกำลังกาย
+  const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
     setTime(3); // รีเซ็ตเวลาเป็น 3 วินาทีเมื่อเริ่มใหม่
@@ -39,8 +40,11 @@ const Muscles_startc = () => {
           }
         });
       }, 1000);
+      setIntervalId(id);
   
-      return () => clearInterval(id);  // ล้าง interval เมื่อคอมโพเนนต์ unmount หรือเมื่อ `isRunning` เปลี่ยนค่า
+      return () => clearInterval(id);
+    } else if (intervalId) {
+      clearInterval(intervalId);  // ล้าง interval เมื่อคอมโพเนนต์ unmount หรือเมื่อ `isRunning` เปลี่ยนค่า
     }
   }, [isRunning, navigation, items]);
   
@@ -50,10 +54,16 @@ const Muscles_startc = () => {
   };
 
   const handleNext = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
     navigation.navigate('Muscles_start', { items, currentIndex: 0,musclesId });
   };
 
   const handlePrevious = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
     navigation.navigate('Musclesexercies',{musclesId});
   };
 

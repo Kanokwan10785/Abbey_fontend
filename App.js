@@ -39,6 +39,7 @@ import Muscles_finish from './app/Screens/Additional_Exercises/Muscles/Muscles_f
 import Muscles_des from './app/Screens/Additional_Exercises/Muscles/Muscles_des.js';
 import Homeexercise from './app/Screens/Daily_exercise/Home_exercise.js';
 import Dayexercise from './app/Screens/Daily_exercise/Day_exercise.js';
+import Muscleslevel from './app/Screens/Additional_Exercises/Muscles/Muscles_level.js';
 
 const Stack = createNativeStackNavigator();
 
@@ -80,6 +81,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Muscles_des" component={Muscles_des} />
       <Stack.Screen name="Homeexercise" component={Homeexercise} />
       <Stack.Screen name="Dayexercise" component={Dayexercise} />
+      <Stack.Screen name="Muscleslevel" component={Muscleslevel} />
     </Stack.Navigator>
   </ClothingProvider>
   </BalanceProvider>

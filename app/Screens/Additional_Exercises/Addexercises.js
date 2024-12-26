@@ -19,7 +19,7 @@ const Addexercises = () => {
   const fetchCourses = async () => {
     try {
       const response = await fetch(
-        `http://172.30.81.165:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
+        `http://172.30.81.180:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
 
@@ -87,8 +87,9 @@ const Addexercises = () => {
   // เรียกข้อมูลการออกกำลังกายจาก API
   const fetchExercises = async () => {
     try {
-      const response = await fetch('http://172.30.81.165:1337/api/addexercises?populate=*');
+      const response = await fetch('http://172.30.81.180:1337/api/muscles-exercises?populate=*');
       const data = await response.json();
+      // console.log('Mu',data)
 
       if (data && data.data) {
         setExercises(data.data); // จัดเก็บข้อมูล addexercises ลงใน state
@@ -126,8 +127,8 @@ const Addexercises = () => {
     const iconUrl = item.attributes.icon?.data?.[0]?.attributes?.formats?.thumbnail?.url;
     return (
       <View style={styles.gridItem}>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Musclesexercies', { musclesId: item.id })}>
-          <Text style={styles.buttonText}>{item.attributes.name}</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Muscleslevel', { musclesId: item.id })}>
+          <Text style={styles.buttonText}>{item.attributes.Muscles_name}</Text>
           <Image
             source={{ uri: iconUrl}} // ตรวจสอบว่ามี URL หรือไม่
             style={styles.image}

@@ -7,11 +7,11 @@ import cancel from '../../../assets/image/cancel.png';
 const Exercise1 = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items, currentIndex } = route.params || {};
+  const { items, currentIndex,dayNumber, weekId,set } = route.params || {};
 
   useEffect(() => {
     console.log('Received currentIndex in Exercise1:', currentIndex);
-  }, [currentIndex]);
+  }, [currentIndex,dayNumber, weekId,set]);
 
   if (!items || currentIndex === undefined) {
     return (
@@ -20,6 +20,7 @@ const Exercise1 = () => {
       </View>
     );
   }
+  console.log('dayNumber, weekId ex1 ',dayNumber, weekId,set)
 
   const item = items[currentIndex];
   const [isRunning, setIsRunning] = useState(false);
@@ -80,17 +81,17 @@ const Exercise1 = () => {
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Exercise2', { item: items[currentIndex + 1], items, currentIndex });
+      navigation.navigate('Exercise2', { item: items[currentIndex + 1], items, currentIndex,dayNumber, weekId,set  });
     } else {
-      navigation.navigate('Exercise4', { item, items, currentIndex });
+      navigation.navigate('Exercise4', { item, items, currentIndex,dayNumber, weekId,set });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
+      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,dayNumber, weekId,set });
     } else {
-      navigation.navigate('ExerciseScreen');
+      navigation.navigate('Dayexercise',{dayNumber, weekId,set});
     }
   };
 
@@ -101,7 +102,7 @@ const Exercise1 = () => {
   };
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{dayNumber, weekId,set})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
