@@ -229,9 +229,9 @@ const FoodScreen = ({ navigation }) => {
             <ProfileButton />
             <DollarIcon />
           </View>
-          <TouchableOpacity style={styles.clearButton} onPress={clearCachedPetImages}>
+          {/* <TouchableOpacity style={styles.clearButton} onPress={clearCachedPetImages}>
             <Text style={styles.clearButtonText}>ล้างแคชภาพสัตว์เลี้ยง</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <View style={styles.petDisplay}>
             <Image source={{ uri: currentPetImage }} style={styles.petImage} />
           </View>
