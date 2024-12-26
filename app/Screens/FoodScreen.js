@@ -170,6 +170,24 @@ const FoodScreen = ({ navigation }) => {
       setIsButtonDisabled(false); 
     }
   };
+
+  const clearCachedPetImages = async () => {
+    try {
+      console.log("Clearing cached pet images for FoodScreen...");
+  
+      const keys = await AsyncStorage.getAllKeys();
+      const petImageKeys = keys.filter(key => key.startsWith('petImage_')); // ค้นหาคีย์ที่เกี่ยวข้อง
+  
+      if (petImageKeys.length > 0) {
+        await AsyncStorage.multiRemove(petImageKeys); // ลบคีย์ทั้งหมดที่เกี่ยวข้อง
+        console.log("Cleared cached pet images:", petImageKeys);
+      } else {
+        console.log("No cached pet images found.");
+      }
+    } catch (error) {
+      console.error("Error clearing cached pet images:", error);
+    }
+  };  
   
   const renderItems = () => {
     const sortedFoodData = [...foodData].sort((a, b) => {
@@ -211,6 +229,9 @@ const FoodScreen = ({ navigation }) => {
             <ProfileButton />
             <DollarIcon />
           </View>
+          <TouchableOpacity style={styles.clearButton} onPress={clearCachedPetImages}>
+            <Text style={styles.clearButtonText}>ล้างแคชภาพสัตว์เลี้ยง</Text>
+          </TouchableOpacity>
           <View style={styles.petDisplay}>
             <Image source={{ uri: currentPetImage }} style={styles.petImage} />
           </View>
@@ -354,6 +375,21 @@ const styles = StyleSheet.create({
     color: "#000",
     fontFamily: "appfont_02",
   },
+  clearButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    top: 90,
+    position: "absolute",
+    zIndex: 100, // ทำให้ปุ่มอยู่ด้านหน้าสุด
+    borderRadius: 5,
+  },
+  clearButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  
+  
 });
 
 export default FoodScreen;
