@@ -227,7 +227,7 @@ export default function ClothingScreen() {
 
   const getBMICategory = (bmi) => {
     // console.log('Received BMI for categorization:', bmi);
-    if (!bmi || isNaN(bmi)) return 'BMI00'; 
+    if (!bmi || isNaN(bmi)) return 'BMI01'; 
     if (bmi >= 30.0) return 'BMI04';
     if (bmi >= 25.0) return 'BMI03';
     if (bmi >= 18.6) return 'BMI02';
