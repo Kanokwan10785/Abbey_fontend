@@ -127,6 +127,7 @@ export default function ShopScreen() {
                   name: attributes.name,
                   price: attributes.price,
                   isSinglePurchase: attributes.isSinglePurchase,
+                  level: attributes.level || '', // เพิ่มข้อมูลเลเวลที่จำเป็น
                   imageUrl: attributes.image?.data?.attributes?.url || '',
                   petFoodItemsId: attributes.pet_food_items?.data.map(petItem => petItem.id) || [],
                   clothingItemsId: attributes.clothing_items?.data.map(clothingItem => clothingItem.id) || []
@@ -357,8 +358,14 @@ const renderItems = () => {
     const isHidden = item.label === 'Z00' || item.label === 'S00' || item.label === 'P00';
     const alreadyOwned = purchasedItems[item.label] === true;
 
+    // ตรวจสอบเลเวลผู้ใช้
+    const userLevel = 1; // ตัวอย่างเลเวลของผู้ใช้, สามารถเปลี่ยนให้ดึงจาก Context ได้
+    const canPurchase = userLevel >= item.level;
+
     return (
-      <View key={index} style={styles.item}>
+      <View key={index} style={[ styles.item, !canPurchase && { backgroundColor: "#FAA828" }
+      ]}
+    >
         <View style={styles.insideitemImage}>
           <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
         </View>
@@ -369,6 +376,7 @@ const renderItems = () => {
               <Text style={styles.itemPrice}>{item.price}</Text>
               <Image source={dollar} style={styles.currencyIcon} />
             </View>
+            {canPurchase ? (
             <TouchableOpacity
               style={[styles.itemButton,]}
               onPress={() => handleBuy(item)}
@@ -378,6 +386,11 @@ const renderItems = () => {
                 {alreadyOwned ? 'มีแล้ว' : 'ซื้อ'}
               </Text>
             </TouchableOpacity>
+          ) : (
+              <View style={styles.lockedButton}>
+                <Text style={styles.lockedButtonText}>ปลดล็อก Lv. {item.level}</Text>
+              </View>
+            )}
           </>
         )}
       </View>
@@ -558,4 +571,20 @@ const styles = StyleSheet.create({
     color: "#000",
     fontFamily: "appfont_02",
   },
+  lockedButton: {
+    backgroundColor: '#444', // สีปุ่มที่ถูกล็อก
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    top: '-25%',
+  },
+  lockedButtonText: {
+    color: '#FFF', // สีข้อความสำหรับปุ่มที่ถูกล็อก
+    fontSize: 14,
+    fontFamily: 'appfont_01',
+    textAlign: 'center',
+  },
+  
 });
