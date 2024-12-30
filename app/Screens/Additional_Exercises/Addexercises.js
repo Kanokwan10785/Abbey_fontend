@@ -19,7 +19,7 @@ const Addexercises = () => {
   const fetchCourses = async () => {
     try {
       const response = await fetch(
-        `http://172.30.81.180:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
+        `http://192.168.1.100:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
 
@@ -33,6 +33,7 @@ const Addexercises = () => {
       const courseData = data.data.map((course) => {
         const courseAttributes = course.attributes;
         const courseImageUrl = courseAttributes?.image?.data?.[0]?.attributes?.url || null;
+        console.log('courseImageUrl',courseImageUrl)
 
         let totalDuration = 0;
 
@@ -87,7 +88,7 @@ const Addexercises = () => {
   // เรียกข้อมูลการออกกำลังกายจาก API
   const fetchExercises = async () => {
     try {
-      const response = await fetch('http://172.30.81.180:1337/api/muscles-exercises?populate=*');
+      const response = await fetch('http://192.168.1.100:1337/api/muscles-exercises?populate=*');
       const data = await response.json();
       // console.log('Mu',data)
 
@@ -140,7 +141,7 @@ const Addexercises = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loading}>
         <ActivityIndicator size="large" color="#F6A444" />
       </View>
     );
@@ -152,8 +153,8 @@ const Addexercises = () => {
         <Text style={styles.headerTitle}>ออกกำลังกาย</Text>
       </View>
       <View style={styles.tabContainer}>
-        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('ExerciseScreen')}>
-          <Text style={styles.tabButtonText}>ภารกิจรายวัน</Text>
+        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('Homeexercise')}>
+          <Text style={styles.tabButtonText}>ภารกิจหลัก</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabButton1} onPress={() => navigation.navigate('Addexercises')}>
           <Text style={styles.tabButtonText1}>ภารกิจเสริม</Text>
@@ -182,7 +183,6 @@ const Addexercises = () => {
         keyExtractor={item => item.id.toString()}
         style={styles.courseList}
       />
-
       <BottomBar />
     </View>
   );
@@ -192,6 +192,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF',
+  },
+  loading: {
+    flex: 1,              
+    backgroundColor: '#FFF', 
   },
   header: {
     backgroundColor: '#F6A444',

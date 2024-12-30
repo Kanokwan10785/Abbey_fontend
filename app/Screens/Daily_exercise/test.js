@@ -151,8 +151,8 @@ const Addexercises = () => {
         <Text style={styles.headerTitle}>ออกกำลังกาย</Text>
       </View>
       <View style={styles.tabContainer}>
-        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('ExerciseScreen')}>
-          <Text style={styles.tabButtonText}>ภารกิจรายวัน</Text>
+        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('Homeexercise')}>
+          <Text style={styles.tabButtonText}>ภารกิจหลัก</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabButton1} onPress={() => navigation.navigate('Addexercises')}>
           <Text style={styles.tabButtonText1}>ภารกิจเสริม</Text>

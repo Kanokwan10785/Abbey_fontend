@@ -49,7 +49,7 @@ const Exercise4 = () => {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://172.30.81.180:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.100:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -78,7 +78,7 @@ const Exercise4 = () => {
       const userId = await AsyncStorage.getItem('userId');
       const timestamp = new Date().toISOString();
   
-      const response = await fetch('http://172.30.81.180:1337/api/workout-records', {
+      const response = await fetch('http://192.168.1.100:1337/api/workout-records', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ import BottomBar from '../BottomBar';
 import exercise from '../../../assets/image/exercise.png';
 
 const Homeexercise = () => {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
   const [weeks, setWeeks] = useState([]);
   const [workoutRecords, setWorkoutRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ const Homeexercise = () => {
 
   const fetchWeeks = async () => {
     try {
-      const response = await axios.get('http://172.30.81.180:1337/api/weeks?populate=*');
+      const response = await axios.get('http://192.168.1.100:1337/api/weeks?populate=*');
       const sortedWeeks = response.data.data.sort((a, b) => a.id - b.id);
 
       setWeeks(sortedWeeks);
@@ -51,9 +51,9 @@ const Homeexercise = () => {
         return;
       }
 
-      const token = await AsyncStorage.getItem('jwt'); 
+      const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `http://172.30.81.180:1337/api/workout-records?filters[users_permissions_user]=${userId}&populate=*`,
+        `http://192.168.1.100:1337/api/workout-records?filters[users_permissions_user]=${userId}&populate=*`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,9 +68,9 @@ const Homeexercise = () => {
 
   const isDayCompleted = (weekId, dayNumber) => {
     const record = workoutRecords.find((record) => {
-      const recordWeekId = record.attributes.week?.data?.id; 
-      const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber; 
-      
+      const recordWeekId = record.attributes.week?.data?.id;
+      const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
+
       return recordWeekId === weekId && recordDayNumber === dayNumber;
     });
 
@@ -92,8 +92,8 @@ const Homeexercise = () => {
         <Text style={styles.headerTitle}>ออกกำลังกาย</Text>
       </View>
       <View style={styles.tabContainer}>
-        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('ExerciseScreen')}>
-          <Text style={styles.tabButtonText}>ภารกิจรายวัน</Text>
+        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('Homeexercise')}>
+          <Text style={styles.tabButtonText}>ภารกิจหลัก</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabButton1} onPress={() => navigation.navigate('Addexercises')}>
           <Text style={styles.tabButtonText1}>ภารกิจเสริม</Text>
@@ -121,7 +121,7 @@ const Homeexercise = () => {
                   />
                 </View>
 
-                <Text style={styles.weekText}>Set {week.attributes.name || 'N/A'}</Text>
+                <Text style={styles.weekText}>{week.attributes.name || 'N/A'}</Text>
                 <Text style={styles.weekProgress}>
                   {`${week.attributes.days.data.filter((day) =>
                     isDayCompleted(week.id, day.attributes.dayNumber)
@@ -160,8 +160,8 @@ const Homeexercise = () => {
                       </Text>
                     </View>
                     {day.attributes.dayNumber == 7 && (
-                        <Icon name="chevron-right" size={30} color="#F6A444" style={styles.arrowIcon} />
-                      )}
+                      <Icon name="chevron-right" size={30} color="#F6A444" style={styles.arrowIcon} />
+                    )}
                   </TouchableOpacity>
                 ))}
                 <Icon
@@ -180,7 +180,8 @@ const Homeexercise = () => {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>No weeks available. Please try again later.</Text>
+          <View style={styles.loadingContainer}>
+          </View>
         )}
       </ScrollView>
       <BottomBar />

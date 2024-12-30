@@ -18,11 +18,13 @@ const Couseexercies = ({ route }) => {
       // ดึงข้อมูลเมื่อ courseId ถูกส่งมา
       fetchexercises();
     }, [courseId]);
+
+    console.log('courseId',courseId)
   
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://172.30.81.180:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://192.168.1.100:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
         // console.log("API Response:", data);

@@ -18,7 +18,7 @@ const MusclesLevel = ({route}) => {
         const fetchCourses = async () => {
           try {
             const response = await fetch(
-              `http://172.30.81.180:1337/api/muscles-exercises/${musclesId}?populate=exercise_levels.image,icon,exercise_levels.all_exercises`
+              `http://192.168.1.100:1337/api/muscles-exercises/${musclesId}?populate=exercise_levels.image,icon,exercise_levels.all_exercises`
             );
             const data = await response.json();
         

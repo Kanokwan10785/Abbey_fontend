@@ -28,7 +28,7 @@ const Dayexercise = () => {
   const fetchExercises = async (day, week) => {
     try {
       const response = await fetch(
-        `http://172.30.81.180:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
+        `http://192.168.1.100:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
   
@@ -103,7 +103,7 @@ const Dayexercise = () => {
           <Image source={previous} style={{ width: 30, height: 30 }} />
         </TouchableOpacity>
         <View style={styles.Title}>
-          <Text style={styles.headerTitle}> Set {set} ออกกำลังกาย {dayNumber}</Text>
+          <Text style={styles.headerTitle}>{set} ออกกำลังกาย ครั้งที่ {dayNumber}</Text>
         </View>
       </View>
       <Image source={exercise} style={styles.mainImage} />

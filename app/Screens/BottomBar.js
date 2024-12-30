@@ -33,12 +33,12 @@ const BottomBar = () => {
         <Text style={styles.label}>หน้าหลัก</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={isActive('ExerciseScreen') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('ExerciseScreen')}>
+        style={isActive('Homeexercise') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('Homeexercise')}>
         <Image source={bar04} style={styles.icon} />
         <Text style={styles.label}>ภารกิจ</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={isActive('Homeexercise') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('Homeexercise')}>
+        style={isActive('AnalysisScreen') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('AnalysisScreen')}>
         <Image source={bar05} style={styles.icon} />
         <Text style={styles.label}>วิเคราะห์</Text>
       </TouchableOpacity>

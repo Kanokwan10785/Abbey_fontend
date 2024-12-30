@@ -23,24 +23,7 @@ const exerciseMapping = {
   "7": "chest_beginner",
 };
 
-const workoutMapping = {
-  "legs_advanced": "กล้ามขา ขั้นสูง",
-  "legs_intermediate": "กล้ามขา ปานกลาง",
-  "legs_beginner": "กล้ามขา ผู้เริ่มฝึก",
-  "arms_advanced": "กล้ามแขน ขั้นสูง",
-  "arms_intermediate": "กล้ามแขน ปานกลาง",
-  "arms_beginner": "กล้ามแขน ผู้เริ่มฝึก",
-  "back_advanced": "กล้ามหลัง ขั้นสูง",
-  "back_intermediate": "กล้ามหลัง ปานกลาง",
-  "back_beginner": "กล้ามหลัง ผู้เริ่มฝึก",
-  "chest_advanced": "กล้ามอก ขั้นสูง",
-  "chest_intermediate": "กล้ามอก ปานกลาง",
-  "chest_beginner": "กล้ามอก ผู้เริ่มฝึก",
-};
-
-
 const mapExerciseLevel = (musclesId) => exerciseMapping[musclesId] || "unknown";
-const mapWorkoutExercise = (exerciseLevel) => workoutMapping[exerciseLevel] || "unknown";
 
 const Muscles_finish = () => {
   const navigation = useNavigation();
@@ -87,7 +70,7 @@ const Muscles_finish = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
 
-      const response = await fetch(`http://172.30.81.180:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.100:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +104,7 @@ const Muscles_finish = () => {
         }
 
         // 1. สร้าง workout record ใหม่
-        const workoutRecordResponse = await fetch('http://172.30.81.180:1337/api/workout-records', {
+        const workoutRecordResponse = await fetch('http://192.168.1.100:1337/api/workout-records', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -146,7 +129,7 @@ const Muscles_finish = () => {
         console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
 
         // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
-        const userResponse = await fetch(`http://172.30.81.180:1337/api/users/${userId}?populate=exercise_levels`, {
+        const userResponse = await fetch(`http://192.168.1.100:1337/api/users/${userId}?populate=exercise_levels`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -168,7 +151,7 @@ const Muscles_finish = () => {
         const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน
 
         // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
-        const userUpdateResponse = await fetch(`http://172.30.81.180:1337/api/users/${userId}`, {
+        const userUpdateResponse = await fetch(`http://192.168.1.100:1337/api/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
