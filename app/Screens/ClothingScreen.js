@@ -6,6 +6,7 @@ import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { ClothingContext } from './ClothingContext';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserClothingData, fetchClothingPets, fetchUserProfile, fetchAndUpdateClothingPets } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
@@ -15,7 +16,7 @@ import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 
-export default function ClothingScreen() {
+export default function ClothingScreen({ navigation, route }) {
   const {selectedItems, setSelectedItems } = useContext(ClothingContext);
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
@@ -25,6 +26,40 @@ export default function ClothingScreen() {
 
   // ใช้เพื่อเก็บข้อมูล cache สำหรับ clothing pets
   const cachedClothingPetsData = useRef(null);
+
+  // ฟังก์ชันโหลดข้อมูลเมื่อมีการรีเฟรช
+  const refreshData = async () => {
+    console.log('Refreshing ClothingScreen...');
+    try {
+      await fetchAndStoreBMI(); // โหลดข้อมูล BMI ใหม่
+      await loadUserClothingData(); // โหลดข้อมูลเสื้อผ้าใหม่
+  
+      // ตรวจสอบว่าข้อมูลใหม่ถูกโหลดสำเร็จ
+      const updatedUserId = await getUserId();
+      const updatedOutfit = await AsyncStorage.getItem(`userOutfit-${updatedUserId}`);
+      console.log('Updated Outfit:', updatedOutfit);
+      console.log('Updated BMI:', bmi);
+  
+    } catch (error) {
+      console.error('Error refreshing ClothingScreen:', error);
+    }
+  };  
+
+  // ฟังก์ชันสำหรับเรียกข้อมูลเสื้อผ้า
+  const loadUserClothingData = async () => {
+    // Logic การโหลดเสื้อผ้า (โค้ดเดิม)
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (route.params?.refresh) {
+        console.log('Triggered refresh from route params');
+        refreshData();
+      } else {
+        console.log('No refresh triggered');
+      }
+    }, [route.params?.refresh]) // ติดตามค่า refresh จาก route.params
+  );  
 
   // ฟังก์ชัน helper เพื่อดึง userId จาก AsyncStorage
   const getUserId = async () => {
@@ -60,6 +95,7 @@ export default function ClothingScreen() {
         // ดึงข้อมูลจาก API และจัดเก็บใน AsyncStorage
         const data = await fetchUserClothingData(userId);
         if (data && data.length > 0) {
+          console.log('Fetched clothing data from API:', data);
           organizeClothingData(data);
           await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data)); // จัดเก็บข้อมูลใหม่ใน AsyncStorage
         }
@@ -171,16 +207,19 @@ export default function ClothingScreen() {
           const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
 
           if (matchingPet) {
+            console.log('Matching Pet Found:', matchingPet);
+            setPetImageUrl(matchingPet.url || null);
             const userId = await getUserId();
             if (!userId) return;
 
              // บันทึกเฉพาะกรณีที่ URL มีค่า
             if (matchingPet.url) {
               setPetImageUrl(matchingPet.url);
-              await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url); // บันทึก URL ที่ถูกต้อง
+              await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url || ''); // บันทึก URL ที่ถูกต้อง
             } else {
               setPetImageUrl(null); // ตั้งค่าใน state เป็น null
               await AsyncStorage.removeItem(`petImageUrl-${userId}`); // ลบค่า URL ที่ไม่ถูกต้องออกจาก AsyncStorage
+              console.log('No matching pet found for label:', combinedLabel);
             }
             
             // อัปเดตข้อมูลสัตว์เลี้ยงในเซิร์ฟเวอร์
@@ -195,7 +234,10 @@ export default function ClothingScreen() {
     };
 
     updatePetImage();
-  }, [selectedItems]);
+  }, [selectedItems, bmi]);
+
+  console.log('Current BMI:', bmi);
+  console.log('Selected Items:', selectedItems);
 
   // ฟังก์ชันการสวมใส่เสื้อผ้า
   const handleWear = async (category, image, name, label) => {

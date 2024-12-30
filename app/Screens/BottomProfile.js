@@ -356,7 +356,7 @@ const ProfileButton = () => {
       if (profileImage.uri) {
         await AsyncStorage.setItem('profileImage', profileImage.uri);
       }
-
+      navigation.navigate('ClothingScreen', { refresh: true });
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile.');
     } finally {
