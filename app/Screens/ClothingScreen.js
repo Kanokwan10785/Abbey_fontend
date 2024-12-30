@@ -29,7 +29,7 @@ export default function ClothingScreen({ navigation, route }) {
 
   // ฟังก์ชันโหลดข้อมูลเมื่อมีการรีเฟรช
   const refreshData = async () => {
-    console.log('Refreshing ClothingScreen...');
+    // console.log('Refreshing ClothingScreen...');
     try {
       await fetchAndStoreBMI(); // โหลดข้อมูล BMI ใหม่
       await loadUserClothingData(); // โหลดข้อมูลเสื้อผ้าใหม่
@@ -37,8 +37,8 @@ export default function ClothingScreen({ navigation, route }) {
       // ตรวจสอบว่าข้อมูลใหม่ถูกโหลดสำเร็จ
       const updatedUserId = await getUserId();
       const updatedOutfit = await AsyncStorage.getItem(`userOutfit-${updatedUserId}`);
-      console.log('Updated Outfit:', updatedOutfit);
-      console.log('Updated BMI:', bmi);
+      // console.log('Updated Outfit:', updatedOutfit);
+      // console.log('Updated BMI:', bmi);
   
     } catch (error) {
       console.error('Error refreshing ClothingScreen:', error);
@@ -95,7 +95,7 @@ export default function ClothingScreen({ navigation, route }) {
         // ดึงข้อมูลจาก API และจัดเก็บใน AsyncStorage
         const data = await fetchUserClothingData(userId);
         if (data && data.length > 0) {
-          console.log('Fetched clothing data from API:', data);
+          // console.log('Fetched clothing data from API:', data);
           organizeClothingData(data);
           await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data)); // จัดเก็บข้อมูลใหม่ใน AsyncStorage
         }
@@ -236,8 +236,8 @@ export default function ClothingScreen({ navigation, route }) {
     updatePetImage();
   }, [selectedItems, bmi]);
 
-  console.log('Current BMI:', bmi);
-  console.log('Selected Items:', selectedItems);
+  // console.log('Current BMI:', bmi);
+  // console.log('Selected Items:', selectedItems);
 
   // ฟังก์ชันการสวมใส่เสื้อผ้า
   const handleWear = async (category, image, name, label) => {
