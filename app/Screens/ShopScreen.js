@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { buyFoodItem, fetchPurchasedItems, fetchUserClothingData, fetchItemsData, buyClothingItem, beginnerClothingItem } from './api'; // นำเข้า beginnerClothingItem
+import { buyFoodItem, fetchPurchasedItems, fetchUserClothingData, fetchUserProfile, fetchItemsData, buyClothingItem, beginnerClothingItem } from './api'; // นำเข้า beginnerClothingItem
 import { ClothingContext } from './ClothingContext';
 import { BalanceContext } from './BalanceContext'; // Import BalanceContext
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
@@ -18,6 +18,7 @@ import dollar from '../../assets/image/dollar-01.png';
 export default function ShopScreen() {
   const { selectedItems, setSelectedItems } = useContext(ClothingContext);
   const { balance, setBalance } = useContext(BalanceContext); // ใช้ BalanceContext เพื่อจัดการยอดเงิน
+  const [userLevel, setUserLevel] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('ShirtItem');
   const [userId, setUserId] = useState(null);
   const [itemsData, setItemsData] = useState({
@@ -64,6 +65,33 @@ export default function ShopScreen() {
     };
 
     loadUserId();
+  }, []);
+
+  useEffect(() => {
+    const loadUserLevel = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        const token = await AsyncStorage.getItem('jwt'); // ใช้ JWT สำหรับการเรียก API
+        if (!userId || !token) {
+          console.error("User ID or token not found");
+          return;
+        }
+  
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+  
+        const profileData = await fetchUserProfile(userId, config); // เรียก API ดึงข้อมูลโปรไฟล์
+        setUserLevel(profileData.level); // อัปเดตเลเวลผู้ใช้ใน state
+        // console.log("User Level:", profileData.level); // ตรวจสอบค่าที่ดึงมา
+      } catch (error) {
+        console.error("Error loading user level:", error);
+      }
+    };
+  
+    loadUserLevel();
   }, []);
 
   useEffect(() => {
@@ -359,7 +387,6 @@ const renderItems = () => {
     const alreadyOwned = purchasedItems[item.label] === true;
 
     // ตรวจสอบเลเวลผู้ใช้
-    const userLevel = 1; // ตัวอย่างเลเวลของผู้ใช้, สามารถเปลี่ยนให้ดึงจาก Context ได้
     const canPurchase = userLevel >= item.level;
 
     return (
