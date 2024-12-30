@@ -186,6 +186,11 @@ const ProfileButton = () => {
 
   // useEffect สำหรับคำนวณ BMI และ PUT ไปยังเซิร์ฟเวอร์เมื่อ weight หรือ height เปลี่ยน
   useEffect(() => {
+    if (isEditing) {
+      // หยุดอัปเดตข้อมูลขณะกำลังแก้ไข
+      return;
+    }
+    
     const updateBMIOnServer = async () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
