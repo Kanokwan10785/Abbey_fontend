@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.145:1337'; // Replace with your Strapi URL
+const API_URL = 'http://192.168.1.139:1337'; // Replace with your Strapi URL
 // const API_URL = 'http://172.28.151.236:1337'; // Replace with your Strapi URL
 
 const api = axios.create({
@@ -79,7 +79,7 @@ export const fetchPurchasedItems = async (userId) => {
 export const fetchUserFoodData = async (userId) => {
   try {
     // เรียกข้อมูลจาก shop-items เพื่อดึงชื่อ, label, และ URL ของ image
-    const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label`);
+    const shopResponse = await api.get(`/api/shop-items?populate[image][fields][0]=url&[fields][0]=name&[fields][1]=label&[fields][2]=level`);
 
     // เรียกข้อมูลจาก pet-food-items เพื่อดึงชื่ออาหารและข้อมูลอื่นๆ ของผู้ใช้
     const petFoodResponse = await api.get(`/api/pet-food-items?filters[user][id][$eq]=${userId}&populate[choose_food][fields][0]=name`);
@@ -102,6 +102,7 @@ export const fetchUserFoodData = async (userId) => {
         id: item.id,
         name: chooseFoodName, // ใช้ชื่อจาก choose_food
         label: shopItemData.label || 'Unknown', // ดึง label จาก shop-items ถ้ามี
+        level: shopItemData.level || '',
         quantity: item.attributes.quantity,
         image: shopItemData.imageUrl || null, // ดึง URL ของ image จาก shop-items ถ้ามี
       };
