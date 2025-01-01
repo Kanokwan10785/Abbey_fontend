@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -9,6 +9,14 @@ const AnalysisScreen = () => {
   const [weeklySummary, setWeeklySummary] = useState([]);
   const [markedDates, setMarkedDates] = useState({});
   const [loading, setLoading] = useState(true);
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - dayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+    return startOfWeek;
+  });
 
   useEffect(() => {
     const fetchWorkoutRecords = async () => {
@@ -20,14 +28,13 @@ const AnalysisScreen = () => {
         const workoutRecords = response.data?.workout_records || [];
         const updatedDates = {};
 
-        // Group records by week
         const groupByWeek = (records) => {
           const weeks = {};
           records.forEach((record) => {
             const date = new Date(record.timestamp);
-            const dayOfWeek = date.getDay(); // Sunday = 0
+            const dayOfWeek = date.getDay();
             const startOfWeek = new Date(date);
-            startOfWeek.setDate(date.getDate() - dayOfWeek); // Move to Sunday
+            startOfWeek.setDate(date.getDate() - dayOfWeek);
             const endOfWeek = new Date(startOfWeek);
             endOfWeek.setDate(startOfWeek.getDate() + 6);
 
@@ -38,7 +45,6 @@ const AnalysisScreen = () => {
             }
             weeks[weekKey].records.push(record);
 
-            // Mark dates on calendar
             const formattedDate = date.toISOString().split('T')[0];
             updatedDates[formattedDate] = {
               selected: true,
@@ -52,51 +58,80 @@ const AnalysisScreen = () => {
 
         const groupedData = groupByWeek(workoutRecords);
 
-        // Format data for summary
-        const formatSummary = (groupedData) =>
-          groupedData.map((group) => ({
+        const formatSummary = (groupedData) => {
+          const parseThaiDate = (dateString) => {
+            const [day, month, year] = dateString.split('/');
+            return new Date(`${year}-${month}-${day}`);
+          };
+
+          const selectedEndOfWeek = new Date(selectedWeek);
+          selectedEndOfWeek.setDate(selectedWeek.getDate() + 6);
+
+          const selectedWeekRange = `${selectedWeek.toLocaleDateString('th-TH')} - ${selectedEndOfWeek.toLocaleDateString('th-TH')}`;
+
+          const currentWeekData = groupedData.filter((group) => {
+            const weekStartDate = parseThaiDate(group.weekRange.split(' - ')[0]);
+            return weekStartDate >= selectedWeek && weekStartDate <= selectedEndOfWeek;
+          });
+
+          if (currentWeekData.length === 0) {
+            return [
+              {
+                weekRange: selectedWeekRange,
+                totalItems: 0,
+                records: [],
+              },
+            ];
+          }
+
+          return currentWeekData.map((group) => ({
             weekRange: group.weekRange,
             totalItems: group.records.length,
-            records: group.records.map((record) => {
-              const date = new Date(record.timestamp).toLocaleDateString('th-TH');
-              const courseName =
-                record.add_course?.name ||
-                record.exercise_level?.name ||
-                `ออกกำลังกายประจำวันที่ ${date}`;
+            records: group.records
+              .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+              .map((record) => {
+                const date = new Date(record.timestamp).toLocaleDateString('th-TH');
+                const weekday = record.week?.name;
+                const day = record.day?.dayNumber;
+                const courseName =
+                  record.add_course?.name ||
+                  record.exercise_level?.name ||
+                  `ออกกำลังกาย${weekday} ครั้งที่ ${day}`;
 
-              let totalDuration = 0;
+                let totalDurationInSeconds = 0;
 
-              const allExercises = [
-                ...(record.add_course?.all_exercises || []),
-                ...(record.exercise_level?.all_exercises || []),
-                ...(record.day?.all_exercises || []),
-              ];
+                const allExercises = [
+                  ...(record.add_course?.all_exercises || []),
+                  ...(record.exercise_level?.all_exercises || []),
+                  ...(record.day?.all_exercises || []),
+                ];
 
-              allExercises.forEach((exercise) => {
-                if (exercise.reps) {
-                  totalDuration += exercise.reps * 2; // สมมติ 30 วินาทีต่อครั้ง
-                } else if (exercise.duration) {
-                  totalDuration += Math.floor(exercise.duration * 60); // แปลงนาทีเป็นวินาที
-                }
-              });
+                allExercises.forEach((exercise) => {
+                  if (exercise.reps) {
+                    totalDurationInSeconds += exercise.reps * 2;
+                  } else if (exercise.duration) {
+                    totalDurationInSeconds += Math.floor(exercise.duration * 60);
+                  }
+                });
 
-              const exercises = allExercises.length;
-              const imageUrl =
-                record.add_course?.image?.[0]?.url ||
-                record.exercise_level?.image?.[0]?.url ||
-                record.day?.image?.[0]?.url ||
-                null;
+                const exercises = allExercises.length;
+                const imageUrl =
+                  record.add_course?.image?.[0]?.url ||
+                  record.exercise_level?.image?.[0]?.url ||
+                  record.day?.image?.[0]?.url ||
+                  null;
 
-              return {
-                id: record.id,
-                date,
-                title: courseName,
-                duration: `${Math.floor(totalDuration / 60)} นาที`,
-                exercises: `${exercises} ท่า`,
-                imageUrl,
-              };
-            }),
+                return {
+                  id: record.id,
+                  date,
+                  title: courseName,
+                  duration: totalDurationInSeconds,
+                  exercises: `${exercises} ท่า`,
+                  imageUrl,
+                };
+              }),
           }));
+        };
 
         setWeeklySummary(formatSummary(groupedData));
         setMarkedDates(updatedDates);
@@ -108,37 +143,58 @@ const AnalysisScreen = () => {
     };
 
     fetchWorkoutRecords();
-  }, []);
+  }, [selectedWeek]);
 
-  const renderRecord = ({ item }) => (
-    <View style={styles.summaryItem}>
-      <Image source={{ uri: item.imageUrl }} style={styles.summaryImage} />
-      <View style={styles.summaryDetails}>
-        <Text style={styles.summaryTitle}>{`${item.date} - ${item.title}`}</Text>
-        <View style={styles.summaryStats}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-            <Icon name="clock" size={20} color="#F6A444" style={{ marginRight: 10 }} />
-            <Text style={styles.statText}>{item.duration}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Icon name="dumbbell" size={20} color="#F6A444" style={{ marginRight: 10 }} />
-            <Text style={styles.statText}>{item.exercises}</Text>
+  const handlePrevWeek = () => {
+    setSelectedWeek((prevWeek) => {
+      const newWeek = new Date(prevWeek);
+      newWeek.setDate(prevWeek.getDate() - 7);
+      return newWeek;
+    });
+  };
+
+  const handleNextWeek = () => {
+    setSelectedWeek((prevWeek) => {
+      const newWeek = new Date(prevWeek);
+      newWeek.setDate(prevWeek.getDate() + 7);
+      return newWeek;
+    });
+  };
+
+  const handleDayPress = (day) => {
+    const selectedDate = new Date(day.dateString);
+    const dayOfWeek = selectedDate.getDay();
+    const startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(selectedDate.getDate() - dayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    setSelectedWeek(startOfWeek);
+  };
+
+  const renderRecord = ({ item }) => {
+    const totalDurationInSeconds = item.duration || 0;
+    const minutes = Math.floor(totalDurationInSeconds / 60);
+    const seconds = totalDurationInSeconds % 60;
+
+    return (
+      <View style={styles.summaryItem}>
+        {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={styles.summaryImage} />}
+        <View style={styles.summaryDetails}>
+          <Text style={styles.summaryTitle}>{`${item.date} - ${item.title}`}</Text>
+          <View style={styles.summaryStats}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+              <Icon name="clock" size={20} color="#F6A444" style={{ marginRight: 10 }} />
+              <Text style={styles.statText}>{`${minutes} นาที ${seconds} วินาที`}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="dumbbell" size={20} color="#F6A444" style={{ marginRight: 10 }} />
+              <Text style={styles.statText}>{item.exercises}</Text>
+            </View>
           </View>
         </View>
       </View>
-    </View>
-  );
-
-  const renderWeek = ({ item }) => (
-    <View>
-      <Text style={styles.weekTitle}>{`วันที่ ${item.weekRange} - ${item.totalItems} รายการ`}</Text>
-      <FlatList
-        data={item.records}
-        renderItem={renderRecord}
-        keyExtractor={(record) => record.id}
-      />
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -153,37 +209,52 @@ const AnalysisScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>ปฏิทินการออกกำลังกาย</Text>
       </View>
-      <View>
-        <Calendar
-          current={new Date().toISOString().split('T')[0]}
-          markedDates={markedDates}
-          onDayPress={(day) => console.log('Selected day:', day.dateString)}
-          theme={{
-            calendarBackground: '#ffffff',
-            textSectionTitleColor: '#b6c1cd',
-            selectedDayBackgroundColor: '#F6A444',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#F6A444',
-            dayTextColor: '#2d4150',
-            textDisabledColor: '#d9e1e8',
-            arrowColor: '#F6A444',
-            monthTextColor: '#F6A444',
-            indicatorColor: '#F6A444',
-          }}
-        />
-      </View>
-
-      <Text style={styles.sectionTitle}>สรุปรายสัปดาห์</Text>
-      <FlatList
-        data={weeklySummary}
-        renderItem={renderWeek}
-        keyExtractor={(item) => item.weekRange}
+  
+      {/* ปฏิทิน */}
+      <Calendar
+        current={new Date().toISOString().split('T')[0]}
+        markedDates={markedDates}
+        onDayPress={handleDayPress}
+        theme={{
+          calendarBackground: '#ffffff',
+          textSectionTitleColor: '#b6c1cd',
+          selectedDayBackgroundColor: '#F6A444',
+          selectedDayTextColor: '#ffffff',
+          todayTextColor: '#F6A444',
+          dayTextColor: '#2d4150',
+          textDisabledColor: '#d9e1e8',
+          arrowColor: '#F6A444',
+          monthTextColor: '#F6A444',
+          indicatorColor: '#F6A444',
+        }}
       />
+  
+      {/* ส่วน Header ของสัปดาห์ */}
+      <View style={styles.weekHeader}>
+        <TouchableOpacity onPress={handlePrevWeek} style={styles.weekButton}>
+          <Icon name="chevron-left" size={30} color="#FFFFFF" />
+        </TouchableOpacity>
+        <View style={styles.weekInfo}>
+          <Text style={styles.data}>{`วันที่ ${weeklySummary[0]?.weekRange || ''}`}</Text>
+          <Text style={styles.list}>{`${weeklySummary[0]?.totalItems || 0} รายการ`}</Text>
+        </View>
+        <TouchableOpacity onPress={handleNextWeek} style={styles.weekButton}>
+          <Icon name="chevron-right" size={30} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+  
+      {/* รายการออกกำลังกาย */}
+      <FlatList
+        data={weeklySummary[0]?.records || []}
+        renderItem={renderRecord}
+        keyExtractor={(item) => item.id}
+      />
+  
       <BottomBar />
     </View>
   );
+  
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -200,24 +271,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'appfont_01',
   },
-  scrollContainer: {
-    padding: 20,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  weekHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    justifyContent: 'space-between',
+    backgroundColor: '#F6A444',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginTop: 10
   },
-  sectionTitle: {
-    fontSize: 18,
-    color: '#000',
+  weekButton: {
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekInfo: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  data: {
+    fontSize: 16,
     fontFamily: 'appfont_01',
-    marginBottom: 10,
-    marginLeft: 15
+    color: '#FFFFFF',
+    marginBottom: 5,
   },
-  summaryListContainer: {
-    maxHeight: 150, // Adjust this height as needed
+  list: {
+    fontSize: 14,
+    fontFamily: 'appfont_01',
+    color: '#FFFFFF',
   },
   summaryItem: {
     flexDirection: 'row',
@@ -245,17 +327,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
-  summaryList: {
-    marginHorizontal: 10,
-  },
   statText: {
     fontSize: 14,
     fontFamily: 'appfont_01',
     color: '#000',
-    marginTop: 5,
-    marginEnd: 30,
     marginRight: 30,
-  }
+  },
 });
+
 
 export default AnalysisScreen;

@@ -60,12 +60,9 @@ const Couse_finish = () => {
         }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('Balance updated successfully:', data);
-      } else {
-        console.log('Failed to update balance:', data.message);
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update balance:', error.message);
       }
     } catch (error) {
       console.error('Error updating balance:', error);
