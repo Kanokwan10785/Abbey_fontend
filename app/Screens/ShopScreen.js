@@ -601,11 +601,11 @@ const styles = StyleSheet.create({
   lockedButton: {
     backgroundColor: '#444', // สีปุ่มที่ถูกล็อก
     borderRadius: 8,
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    top: '-25%',
+    top: '-16%',
   },
   lockedButtonText: {
     color: '#FFF', // สีข้อความสำหรับปุ่มที่ถูกล็อก
