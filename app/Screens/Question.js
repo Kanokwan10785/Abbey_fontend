@@ -13,7 +13,6 @@ const Question = () => {
   const [weight, setWeight] = useState('');
   const [age, setAge] = useState('');
   const [selectedGender, setSelectedGender] = useState(null);
-  const [selectPet, setselectPet] = useState(null);
 
   const handleSubmit = async () => {
     if (!height || !weight || !age || !selectedGender || !selectPet) {
@@ -60,30 +59,40 @@ const Question = () => {
           style={[styles.genderButton, selectedGender === 'male' && styles.selectedGenderButton]}
           onPress={() => setSelectedGender('male')}
         >
-          <Icon name="gender-male" size={40} color={selectedGender === 'male' ? '#FFF' : '#FFA500'} />
+          <Icon
+            name="gender-male"
+            size={50}
+            color={selectedGender === 'male' ? '#FFF' : '#FFA500'}
+          />
+          <Text
+            style={[
+              styles.genderText,
+              { color: selectedGender === 'male' ? '#FFF' : '#FFA500' },
+            ]}
+          >
+            ชาย
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.genderButton, selectedGender === 'female' && styles.selectedGenderButton]}
           onPress={() => setSelectedGender('female')}
         >
-          <Icon name="gender-female" size={40} color={selectedGender === 'female' ? '#FFF' : '#FFA500'} />
+          <Icon
+            name="gender-female"
+            size={50}
+            color={selectedGender === 'female' ? '#FFF' : '#FFA500'}
+          />
+          <Text
+            style={[
+              styles.genderText,
+              { color: selectedGender === 'female' ? '#FFF' : '#FFA500' },
+            ]}
+          >
+            หญิง
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.animalContainer}>
-        <TouchableOpacity
-          style={[styles.animalButton, selectPet === 'cat' && styles.selectPetButton]}
-          onPress={() => setselectPet('cat')}
-        >
-          <Image source={require('../../assets/image/cat.png')} style={styles.animalIcon} tintColor={selectPet === 'cat' ? '#FFF' : '#FFA500'} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.animalButton, selectPet === 'dog' && styles.selectPetButton]}
-          onPress={() => setselectPet('dog')}
-        >
-          <Image source={require('../../assets/image/dog.png')} style={styles.animalIcon} tintColor={selectPet === 'dog' ? '#FFF' : '#FFA500'} />
-        </TouchableOpacity>
-      </View>
 
       <TouchableOpacity 
       style={styles.startButton}
@@ -135,45 +144,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   genderButton: {
-    borderWidth: 1,
-    borderColor: '#FFA500',
-    borderRadius: 8,
-    padding: 16,
-    width: 140,
-    alignItems: 'center',
-    height: 70,
-  },
-  selectedGenderButton: {
-    backgroundColor: '#FFA500',
-  },
-  animalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 30,
-  },
-  animalButton: {
-    borderWidth: 1,
-    borderColor: '#FFA500',
-    borderRadius: 8,
-    padding: 16,
-    width: 140,
-    alignItems: 'center',
-    height: 140,
-  },
-  selectPetButton: {
-    backgroundColor: '#FFA500',
-  },
-  animalIcon: {
-    width: 100,
-    height: 100,
-  },
+  borderWidth: 1,
+  borderColor: '#FFA500',
+  borderRadius: 16,
+  paddingVertical: 16,
+  paddingHorizontal: 8,
+  width: 140,
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: 160,
+},
+genderText: {
+  marginTop: 8,
+  fontSize: 18,
+  fontFamily: 'appfont_01',
+},
+selectedGenderButton: {
+  backgroundColor: '#FFA500',
+},
+
   startButton: {
     backgroundColor: '#FFA500',
     paddingVertical: 15,
     marginTop: 32,
     borderRadius: 50,
     width: 320,
-    marginTop: 20,
+    marginTop: 40,
     alignSelf: 'center',
   },
   startButtonText: {
