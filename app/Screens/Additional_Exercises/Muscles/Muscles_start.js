@@ -49,11 +49,7 @@ const Muscles_start = () => {
           } else {
             clearInterval(id);
             setIsRunning(false);
-            if (currentIndex < items.length - 1) {
-              navigation.navigate('Muscles_relax', { item, items, currentIndex,musclesId });
-            } else {
-              navigation.navigate('Muscles_finish', { item, items, currentIndex,musclesId });
-            }
+            handleNext();
             return 0;
           }
         });

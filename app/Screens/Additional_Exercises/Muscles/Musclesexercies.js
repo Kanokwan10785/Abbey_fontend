@@ -16,14 +16,13 @@ const Musclesexercies = ({route}) => {
 
     useEffect(() => {
         fetchexercises();
-      }, [musclesId]);
-
+      }, [musclesId]);    
       const fetchexercises = async () => {
         try {
-            const response = await fetch(`http://192.168.1.125:1337/api/addexercises/${musclesId}?populate=image,all_exercises.animation,all_exercises.muscle`
+            const response = await fetch(`http://192.168.1.145:1337/api/exercise-levels/${musclesId}?populate=image,all_exercises.animation,all_exercises.muscle`
             );
             const data = await response.json();
-            // console.log("API Response:", data);
+            console.log("API Response:", data);
       
             if (!data || !data.data) {
               console.error("ไม่มีข้อมูลที่ต้องการจาก API");
@@ -34,10 +33,8 @@ const Musclesexercies = ({route}) => {
       
             // Set course image
             const courseImageUrl = data.data?.attributes?.image?.data?.[0]?.attributes?.url || null;
-            setCourseImage(courseImageUrl);
-      
+            setCourseImage(courseImageUrl);      
             let totalDuration = 0;
-      
             // Map through exercises and extract data
             const exerciseData = data.data?.attributes?.all_exercises?.data.map((exercise) => {
               const imageUrl = exercise.attributes.muscle?.data?.[0]?.attributes?.formats?.thumbnail.url || null;
@@ -70,7 +67,7 @@ const Musclesexercies = ({route}) => {
                         animation: animationUrl,
                         name: exercise.attributes.name,
                         duration: displayText,
-                        description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
+                        description: exercise.attributes.description?.[0]?.children?.[0]?.text || '',
                         image: imageUrl,
                         dollar: exercise.attributes.dollar,
                         trophy: data.data.attributes.trophy || 0,
@@ -88,28 +85,20 @@ const Musclesexercies = ({route}) => {
             setLoading(false);
           }
         };
-    
-        if (loading) {
-            return (
-              <View style={styles.container}>
-                <ActivityIndicator size="large" color="#F6A444" />
-              </View>
-            );
-          }
-      
+          
         return (
           <View style={styles.container}>
             <View style={styles.header}>
-              <TouchableOpacity onPress={() => navigation.navigate('Addexercises')}>
+              <TouchableOpacity  onPress={() => navigation.goBack()}>
                 <Image source={previous} style={{ width: 30, height: 30 }} />
               </TouchableOpacity>
               <View style={styles.Title}>
                 <Text style={styles.headerTitle}>
-                  {exercises.length > 0 ? exercises[0].exname : 'ไม่มีชื่อ'}
+                  {exercises.length > 0 ? exercises[0].exname : ''}
                 </Text>
               </View>
             </View>
-            <Image source={courseImage ? { uri: courseImage } : exercise} style={styles.mainImage} />
+            <Image source={{ uri: courseImage }} style={styles.mainImage} />
             <Text style={styles.dateText}>ท่ายืดกล้ามเนื้อง่ายๆ บริเวณกล้ามแขน</Text>
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>

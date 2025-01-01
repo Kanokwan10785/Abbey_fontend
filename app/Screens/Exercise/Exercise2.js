@@ -11,7 +11,7 @@ const Exercise2 = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const { item, items, currentIndex } = route.params || {};
+  const { item, items, currentIndex,dayNumber, weekId,set } = route.params || {};
 
   const [time, setTime] = useState(5);
   const [intervalId, setIntervalId] = useState(null);
@@ -35,9 +35,9 @@ const Exercise2 = () => {
         } else {
           clearInterval(id);
           if (currentIndex < items.length - 1) {
-            navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1});
+            navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1,dayNumber, weekId,set});
           } else {
-            navigation.navigate('Exercise4', { item, items, currentIndex });
+            navigation.navigate('Exercise4', { item, items, currentIndex,dayNumber, weekId,set });
           }
           return 0;
         }
@@ -47,7 +47,9 @@ const Exercise2 = () => {
     setIntervalId(id);
   
     return () => clearInterval(id);
-  }, [currentIndex]);
+  }, [currentIndex,dayNumber, weekId,set]);
+
+  console.log('dayNumber, weekId ex2',dayNumber,weekId,set)
 
   const updateBalance = async () => {
     const updatedBalance = balance + item.dollar;
@@ -66,7 +68,7 @@ const Exercise2 = () => {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
   
-      const response = await fetch(`http:/192.168.1.182:1337/api/users/${userId}`, {
+      const response = await fetch(`http:/192.168.1.145:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -94,12 +96,10 @@ const Exercise2 = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < items.length) {
-      navigation.navigate('Exercise1', { item: items[nextIndex], items, currentIndex: nextIndex });
+    if (currentIndex < items.length) {
+      navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1,dayNumber, weekId,set });
     } else {
-      navigation.navigate('Exercise4');
+      navigation.navigate('Exercise4',{dayNumber, weekId,set});
     }
   };
 
@@ -109,9 +109,9 @@ const Exercise2 = () => {
     }
 
     if (currentIndex > 0) {
-      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1 });
+      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,dayNumber, weekId,set });
     } else {
-      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0 });
+      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0,dayNumber, weekId,set });
     }
   };
 
@@ -125,7 +125,7 @@ const Exercise2 = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{dayNumber, weekId,set})}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>

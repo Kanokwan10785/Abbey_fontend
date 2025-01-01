@@ -23,11 +23,12 @@ const Dayexercise = () => {
       setLoading(false);
     }
   }, [dayNumber, weekId,set]);
+  console.log('dayNumber, weekId',dayNumber, weekId)
 
   const fetchExercises = async (day, week) => {
     try {
       const response = await fetch(
-        `http://192.168.1.182:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
+        `http://192.168.1.145:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
   
@@ -102,7 +103,7 @@ const Dayexercise = () => {
           <Image source={previous} style={{ width: 30, height: 30 }} />
         </TouchableOpacity>
         <View style={styles.Title}>
-          <Text style={styles.headerTitle}> Set {set} ออกกำลังกาย {dayNumber}</Text>
+          <Text style={styles.headerTitle}>{set} ออกกำลังกาย ครั้งที่ {dayNumber}</Text>
         </View>
       </View>
       <Image source={exercise} style={styles.mainImage} />
@@ -122,7 +123,7 @@ const Dayexercise = () => {
       <TouchableOpacity
         style={styles.startButton}
         onPress={() =>
-          navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false })
+          navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false,dayNumber, weekId,set })
         }
       >
         <Text style={styles.startButtonText}>เริ่ม</Text>

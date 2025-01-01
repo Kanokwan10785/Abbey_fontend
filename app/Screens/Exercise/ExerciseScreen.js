@@ -37,8 +37,7 @@ const ExerciseScreen = () => {
 
   const fetchExercises = async (day) => {
     try {
-      //const response = await fetch(`http://192.168.1.141:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day${day}&populate=exercises.animation,exercises.muscle`);
-      const response = await fetch(`http://192.168.1.157:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day1&populate=exercises.animation,exercises.muscle`);
+      const response = await fetch(`http://192.168.1.145:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day1&populate=exercises.animation,exercises.muscle`);
       const data = await response.json();
 
       if (!data.data || data.data.length === 0) {
@@ -116,8 +115,8 @@ const ExerciseScreen = () => {
         <Text style={styles.headerTitle}>ออกกำลังกาย</Text>
       </View>
       <View style={styles.tabContainer}>
-        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('ExerciseScreen')}>
-          <Text style={styles.tabButtonText}>ภารกิจรายวัน</Text>
+        <TouchableOpacity style={styles.tabButton} onPress={() => navigation.navigate('Homeexercise')}>
+          <Text style={styles.tabButtonText}>ภารกิจหลัก</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabButton1} onPress={() => navigation.navigate('Addexercises')}>
           <Text style={styles.tabButtonText1}>ภารกิจเสริม</Text>

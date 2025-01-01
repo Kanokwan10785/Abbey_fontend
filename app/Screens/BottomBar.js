@@ -1,6 +1,5 @@
 import React from 'react';
-import { Image } from 'expo-image';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import bar01 from '../../assets/image/bar-01.png';
 import bar02 from '../../assets/image/bar-02.png';
@@ -34,12 +33,12 @@ const BottomBar = () => {
         <Text style={styles.label}>หน้าหลัก</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={isActive('ExerciseScreen') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('ExerciseScreen')}>
+        style={isActive('Homeexercise') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('Homeexercise')}>
         <Image source={bar04} style={styles.icon} />
         <Text style={styles.label}>ภารกิจ</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={isActive('Homeexercise') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('Homeexercise')}>
+        style={isActive('AnalysisScreen') ? styles.aftericonContainer : styles.beforeiconContainer} onPress={() => navigation.navigate('AnalysisScreen')}>
         <Image source={bar05} style={styles.icon} />
         <Text style={styles.label}>วิเคราะห์</Text>
       </TouchableOpacity>

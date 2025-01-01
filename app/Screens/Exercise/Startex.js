@@ -7,7 +7,7 @@ import cancel from '../../../assets/image/cancel.png';
 const Startex = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items } = route.params || {};
+  const { items,dayNumber, weekId,set } = route.params || {};
 
   // ใช้รายการแรกเป็น item ที่ต้องการแสดง
   const item = items ? items[0] : null;
@@ -23,7 +23,8 @@ const Startex = () => {
   useEffect(() => {
     setTime(3);
     setIsRunning(true);
-  }, [item]);
+  }, [item,dayNumber, weekId,set]);
+
 
   useEffect(() => {
     if (isRunning) {
@@ -34,7 +35,7 @@ const Startex = () => {
           } else {
             clearInterval(id);
             setIsRunning(false);
-            navigation.navigate('Exercise1', { items, currentIndex: 0 }); // ไปยังหน้า Exercise1 หลังจากครบ 5 วินาที
+            navigation.navigate('Exercise1', { items, currentIndex: 0,dayNumber, weekId,set  }); // ไปยังหน้า Exercise1 หลังจากครบ 5 วินาที
             return 0;
           }
         });
@@ -55,14 +56,14 @@ const Startex = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Exercise1', { items, currentIndex: 0 }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
+    navigation.navigate('Exercise1', { items, currentIndex: 0,dayNumber, weekId,set }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
   };
 
   const handlePrevious = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('ExerciseScreen'); // กลับไปยังหน้า ExerciseScreen เมื่อกดปุ่มไปข้างหลัง
+    navigation.navigate('Dayexercise',{dayNumber, weekId,set}); // กลับไปยังหน้า ExerciseScreen เมื่อกดปุ่มไปข้างหลัง
   };
 
   const formatTime = (seconds) => {
@@ -73,7 +74,7 @@ const Startex = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('ExerciseScreen')}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{dayNumber, weekId,set})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

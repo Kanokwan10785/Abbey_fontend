@@ -26,11 +26,11 @@ const Couseexercies1 = ({ route }) => {
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://172.30.81.165:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://192.168.1.145:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
 
-        console.log("API Response:", data);
+        //console.log("API Response:", data);
 
         if (!data || !data.data) {
           console.error("ไม่มีข้อมูลที่ต้องการจาก API");
@@ -85,7 +85,7 @@ const Couseexercies1 = ({ route }) => {
           };
         });
 
-        console.log("Exercise Data:", exerciseData);
+        //console.log("Exercise Data:", exerciseData);
   
         setExercises(exerciseData);
         setTotalTime(totalDuration);

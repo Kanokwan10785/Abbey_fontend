@@ -12,6 +12,7 @@ const Couse_finish = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex, courseId } = route.params || {};
+  console.log('courseId in couse fin:', courseId);
 
   if (!item) {
     console.log("Item is undefined");
@@ -48,7 +49,7 @@ const Couse_finish = () => {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -71,6 +72,104 @@ const Couse_finish = () => {
     }
   };
 
+  const exerciseMapping = {
+    "1": "neck pain",
+    "2": "back pain",
+  }
+
+  const mapExerciseLevel = (courseId) => exerciseMapping[courseId] || "unknown";
+
+  const updateWorkoutRecord = async () => {
+    try {
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+        const timestamp = new Date().toISOString();
+
+        // Map courseId to exercise level and workout records
+        const mappedExerciseLevel = mapExerciseLevel(courseId);
+        console.log('mappedExerciseLevel', mappedExerciseLevel);
+
+        // Validate mappings
+        if (mappedExerciseLevel === "unknown") {
+            console.error("Invalid mapping for courseId:", courseId);
+            return false;
+        }
+
+        // 1. สร้าง workout record ใหม่
+        const workoutRecordResponse = await fetch('http://192.168.1.145:1337/api/workout-records', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                data: {
+                    users_permissions_user: userId,
+                    add_course: courseId, // ID จริง
+                    add_courses: mappedExerciseLevel, // คีย์ที่สัมพันธ์
+                    timestamp, // บันทึกเวลาการออกกำลังกาย
+                },
+            }),
+        });
+
+        const workoutRecordData = await workoutRecordResponse.json();
+        if (!workoutRecordResponse.ok) {
+            console.error('สร้าง workout record ไม่สำเร็จ:', workoutRecordData.error?.message || workoutRecordData);
+            return false;
+        }
+
+        console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
+
+        // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
+        const userResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}?populate=add_courses`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const userData = await userResponse.json();
+        if (!userResponse.ok) {
+            console.error('ดึงข้อมูลผู้ใช้ล้มเหลว:', userData.error?.message || userData);
+            return false;
+        }
+
+        // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
+        const existingExerciseLevels = userData?.data?.add_course?.map((level) => level.id) || [];
+        console.log('Existing exercise levels:', existingExerciseLevels);
+
+        // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
+        const updatedExerciseLevels = [...new Set([...existingExerciseLevels, courseId])];
+        console.log('updatedExerciseLevels:', updatedExerciseLevels);
+
+        // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
+        const userUpdateResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                add_course: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
+            }),
+        });
+
+        const userUpdateData = await userUpdateResponse.json();
+        if (!userUpdateResponse.ok) {
+            console.error('อัปเดต exercise_levels ของผู้ใช้ล้มเหลว:', userUpdateData.error?.message || userUpdateData);
+            return false;
+        }
+
+        console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
+        return true;
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการอัปเดต exercise_levels:', error);
+        return false;
+    }
+};
+
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -92,7 +191,11 @@ const Couse_finish = () => {
       </View>
       <TouchableOpacity
         style={styles.finishButton}
-        onPress={() => navigation.navigate('Couseexercies1', { item, items, currentIndex, courseId })}
+        onPress={() => {
+          updateWorkoutRecord().then(() => {
+            navigation.navigate('Couseexercies1', { item, items, currentIndex, courseId });
+          });
+        }}
       >
         <Text style={styles.finishButtonText}>เสร็จสิ้น</Text>
       </TouchableOpacity>

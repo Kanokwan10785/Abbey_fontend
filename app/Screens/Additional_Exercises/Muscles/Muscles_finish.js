@@ -7,6 +7,24 @@ import { useRoute } from '@react-navigation/native';
 import { BalanceContext } from '../../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Mapping for exercise level names
+const exerciseMapping = {
+  "6": "legs_advanced",
+  "5": "legs_intermediate",
+  "4": "legs_beginner",
+  "3": "arms_advanced",
+  "2": "arms_intermediate",
+  "1": "arms_beginner",
+  "12": "back_advanced",
+  "11": "back_intermediate",
+  "10": "back_beginner",
+  "9": "chest_advanced",
+  "8": "chest_intermediate",
+  "7": "chest_beginner",
+};
+
+const mapExerciseLevel = (musclesId) => exerciseMapping[musclesId] || "unknown";
+
 const Muscles_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
@@ -14,69 +32,156 @@ const Muscles_finish = () => {
   const { item, items, currentIndex, musclesId } = route.params || {};
 
   if (!item) {
-    console.log("Item is undefined");
-    return <View style={styles.container}><Text>Loading item...</Text></View>;
+    console.error("Item is undefined");
+    return (
+      <View style={styles.container}>
+        <Text>Loading item...</Text>
+      </View>
+    );
   }
 
   if (!item.trophy) {
-    console.log("Trophy is undefined in item");
-    return <View style={styles.container}><Text>Loading trophy...</Text></View>;
+    console.error("Trophy is undefined in item");
+    return (
+      <View style={styles.container}>
+        <Text>Loading trophy...</Text>
+      </View>
+    );
   }
 
-  // อัปเดต balance เมื่อหน้า Muscles_finish ถูกโหลดครั้งแรก
   useEffect(() => {
-    console.log('musclesId in couse finish',musclesId)
     const updateBalanceOnce = async () => {
-      // เพิ่มค่า item.trophy เข้าไปใน balance
       const updatedBalance = balance + item.trophy;
-      setBalance(updatedBalance);  // อัปเดต balance ใน state
+      setBalance(updatedBalance);
 
-      // บันทึก balance ใหม่ลงใน AsyncStorage และส่งไปยังเซิร์ฟเวอร์
       try {
         await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
+        await updateUserBalance(updatedBalance);
       } catch (error) {
         console.error('Error saving balance:', error);
       }
     };
 
-    // เรียกใช้งานฟังก์ชันนี้ครั้งเดียว
     updateBalanceOnce();
-  }, []); // ใช้ dependency array ที่ว่างเปล่าเพื่อให้ฟังก์ชันทำงานแค่ครั้งเดียว
+  }, []);
 
   const updateUserBalance = async (newBalance) => {
     try {
-      const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
-      const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
 
-      const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
-          'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
-        }),
+        body: JSON.stringify({ balance: newBalance }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('Balance updated successfully:', data);
-      } else {
-        console.log('Failed to update balance:', data.message);
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update balance:', error.message);
       }
     } catch (error) {
       console.error('Error updating balance:', error);
     }
   };
 
+  const updateWorkoutRecord = async () => {
+    try {
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+        const timestamp = new Date().toISOString();
+
+        // Map musclesId to exercise level and workout records
+        const mappedExerciseLevel = mapExerciseLevel(musclesId);
+
+        // Validate mappings
+        if (mappedExerciseLevel === "unknown") {
+            console.error("Invalid mapping for musclesId:", musclesId);
+            return false;
+        }
+
+        // 1. สร้าง workout record ใหม่
+        const workoutRecordResponse = await fetch('http://192.168.1.145:1337/api/workout-records', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                data: {
+                    users_permissions_user: userId,
+                    exercise_level: musclesId, // ID จริง
+                    exercise_levels: mappedExerciseLevel, // คีย์ที่สัมพันธ์
+                    timestamp, // บันทึกเวลาการออกกำลังกาย
+                },
+            }),
+        });
+
+        const workoutRecordData = await workoutRecordResponse.json();
+        if (!workoutRecordResponse.ok) {
+            console.error('สร้าง workout record ไม่สำเร็จ:', workoutRecordData.error?.message || workoutRecordData);
+            return false;
+        }
+
+        console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
+
+        // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
+        const userResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}?populate=exercise_levels`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const userData = await userResponse.json();
+        if (!userResponse.ok) {
+            console.error('ดึงข้อมูลผู้ใช้ล้มเหลว:', userData.error?.message || userData);
+            return false;
+        }
+
+        // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
+        const existingExerciseLevels = userData?.data?.exercise_levels?.map((level) => level.id) || [];
+        console.log('Existing exercise levels:', existingExerciseLevels);
+
+        // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
+        const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน
+
+        // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
+        const userUpdateResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                exercise_levels: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
+            }),
+        });
+
+        const userUpdateData = await userUpdateResponse.json();
+        if (!userUpdateResponse.ok) {
+            console.error('อัปเดต exercise_levels ของผู้ใช้ล้มเหลว:', userUpdateData.error?.message || userUpdateData);
+            return false;
+        }
+
+        console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
+        return true;
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการอัปเดต exercise_levels:', error);
+        return false;
+    }
+};
+
+
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton}
-          onPress={() => navigation.navigate('Musclesexercies', { musclesId })}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies', { musclesId })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -93,7 +198,11 @@ const Muscles_finish = () => {
       </View>
       <TouchableOpacity
         style={styles.finishButton}
-        onPress={() => navigation.navigate('Musclesexercies1', { item, items, currentIndex, musclesId })}
+        onPress={() => {
+          updateWorkoutRecord().then(() => {
+            navigation.navigate('Musclesexercies', { item, items, currentIndex, musclesId });
+          });
+        }}
       >
         <Text style={styles.finishButtonText}>เสร็จสิ้น</Text>
       </TouchableOpacity>

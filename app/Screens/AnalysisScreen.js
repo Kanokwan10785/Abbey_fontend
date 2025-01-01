@@ -1,142 +1,127 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image, Dimensions, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, Image } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { useNavigation } from '@react-navigation/native';
-import BottomBar from './BottomBar';
+import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { LineChart } from 'react-native-chart-kit';
-import exerciseImg from '../../assets/image/exercise.png';
-
-const weeklySummary = [
-  {
-    id: '1',
-    date: '2024-01-30',
-    title: 'ร่างกายทุกส่วน',
-    duration: '15 min',
-    calories: '160 cal',
-    exercises: '15 ท่า',
-    image: exerciseImg,
-  },
-  {
-    id: '2',
-    date: '2024-01-31',
-    title: 'ร่างกายทุกส่วน',
-    duration: '15 min',
-    calories: '160 cal',
-    exercises: '15 ท่า',
-    image: exerciseImg,
-  },
-  {
-    id: '3',
-    date: '2024-01-31',
-    title: 'ร่างกายทุกส่วน',
-    duration: '15 min',
-    calories: '160 cal',
-    exercises: '15 ท่า',
-    image: exerciseImg,
-  },
-  {
-    id: '4',
-    date: '2024-01-31',
-    title: 'ร่างกายทุกส่วน',
-    duration: '15 min',
-    calories: '160 cal',
-    exercises: '15 ท่า',
-    image: exerciseImg,
-  },
-];
+import BottomBar from './BottomBar';
 
 const AnalysisScreen = () => {
-  const navigation = useNavigation();
-
-  const [weight, setWeight] = useState(58); // น้ำหนัก (กิโลกรัม)
-  const [heightCm, setHeightCm] = useState(167); // ส่วนสูง (เซนติเมตร)
-  const [bmi, setBmi] = useState(0);
-  const [bmiStatus, setBmiStatus] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-
-  const [weightData, setWeightData] = useState([55, 56, 57, 58, 59]); // ค่าน้ำหนักในกราฟ
-  const [dateLabels, setDateLabels] = useState(['3', '5', '7', '9', '11']); // ค่าวันที่ในกราฟ
-  const [newWeight, setNewWeight] = useState(''); // น้ำหนักใหม่ที่จะใส่
-  const [newDate, setNewDate] = useState(''); // วันที่ใหม่ที่จะใส่
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const handleSaveData = () => {
-    const weightValue = parseFloat(newWeight);
-    const dateValue = newDate;
-
-    if (!isNaN(weightValue) && weightValue > 0 && dateValue !== '') {
-      setWeightData([...weightData, weightValue]);
-      setDateLabels([...dateLabels, dateValue]);
-      setWeight(weightValue); // อัปเดตน้ำหนักล่าสุด
-      setNewWeight(''); // รีเซ็ตค่าอินพุตหลังจากเพิ่มข้อมูลแล้ว
-      setNewDate('');
-      setIsModalVisible(false); // ปิดป๊อปอัปหลังจากบันทึกข้อมูล
-    } else {
-      alert('กรุณาใส่น้ำหนักและวันที่ที่ถูกต้อง');
-    }
-  };
+  const [weeklySummary, setWeeklySummary] = useState([]);
+  const [markedDates, setMarkedDates] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const calculateBmi = () => {
-      const height = heightCm / 100; // แปลงส่วนสูงจากเซนติเมตรเป็นเมตร
-      const bmiValue = (weight / (height * height)).toFixed(1);
-      setBmi(bmiValue);
-      if (bmiValue < 18.5) {
-        setBmiStatus('น้ำหนักน้อย');
-      } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
-        setBmiStatus('น้ำหนักปกติ');
-      } else if (bmiValue >= 25 && bmiValue < 29.9) {
-        setBmiStatus('น้ำหนักเกิน');
-      } else {
-        setBmiStatus('โรคอ้วน');
+    const fetchWorkoutRecords = async () => {
+      try {
+        const response = await axios.get(
+          'http://192.168.1.145:1337/api/users/63?populate=workout_records,workout_records.exercise_level,workout_records.exercise_level.image,workout_records.add_course,workout_records.week,workout_records.day,workout_records.add_course.image,workout_records.add_course.all_exercises,workout_records.day.all_exercises,workout_records.exercise_level.all_exercises,workout_records.day.image'
+        );
+
+        const workoutRecords = response.data?.workout_records || [];
+        const updatedDates = {};
+
+        // Group records by week
+        const groupByWeek = (records) => {
+          const weeks = {};
+          records.forEach((record) => {
+            const date = new Date(record.timestamp);
+            const dayOfWeek = date.getDay(); // Sunday = 0
+            const startOfWeek = new Date(date);
+            startOfWeek.setDate(date.getDate() - dayOfWeek); // Move to Sunday
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            const weekKey = `${startOfWeek.toLocaleDateString('th-TH')} - ${endOfWeek.toLocaleDateString('th-TH')}`;
+
+            if (!weeks[weekKey]) {
+              weeks[weekKey] = { weekRange: weekKey, records: [] };
+            }
+            weeks[weekKey].records.push(record);
+
+            // Mark dates on calendar
+            const formattedDate = date.toISOString().split('T')[0];
+            updatedDates[formattedDate] = {
+              selected: true,
+              marked: true,
+              selectedColor: '#F6A444',
+            };
+          });
+
+          return Object.values(weeks);
+        };
+
+        const groupedData = groupByWeek(workoutRecords);
+
+        // Format data for summary
+        const formatSummary = (groupedData) =>
+          groupedData.map((group) => ({
+            weekRange: group.weekRange,
+            totalItems: group.records.length,
+            records: group.records.map((record) => {
+              const date = new Date(record.timestamp).toLocaleDateString('th-TH');
+              const courseName =
+                record.add_course?.name ||
+                record.exercise_level?.name ||
+                `ออกกำลังกายประจำวันที่ ${date}`;
+
+              let totalDuration = 0;
+
+              const allExercises = [
+                ...(record.add_course?.all_exercises || []),
+                ...(record.exercise_level?.all_exercises || []),
+                ...(record.day?.all_exercises || []),
+              ];
+
+              allExercises.forEach((exercise) => {
+                if (exercise.reps) {
+                  totalDuration += exercise.reps * 2; // สมมติ 30 วินาทีต่อครั้ง
+                } else if (exercise.duration) {
+                  totalDuration += Math.floor(exercise.duration * 60); // แปลงนาทีเป็นวินาที
+                }
+              });
+
+              const exercises = allExercises.length;
+              const imageUrl =
+                record.add_course?.image?.[0]?.url ||
+                record.exercise_level?.image?.[0]?.url ||
+                record.day?.image?.[0]?.url ||
+                null;
+
+              return {
+                id: record.id,
+                date,
+                title: courseName,
+                duration: `${Math.floor(totalDuration / 60)} นาที`,
+                exercises: `${exercises} ท่า`,
+                imageUrl,
+              };
+            }),
+          }));
+
+        setWeeklySummary(formatSummary(groupedData));
+        setMarkedDates(updatedDates);
+      } catch (error) {
+        console.error('Error fetching workout records:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    calculateBmi();
-  }, [weight, heightCm]);
+    fetchWorkoutRecords();
+  }, []);
 
-  const handleSave = () => {
-    const weightValue = parseFloat(weight);
-    const heightCmValue = parseFloat(heightCm);
-
-    if (!isNaN(weightValue) && !isNaN(heightCmValue)) {
-      setWeight(weightValue);
-      setHeightCm(heightCmValue);
-      setIsEditing(false);
-      const height = heightCmValue / 100; // แปลงส่วนสูงจากเซนติเมตรเป็นเมตร
-      const bmiValue = (weightValue / (height * height)).toFixed(1);
-      setBmi(bmiValue);
-      if (bmiValue < 18.5) {
-        setBmiStatus('น้ำหนักน้อย');
-      } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
-        setBmiStatus('น้ำหนักปกติ');
-      } else if (bmiValue >= 25 && bmiValue < 29.9) {
-        setBmiStatus('น้ำหนักเกิน');
-      } else {
-        setBmiStatus('โรคอ้วน');
-      }
-    } else {
-      alert('กรุณาใส่ข้อมูลที่ถูกต้อง');
-    }
-  };
-
-  const renderItem = ({ item }) => (
+  const renderRecord = ({ item }) => (
     <View style={styles.summaryItem}>
-      <Image source={item.image} style={styles.summaryImage} />
+      <Image source={{ uri: item.imageUrl }} style={styles.summaryImage} />
       <View style={styles.summaryDetails}>
-        <Text style={styles.summaryTitle}>{`วันที่ ${item.date} - ${item.title}`}</Text>
+        <Text style={styles.summaryTitle}>{`${item.date} - ${item.title}`}</Text>
         <View style={styles.summaryStats}>
-          <View style={styles.statItem}>
-            <Icon name="clock-outline" size={16} color="#888" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+            <Icon name="clock" size={20} color="#F6A444" style={{ marginRight: 10 }} />
             <Text style={styles.statText}>{item.duration}</Text>
           </View>
-          <View style={styles.statItem}>
-            <Icon name="fire" size={16} color="#888" />
-            <Text style={styles.statText}>{item.calories}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Icon name="dumbbell" size={16} color="#888" />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Icon name="dumbbell" size={20} color="#F6A444" style={{ marginRight: 10 }} />
             <Text style={styles.statText}>{item.exercises}</Text>
           </View>
         </View>
@@ -144,22 +129,35 @@ const AnalysisScreen = () => {
     </View>
   );
 
+  const renderWeek = ({ item }) => (
+    <View>
+      <Text style={styles.weekTitle}>{`วันที่ ${item.weekRange} - ${item.totalItems} รายการ`}</Text>
+      <FlatList
+        data={item.records}
+        renderItem={renderRecord}
+        keyExtractor={(record) => record.id}
+      />
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#F6A444" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>รายงานผล</Text>
+        <Text style={styles.headerTitle}>ปฏิทินการออกกำลังกาย</Text>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.sectionTitle}>ประวัติการออกกำลังกาย</Text>
+      <View>
         <Calendar
-          current={'2024-01-30'}
-          markedDates={{
-            '2024-01-30': { selected: true, marked: true, selectedColor: '#F6A444' },
-            '2024-01-31': { selected: true, marked: true, selectedColor: '#F6A444' },
-          }}
-          onDayPress={(day) => {
-            console.log('selected day', day);
-          }}
+          current={new Date().toISOString().split('T')[0]}
+          markedDates={markedDates}
+          onDayPress={(day) => console.log('Selected day:', day.dateString)}
           theme={{
             calendarBackground: '#ffffff',
             textSectionTitleColor: '#b6c1cd',
@@ -170,130 +168,22 @@ const AnalysisScreen = () => {
             textDisabledColor: '#d9e1e8',
             arrowColor: '#F6A444',
             monthTextColor: '#F6A444',
+            indicatorColor: '#F6A444',
           }}
         />
-        <Text style={styles.sectionTitle}>สรุปรายสัปดาห์</Text>
-        <FlatList
-          data={weeklySummary}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.summaryList}
-        />
-        <View style={styles.graphContainer}>
-          <View style={styles.graphHeader}>
-            <Text style={styles.graphTitle}>กราฟน้ำหนัก</Text>
-            <TouchableOpacity onPress={() => setIsModalVisible(true)}>
-              <Text style={styles.graphsaveButtonText}>บันทึก</Text>
-            </TouchableOpacity>
-          </View>
-          <LineChart
-            data={{
-              labels: dateLabels,
-              datasets: [
-                {
-                  data: weightData,
-                },
-              ],
-            }}
-            width={Dimensions.get('window').width - 60} // from react-native
-            height={220}
-            yAxisLabel=""
-            yAxisSuffix="kg"
-            yAxisInterval={1} // optional, defaults to 1
-            chartConfig={{
-              backgroundColor: '#e26a00',
-              backgroundGradientFrom: '#fb8c00',
-              backgroundGradientTo: '#ffa726',
-              decimalPlaces: 1, // optional, defaults to 2dp
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 16,
-              },
-              propsForDots: {
-                r: '6',
-                strokeWidth: '2',
-                stroke: '#ffa726',
-              },
-            }}
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
-        </View>
+      </View>
 
-        <View style={styles.bmiContainer}>
-          <Text style={styles.bmiLabel}>ค่าดัชนีมวลกาย</Text>
-          {isEditing ? (
-            <View style={styles.editContainer}>
-              <TextInput
-                style={styles.input}
-                value={weight.toString()}
-                onChangeText={text => setWeight(text)}
-                placeholder="น้ำหนัก (kg)"
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={styles.input}
-                value={heightCm.toString()}
-                onChangeText={text => setHeightCm(text)}
-                placeholder="ส่วนสูง (cm)"
-                keyboardType="numeric"
-              />
-              <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>บันทึก</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.bmiValueContainer}>
-              <Text style={styles.bmiValue}>{bmi}</Text>
-              <Text style={styles.bmiStatus}>{bmiStatus}</Text>
-              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
-                <Text style={styles.editButtonText}>แก้ไข</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Modal สำหรับการเพิ่มน้ำหนักและวันที่ */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>บันทึกน้ำหนักและวันที่</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={newWeight}
-                onChangeText={setNewWeight}
-                placeholder="น้ำหนัก (kg)"
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={styles.input}
-                value={newDate}
-                onChangeText={setNewDate}
-                placeholder="วันที่ (dd-mm-yyyy)"
-                keyboardType="default"
-              />
-            </View>
-            <TouchableOpacity onPress={handleSaveData} style={styles.modalButton}>
-              <Text style={styles.modalButtonText}>บันทึก</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
+      <Text style={styles.sectionTitle}>สรุปรายสัปดาห์</Text>
+      <FlatList
+        data={weeklySummary}
+        renderItem={renderWeek}
+        keyExtractor={(item) => item.weekRange}
+      />
       <BottomBar />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -310,14 +200,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'appfont_01',
   },
-  scrollViewContent: {
+  scrollContainer: {
     padding: 20,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
   },
   sectionTitle: {
     fontSize: 18,
     color: '#000',
     fontFamily: 'appfont_01',
     marginBottom: 10,
+    marginLeft: 15
   },
   summaryListContainer: {
     maxHeight: 150, // Adjust this height as needed
@@ -331,9 +228,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   summaryImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
+    width: 100,
+    height: 70,
+    borderRadius: 8,
   },
   summaryDetails: {
     flex: 1,
@@ -351,146 +248,14 @@ const styles = StyleSheet.create({
   summaryList: {
     marginHorizontal: 10,
   },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   statText: {
-    marginLeft: 5,
     fontSize: 14,
-    color: '#888',
     fontFamily: 'appfont_01',
-  },
-  graphContainer: {
-    backgroundColor: '#FFECB3',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#dcdcdc',
-    marginTop: 20,
-  },
-  graphHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  graphTitle: {
-    fontSize: 16,
-    fontFamily: 'appfont_01',
-  },
-  graphFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  graph: {
-    fontSize: 14,
-  },
-  graphsaveButtonText: {
-    color: '#fff',
-    backgroundColor: '#F6A444',
-    padding: 5,
-    borderRadius: 5,
-    fontFamily: 'appfont_01',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  input: {
-    height: 40,
-    borderColor: '#dcdcdc',
-    borderWidth: 1,
-    marginRight: 10,
-    paddingLeft: 8,
-    borderRadius: 5,
-    flex: 1,
-    backgroundColor: '#FFF',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    marginBottom: 15,
-    textAlign: 'center',
-    fontFamily: 'appfont_01',
-  },
-  modalButton: {
-    backgroundColor: '#F6A444',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontFamily: 'appfont_01',
-  },
-  bmiContainer: {
-    backgroundColor: '#FFECB3',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#dcdcdc',
-    marginTop: 20,
-  },
-  bmiLabel: {
-    fontSize: 16,
-    fontFamily: 'appfont_01',
-  },
-  bmiValueContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  bmiValue: {
-    fontSize: 18,
-    fontFamily: 'appfont_01',
-    backgroundColor: '#FFF',
-    padding: 5,
-    borderRadius: 5,
-  },
-  bmiStatus: {
-    fontSize: 16,
-    fontFamily: 'appfont_01',
-    marginLeft: 10,
-  },
-  editButton: {
-    marginLeft: 10,
-    backgroundColor: '#F6A444',
-    padding: 5,
-    borderRadius: 5,
-  },
-  editButtonText: {
-    color: '#FFF',
-    fontFamily: 'appfont_01',
-  },
-  editContainer: {
-    flexDirection: 'row',
-    alignSelf: 'center',
-  },
-  saveButton: {
-    backgroundColor: '#F6A444',
-    padding: 10,
-    borderRadius: 5,
-    alignSelf: 'center',
-    fontFamily: 'appfont_01',
-  },
-  saveButtonText: {
-    color: '#FFF',
-    fontFamily: 'appfont_01',
-  },
+    color: '#000',
+    marginTop: 5,
+    marginEnd: 30,
+    marginRight: 30,
+  }
 });
 
 export default AnalysisScreen;
