@@ -83,7 +83,7 @@ export default function Register() {
                         color: Colors.while,
                         padding: 2,
                         fontFamily: 'appfont_01',
-                    }}>เข้าสู่ระบบ</Text>
+                    }}>หน้าถัดไป</Text>
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row',marginTop: 20 }}>
                 <Text style={{marginRight: 50 ,fontFamily:'appfont_01'}}>มีบัญชีอยู่แล้ว?</Text>
