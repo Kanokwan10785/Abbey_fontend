@@ -365,6 +365,16 @@ const ProfileButton = () => {
     }
   };
 
+  // ฟังก์ชันแปลง BMI เป็นข้อความ
+  const getBMIStatus = (bmi) => {
+    if (!bmi) return "ไม่มีข้อมูล";
+    const bmiValue = parseFloat(bmi); // แปลงค่า BMI เป็นตัวเลข
+    if (bmiValue < 18.6) return "ผอมเกินไป";
+    if (bmiValue < 25.0) return "ปกติ";
+    if (bmiValue < 30.0) return "เริ่มอ้วน";
+    return "อ้วนเกินไป";
+  };
+  
   const logout = async () => {
     try {
       // ลบ token ออกจาก AsyncStorage
@@ -489,7 +499,8 @@ const ProfileButton = () => {
                       {/* <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text> */}
                       <Text style={styles.detailText}>อายุ: {age || "ไม่มีข้อมูล"} ปี</Text>
                       <Text style={styles.detailText}>เพศ: {gender || "ไม่มีข้อมูล"}</Text>
-                      <Text style={styles.detailText}>BMI: {bmi || "ไม่มีข้อมูล"}</Text>
+                      <Text style={styles.detailText}>BMI: {bmi ? `${bmi} (${getBMIStatus(bmi)})` : "ไม่มีข้อมูล"}</Text>
+                      {/* <Text style={styles.detailText}>BMI: {bmi ? `${getBMIStatus(bmi)}` : "ไม่มีข้อมูล"}</Text> */}
                     </>
                   )}
                   {!isEditing && (
