@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Image } from 'expo-image';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, TextInput, Alert, LogBox } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
@@ -176,13 +176,10 @@ const ProfileButton = () => {
   };
 
   // ฟังก์ชันสำหรับคำนวณ BMI
-  const calculateBMI = (weight, height) => {
-    if (!weight || !height || isNaN(weight) || isNaN(height) || height <= 0) {
-      return null;
-    }
-    const heightInMeters = height / 100; // แปลงจากเซนติเมตรเป็นเมตร
-    return (weight / (heightInMeters * heightInMeters)).toFixed(2); // คืนค่า BMI พร้อมทศนิยม 2 ตำแหน่ง
-  };
+  const calculateBMI = useCallback((weight, height) => {
+    if (!weight || !height) return null;
+    return ((weight / ((height / 100) ** 2)).toFixed(2));
+  }, []);
 
   // useEffect สำหรับคำนวณ BMI และ PUT ไปยังเซิร์ฟเวอร์เมื่อ weight หรือ height เปลี่ยน
   useEffect(() => {
