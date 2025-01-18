@@ -14,7 +14,7 @@ const Exercise4 = () => {
   const route = useRoute();
   const [intervalId, setIntervalId] = useState(null);
   const { item } = route.params || {};
-  const { dayNumber, weekId,set } = route.params || {};
+  const { dayNumber, weekId, set, isMissed } = route.params || {};
 
   // ตรวจสอบว่า item ถูกกำหนดค่าหรือไม่
   if (!item || !item.trophy) {
@@ -40,16 +40,16 @@ const Exercise4 = () => {
 
     // เรียกใช้งานฟังก์ชันนี้ครั้งเดียว
     updateBalanceOnce();
-  }, [dayNumber, weekId,set]);
+  }, [dayNumber, weekId, set]);
 
-  console.log('dayNumber, weekId ex4',dayNumber, weekId,set)
+  console.log('dayNumber, weekId ex4', dayNumber, weekId, set, isMissed)
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+      const response = await fetch('http://192.168.1.200:1337/api/users/${userId}', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -77,8 +77,10 @@ const Exercise4 = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
       const timestamp = new Date().toISOString();
-  
-      const response = await fetch('http://192.168.1.145:1337/api/workout-records', {
+
+      const status = isMissed ? false : true;
+
+      const response = await fetch('http://192.168.1.200:1337/api/workout-records', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,12 +92,12 @@ const Exercise4 = () => {
             week: weekId,
             day: dayNumber,
             completed: true,
-            status: true,
+            status: status,
             timestamp: timestamp,
           },
         }),
       });
-  
+
       const data = await response.json();
       if (response.ok) {
         console.log('Workout record updated successfully:', data);
@@ -109,7 +111,7 @@ const Exercise4 = () => {
       return false;
     }
   };
-  
+
 
   return (
     <View style={styles.container}>
@@ -133,8 +135,13 @@ const Exercise4 = () => {
       <TouchableOpacity
         style={styles.finishButton}
         onPress={() => {
-          updateWorkoutRecord().then(() => {
-            navigation.navigate('Homeexercise'); // นำทางหลังอัปเดตเสร็จ
+          updateWorkoutRecord().then((success) => {
+            if (success) {
+              console.log('Record updated and navigating to Homeexercise');
+              navigation.navigate('Homeexercise'); // นำทางไปหน้าหลัก
+            } else {
+              console.error('Failed to update record');
+            }
           });
         }}
       >

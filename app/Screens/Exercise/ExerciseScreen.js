@@ -37,7 +37,7 @@ const ExerciseScreen = () => {
 
   const fetchExercises = async (day) => {
     try {
-      const response = await fetch(`http://192.168.1.145:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day1&populate=exercises.animation,exercises.muscle`);
+      const response = await fetch(`http://192.168.1.200:1337/api/daily-exercise-routines?filters[Day_name][$eq]=Day1&populate=exercises.animation,exercises.muscle`);
       const data = await response.json();
 
       if (!data.data || data.data.length === 0) {

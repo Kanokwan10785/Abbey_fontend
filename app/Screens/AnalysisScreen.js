@@ -22,7 +22,7 @@ const AnalysisScreen = () => {
     const fetchWorkoutRecords = async () => {
       try {
         const response = await axios.get(
-          'http://192.168.1.145:1337/api/users/63?populate=workout_records,workout_records.exercise_level,workout_records.exercise_level.image,workout_records.add_course,workout_records.week,workout_records.day,workout_records.add_course.image,workout_records.add_course.all_exercises,workout_records.day.all_exercises,workout_records.exercise_level.all_exercises,workout_records.day.image'
+          'http://192.168.1.200:1337/api/users/67?populate=workout_records,workout_records.exercise_level,workout_records.exercise_level.image,workout_records.add_course,workout_records.week,workout_records.day,workout_records.add_course.image,workout_records.add_course.all_exercises,workout_records.day.all_exercises,workout_records.exercise_level.all_exercises,workout_records.day.image'
         );
 
         const workoutRecords = response.data?.workout_records || [];

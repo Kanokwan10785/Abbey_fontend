@@ -5,41 +5,108 @@ import BottomBar from '../BottomBar';
 import exercise from '../../../assets/image/exercise.png';
 import previous from '../../../assets/image/previous.png';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Dayexercise = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { dayNumber, weekId,set } = route.params || {}; // Extract dayNumber and weekId from route params
+  const { dayNumber, weekId, set , userId , isMissed } = route.params || {}; // Extract dayNumber and weekId from route params
 
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalTime, setTotalTime] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [unlockDate, setUnlockDate] = useState(null);
 
   useEffect(() => {
-    if (dayNumber && weekId && set) { // Ensure both dayNumber and weekId are available
-      fetchExercises(dayNumber, weekId,set);
+    setIsLocked(false);
+    setUnlockDate(null);
+    setExercises([]);
+    if (dayNumber && weekId && set && userId) {
+      fetchExercises(dayNumber, weekId, set, userId, isMissed);
     } else {
       console.error('Missing dayNumber or weekId');
       setLoading(false);
     }
-  }, [dayNumber, weekId,set]);
-  console.log('dayNumber, weekId',dayNumber, weekId)
+  }, [dayNumber, weekId, set, userId, isMissed]);
+  
 
+  console.log('Dayexercise: Received params:', { dayNumber, weekId, set, isMissed });
+
+  const fetchStartDateFromHistory = async (week, day) => {
+    try {
+
+      const token = await AsyncStorage.getItem('jwt'); // ดึง token สำหรับการเชื่อมต่อ
+      const response = await fetch(
+        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      console.log('Fetched workout-records data:', data);
+  
+      // กรองเฉพาะประวัติที่ตรงกับ week และ day ที่ต้องการ
+      const matchingRecords = data.data.filter(
+        (record) =>
+          record.attributes.week?.data?.id === week &&
+          record.attributes.day?.data?.attributes?.dayNumber === day
+      );
+      console.log('Matching records:', matchingRecords);
+  
+      if (matchingRecords.length > 0) {
+        return new Date(matchingRecords[0].attributes.timestamp);
+      }
+        return null; // ไม่มีข้อมูลในประวัติ
+    } catch (error) {
+      console.error('Error fetching workout history:', error);
+      return null;
+    }
+  };
+  
   const fetchExercises = async (day, week) => {
     try {
       const response = await fetch(
-        `http://192.168.1.145:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
+        `http://192.168.1.200:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
   
-      console.log("API Response:", data);
-  
-      // ตรวจสอบว่ามี data หรือไม่
       if (!data || !data.data || !data.data[0]?.attributes?.all_exercises?.data) {
         console.error("No data found for the specified day and week");
         setExercises([]);
         setLoading(false);
         return;
+      }
+  
+      // ดึง startDate ของ week 1 day 1
+      const week1StartDate = await fetchStartDateFromHistory(1, 1);
+      console.log('Week 1 Start Date:', week1StartDate);
+  
+      let baseStartDate;
+      if (week1StartDate) {
+        // หากมี week 1 day 1 ใช้เป็นจุดเริ่มต้น
+        baseStartDate = new Date(week1StartDate);
+        baseStartDate.setHours(0, 0, 0, 0);
+        baseStartDate.setDate(baseStartDate.getDate() + (7 * (week - 1))); // เพิ่มวันตาม week ที่อยู่
+      } else {
+        // หากไม่มี week 1 day 1 ใช้ค่าเริ่มต้นของ week ปัจจุบัน
+        const defaultStartDate = new Date(data.data[0]?.attributes?.startDate || new Date());
+        baseStartDate = new Date(defaultStartDate);
+      }
+  
+      // เพิ่มวันที่ตาม dayNumber
+      baseStartDate.setDate(baseStartDate.getDate() + (day - 1));
+  
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+  
+      if (today < baseStartDate) {
+        setIsLocked(true);
+        setUnlockDate(baseStartDate);
+      } else {
+        setIsLocked(false);
       }
   
       // ประมวลผลข้อมูล exercise
@@ -48,11 +115,11 @@ const Dayexercise = () => {
         const animationUrl = exercise.attributes.animation?.data?.[0]?.attributes?.url || null;
         const imageData = exercise.attributes.muscle?.data?.[0]?.attributes?.formats?.thumbnail;
         const imageUrl = imageData ? imageData.url : null;
-
+  
         let displayText = '';
         if (exercise.attributes.reps) {
           displayText = `${exercise.attributes.reps} ครั้ง`;
-          totalDuration += 30; // Assuming 30 seconds per rep
+          totalDuration += 30;
         } else if (exercise.attributes.duration) {
           const durationInSeconds = Math.floor(exercise.attributes.duration * 60);
           const minutes = Math.floor(durationInSeconds / 60);
@@ -86,8 +153,8 @@ const Dayexercise = () => {
       console.error("Error fetching exercises:", error);
       setLoading(false);
     }
-  };
-  
+  }; 
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -95,6 +162,16 @@ const Dayexercise = () => {
       </View>
     );
   }
+
+  const formattedUnlockDate = unlockDate
+  ? unlockDate.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : 'ไม่ทราบ';
+
+
 
   return (
     <View style={styles.container}>
@@ -120,14 +197,23 @@ const Dayexercise = () => {
           <Text style={styles.statText}>{exercises.length} ท่า</Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.startButton}
-        onPress={() =>
-          navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false,dayNumber, weekId,set })
-        }
-      >
-        <Text style={styles.startButtonText}>เริ่ม</Text>
-      </TouchableOpacity>
+      {isLocked ? (
+        <View style={styles.lockButton}>
+          <Text style={styles.startButtonText}>
+          วันปลดล็อค: {formattedUnlockDate || 'ไม่ทราบ'}
+        </Text>
+        </View>
+        
+      ) : (
+        <TouchableOpacity
+          style={styles.startButton}
+          onPress={() =>
+            navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false, dayNumber, weekId, set, isMissed })
+          }
+        >
+          <Text style={styles.startButtonText}>เริ่ม</Text>
+        </TouchableOpacity>
+      )}
       <FlatList
         data={exercises}
         renderItem={({ item }) => (
@@ -211,6 +297,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'appfont_01',
   },
+  lockButton: {
+    backgroundColor: '#C0C0C0',
+    padding: 10,
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginBottom: 10,
+  },
   exerciseList: {
     marginHorizontal: 10,
   },
@@ -240,6 +333,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     fontFamily: 'appfont_01',
+  },
+  lockedText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#F00',
+    fontFamily: 'appfont_01',
+    marginBottom: 10,
   },
 });
 
