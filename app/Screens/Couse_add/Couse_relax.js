@@ -68,7 +68,7 @@ const Couse_relax = () => {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
   
-      const response = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

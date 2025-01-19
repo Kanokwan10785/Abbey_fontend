@@ -70,7 +70,7 @@ const Muscles_finish = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
 
-      const response = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ const Muscles_finish = () => {
         }
 
         // 1. สร้าง workout record ใหม่
-        const workoutRecordResponse = await fetch('http://192.168.1.145:1337/api/workout-records', {
+        const workoutRecordResponse = await fetch('http://192.168.1.200:1337/api/workout-records', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ const Muscles_finish = () => {
         console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
 
         // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
-        const userResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}?populate=exercise_levels`, {
+        const userResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}?populate=exercise_levels`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ const Muscles_finish = () => {
         const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน
 
         // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
-        const userUpdateResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+        const userUpdateResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

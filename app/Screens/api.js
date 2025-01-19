@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const API_URL = 'http://192.168.1.199:1337'; 
 // const API_URL = 'http://172.28.148.66:1337'; 
+=======
+const API_URL = 'http://192.168.1.200:1337'; // Replace with your Strapi URL
+>>>>>>> 6f606bbcbe515e0fa02823bba0a193e9be3b96dc
 
 const api = axios.create({
   baseURL: API_URL,

@@ -49,7 +49,7 @@ const Couse_finish = () => {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+      const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -93,7 +93,7 @@ const Couse_finish = () => {
         }
 
         // 1. สร้าง workout record ใหม่
-        const workoutRecordResponse = await fetch('http://192.168.1.145:1337/api/workout-records', {
+        const workoutRecordResponse = await fetch('http://192.168.1.200:1337/api/workout-records', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ const Couse_finish = () => {
         console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
 
         // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
-        const userResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}?populate=add_courses`, {
+        const userResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}?populate=add_courses`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ const Couse_finish = () => {
         console.log('updatedExerciseLevels:', updatedExerciseLevels);
 
         // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
-        const userUpdateResponse = await fetch(`http://192.168.1.145:1337/api/users/${userId}`, {
+        const userUpdateResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

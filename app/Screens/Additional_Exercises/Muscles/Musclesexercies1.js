@@ -28,7 +28,7 @@ const Musclesexercies1 = ({ route }) => {
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.145:1337/api/addexercises/${musclesId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `http://192.168.1.200:1337/api/addexercises/${musclesId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
 
