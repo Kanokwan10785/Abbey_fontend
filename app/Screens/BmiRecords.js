@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { LineChart } from 'react-native-chart-kit';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 
 const BmiRecords = () => {
-  const navigation = useNavigation();
 
   const [weight, setWeight] = useState(58); // น้ำหนัก (กิโลกรัม)
   const [heightCm, setHeightCm] = useState(167); // ส่วนสูง (เซนติเมตร)
@@ -142,43 +139,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF',
   },
-  weightgraphHeader: {
-    flexDirection: "column",
-    justifyContent: "space-between",
-    backgroundColor: '#F6A444',
-    marginTop: 20,
-  },
-  graphTitle: {
-    color: "#FFF",
-    fontSize: 20,
-    top: "32%",
-    // textAlign: "center",
-    left: 30,
-    fontFamily: "appfont_01",
-  },
-  graphContainer: {
-    backgroundColor: '#FFECB3',
-    padding: 10,
-  },
-  graphHeader: {
-    backgroundColor: '#fff',
-    padding: 5,
-    borderRadius: 10,
-    position: "absolute",
-    top: "32%",
-    right: 20,
-    paddingHorizontal: 20,
-  },
-  graphsaveButtonText: {
-    color: '#F6A444',
-    fontSize: 16,
-    fontFamily: 'appfont_02',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
   inputHeightCm: {
     height: 40,
     width: "50%",
@@ -188,62 +148,6 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 5,
     backgroundColor: '#FFF',
-  },
-  inputWeigh: {
-    height: 40,
-    width: "100%",
-    borderColor: '#dcdcdc',
-    borderWidth: 1,
-    marginRight: 10,
-    paddingLeft: 8,
-    borderRadius: 5,
-    backgroundColor: '#FFF',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    marginBottom: 15,
-    textAlign: 'center',
-    fontFamily: 'appfont_01',
-  },
-  modalButton: {
-    backgroundColor: '#F6A444',
-    padding: 10,
-    paddingHorizontal: 25,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontFamily: 'appfont_02',
-  },
-  modalbackButton:{
-    flexDirection: "row",
-    justifyContent: 'space-evenly',
-  },
-  backButton: {
-    backgroundColor: '#F6A444',
-    padding: 10,
-    paddingHorizontal: 25,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  backButtonText: {
-    color: '#FFF',
-    fontFamily: 'appfont_02',
   },
   bmiContainer: {
     backgroundColor: '#FFECB3',
