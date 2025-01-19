@@ -444,15 +444,16 @@ const ProfileButton = () => {
                           onChangeText={setUsername}
                         />
                       </View>
-                      <View style={styles.inputGroup}>
+                      {/* <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>น้ำหนัก:</Text>
                         <TextInput
                           style={styles.input}
                           value={weight}
                           onChangeText={setWeight}
                           keyboardType="numeric"
+                          placeholder="น้ำหนัก (kg)"
                         />
-                      </View>
+                      </View> */}
                       <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>ส่วนสูง:</Text>
                         <TextInput
@@ -460,6 +461,7 @@ const ProfileButton = () => {
                           value={height}
                           onChangeText={setHeight}
                           keyboardType="numeric"
+                          placeholder="ส่วนสูง (cm)"
                         />
                       </View>
                       {/* <View style={styles.inputGroup}>
@@ -468,6 +470,7 @@ const ProfileButton = () => {
                           style={styles.input}
                           value={birthday}
                           onChangeText={setBirthday}
+                          placeholder="วว/ดด/คศ"
                         />
                       </View> */}
                       <View style={styles.inputGroup}>
@@ -477,6 +480,7 @@ const ProfileButton = () => {
                           value={age}
                           onChangeText={setAge}
                           keyboardType="numeric"
+                          placeholder="อายุ (age)"
                         />
                       </View>
                       <View style={styles.buttonGroup}>
