@@ -39,7 +39,7 @@ const CustomAlertdata = ({ visible, onConfirm, onCancel }) => (
     <View style={styles.customAlertContainer}>
       <View style={styles.customAlertBox}>
         <Text style={styles.customAlertTitle}>ยกเลิกการแก้ไข</Text>
-        <Text style={styles.customAlertMessage}>   คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข? ข้อมูลที่เปลี่ยนแปลงจะไม่ถูกบันทึก</Text>
+        <Text style={styles.customAlertMessage}> คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข? ข้อมูลที่เปลี่ยนแปลงจะไม่ถูกบันทึก</Text>
         <View style={styles.buttonText}>
           <TouchableOpacity style={styles.customAlertButton} onPress={onConfirm}>
             <Text style={styles.customAlertButtonText}>ใช่</Text>
@@ -327,7 +327,7 @@ const ProfileButton = () => {
         selectedGender: gender === 'ชาย' ? 'male' : 'female',
         BMI: calculatedBMI,
       };
-
+111
       if (pictureId) {
         updatedData.picture = pictureId; // อัปเดตรูปโปรไฟล์ถ้ามีการอัปโหลดใหม่
       }
@@ -442,6 +442,7 @@ const ProfileButton = () => {
                           style={styles.input}
                           value={username}
                           onChangeText={setUsername}
+                          placeholder="ชื่อเล่น"
                         />
                       </View>
                       {/* <View style={styles.inputGroup}>
@@ -454,7 +455,7 @@ const ProfileButton = () => {
                           placeholder="น้ำหนัก (kg)"
                         />
                       </View> */}
-                      <View style={styles.inputGroup}>
+                      {/* <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>ส่วนสูง:</Text>
                         <TextInput
                           style={styles.input}
@@ -463,7 +464,7 @@ const ProfileButton = () => {
                           keyboardType="numeric"
                           placeholder="ส่วนสูง (cm)"
                         />
-                      </View>
+                      </View> */}
                       {/* <View style={styles.inputGroup}>
                         <Text style={styles.labelText}>วันเกิด:</Text>
                         <TextInput
@@ -495,8 +496,8 @@ const ProfileButton = () => {
                   ) : (
                     <>
                       <Text style={styles.headText}>{username || "ไม่มีข้อมูล"}</Text>
-                      <Text style={styles.detailText}>น้ำหนัก: {weight || "ไม่มีข้อมูล"} กิโลกรัม</Text>
                       <Text style={styles.detailText}>ส่วนสูง: {height || "ไม่มีข้อมูล"} เซนติเมตร</Text>
+                      <Text style={styles.detailText}>น้ำหนัก: {weight || "ไม่มีข้อมูล"} กิโลกรัม</Text>
                       {/* <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text> */}
                       <Text style={styles.detailText}>อายุ: {age || "ไม่มีข้อมูล"} ปี</Text>
                       <Text style={styles.detailText}>เพศ: {gender || "ไม่มีข้อมูล"}</Text>
@@ -618,7 +619,7 @@ const styles = StyleSheet.create({
   },
   insidepersonalInformation: {
     width: "65%",
-    height: "100%", 
+    height: 180, 
     borderRadius: 8,
     backgroundColor: "#F9E79F",
     borderColor: "#E97424",
@@ -647,6 +648,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontSize: 16,
+    width: 50,
     fontFamily: "appfont_02",
     color: "#000",
     marginRight: 10, 
@@ -698,6 +700,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
+    top: 25,
   },
   saveButton: {
     width: 95,
