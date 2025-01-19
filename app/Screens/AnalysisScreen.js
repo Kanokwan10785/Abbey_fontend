@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, Image, TouchableOpacity,} from "react-native";
 import { Calendar } from "react-native-calendars";
 import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import BottomBar from "./BottomBar";
 import WeightRecords from "./WeightRecords.js";
+import BmiRecords from "./BmiRecords.js";
 
 const AnalysisScreen = () => {
   const [weeklySummary, setWeeklySummary] = useState([]);
@@ -258,7 +250,7 @@ const AnalysisScreen = () => {
             <View style={styles.header}>
               <Text style={styles.headerTitle}>ปฏิทินการออกกำลังกาย</Text>
             </View>
-  
+
             {/* ปฏิทิน */}
             <Calendar
               current={new Date().toISOString().split("T")[0]}
@@ -277,7 +269,7 @@ const AnalysisScreen = () => {
                 indicatorColor: "#F6A444",
               }}
             />
-  
+
             {/* ส่วน Header ของสัปดาห์ */}
             <View style={styles.weekHeader}>
               <TouchableOpacity
@@ -306,12 +298,17 @@ const AnalysisScreen = () => {
         data={weeklySummary[0]?.records || []}
         renderItem={renderRecord}
         keyExtractor={(item) => item.id}
-        ListFooterComponent={<WeightRecords />}
+        ListFooterComponent={
+          <View>
+            <WeightRecords />
+            <BmiRecords />
+          </View>
+        }
       />
-  
+
       <BottomBar />
     </View>
-  );  
+  );
 };
 
 const styles = StyleSheet.create({

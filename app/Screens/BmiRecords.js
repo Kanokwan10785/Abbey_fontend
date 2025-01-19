@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal 
 import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
 
-const WeightRecords = () => {
+const BmiRecords = () => {
   const navigation = useNavigation();
 
   const [weight, setWeight] = useState(58); // น้ำหนัก (กิโลกรัม)
@@ -90,47 +90,39 @@ const WeightRecords = () => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.weightgraphHeader, { height: 75 }]}>
-        <Text style={styles.graphTitle}>กราฟน้ำหนัก</Text>
-        <View style={styles.graphHeader}>
-            <TouchableOpacity onPress={() => setIsModalVisible(true)}>
-              <Text style={styles.graphsaveButtonText}>บันทึก</Text>
-            </TouchableOpacity>
+        <View style={styles.bmiHeader}>
+          <Text style={styles.bmiLabel}>ค่าดัชนีมวลกาย</Text>
+          <View style={styles.buttonHeader}>
+          <TouchableOpacity onPress={() => setIsEditing(true)}>
+            <Text style={styles.editButtonText}>แก้ไข</Text>
+          </TouchableOpacity>
           </View>
-      </View>
-        <View style={styles.graphContainer}>
-          <LineChart
-            data={{
-              labels: dateLabels,
-              datasets: [
-                {
-                  data: weightData,
-                },
-              ],
-            }}
-            width={Dimensions.get('window').width - 20} // from react-native
-            height={250}
-            yAxisLabel=""
-            yAxisSuffix="kg"
-            yAxisInterval={1} // optional, defaults to 1
-            chartConfig={{
-              backgroundColor: '#e26a00',
-              backgroundGradientFrom: '#fb8c00',
-              backgroundGradientTo: '#ffa726',
-              decimalPlaces: 1, // optional, defaults to 2dp
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              propsForDots: {
-                r: '6',
-                strokeWidth: '2',
-                stroke: '#ffa726',
-              },
-            }}
-            style={{
-              // marginVertical: 8,
-              borderRadius: 6,
-            }}
-          />
+        </View>
+        <View style={styles.bmiContainer}>
+          {isEditing ? (
+            <View style={styles.editContainer}>
+              <TextInput
+                style={styles.inputHeightCm}
+                value={heightCm.toString()}
+                onChangeText={text => setHeightCm(text)}
+                placeholder="ส่วนสูง (cm)"
+                keyboardType="numeric"
+              />
+              <View style={styles.buttonGroup}>
+              <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+                <Text style={styles.saveButtonText}>บันทึก</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handlebmiCancel} style={styles.editButton}>
+                <Text style={styles.saveButtonText}>ยกเลิก</Text>
+              </TouchableOpacity>            
+            </View>
+            </View>
+          ) : (
+            <View style={styles.bmiValueContainer}>
+              <Text style={styles.bmiValue}>{bmi}</Text>
+              <Text style={styles.bmiStatus}>{bmiStatus}</Text>
+            </View>
+          )}
         </View>
 
       {/* Modal สำหรับการเพิ่มน้ำหนักและวันที่ */}
@@ -140,28 +132,6 @@ const WeightRecords = () => {
         transparent={true}
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>บันทึกน้ำหนัก</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.inputWeigh}
-                value={newWeight}
-                onChangeText={setNewWeight}
-                placeholder="น้ำหนัก (kg)"
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={styles.modalbackButton}>
-              <TouchableOpacity onPress={handleSaveData} style={styles.modalButton}>
-                <Text style={styles.modalButtonText}>บันทึก</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-                <Text style={styles.backButtonText}>ยกเลิก</Text>
-              </TouchableOpacity>
-              </View>
-          </View>
-        </View>
       </Modal>
     </View>
   );
@@ -355,4 +325,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WeightRecords;
+export default BmiRecords;
