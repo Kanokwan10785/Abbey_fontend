@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.139:1337'; // Replace with your Strapi URL
-// const API_URL = 'http://172.28.151.236:1337'; // Replace with your Strapi URL
+const API_URL = 'http://192.168.1.199:1337'; 
+// const API_URL = 'http://172.28.148.66:1337'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -22,7 +22,7 @@ export const login = async (identifier, password) => {
 };
 
 // ฟังก์ชันการลงทะเบียน
-export const register = async (username, email, password,height, weight,age,selectedGender,selectPet) => {
+export const register = async (username, email, password, height, weight, age, selectedGender, selectPet) => {
   try {
     const response = await api.post('/api/auth/local/register', {
       username,
