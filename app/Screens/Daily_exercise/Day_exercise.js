@@ -80,25 +80,16 @@ const Dayexercise = () => {
         return;
       }
   
-      // ดึง startDate ของ week 1 day 1
-      const week1StartDate = await fetchStartDateFromHistory(1, 1);
+      // ดึง startDate ของ Week 1 Day 1
+      const week1StartDate = await fetchStartDateFromHistory(1, 1) || new Date(); // fallback เป็นวันนี้
       console.log('Week 1 Start Date:', week1StartDate);
   
-      let baseStartDate;
-      if (week1StartDate) {
-        // หากมี week 1 day 1 ใช้เป็นจุดเริ่มต้น
-        baseStartDate = new Date(week1StartDate);
-        baseStartDate.setHours(0, 0, 0, 0);
-        baseStartDate.setDate(baseStartDate.getDate() + (7 * (week - 1))); // เพิ่มวันตาม week ที่อยู่
-      } else {
-        // หากไม่มี week 1 day 1 ใช้ค่าเริ่มต้นของ week ปัจจุบัน
-        const defaultStartDate = new Date(data.data[0]?.attributes?.startDate || new Date());
-        baseStartDate = new Date(defaultStartDate);
-      }
+      // กำหนดค่า baseStartDate
+      const baseStartDate = new Date(week1StartDate);
+      baseStartDate.setHours(0, 0, 0, 0);
+      baseStartDate.setDate(baseStartDate.getDate() + (7 * (week - 1)) + (day - 1));
   
-      // เพิ่มวันที่ตาม dayNumber
-      baseStartDate.setDate(baseStartDate.getDate() + (day - 1));
-  
+      // เปรียบเทียบกับวันที่ปัจจุบัน
       const today = new Date();
       today.setHours(0, 0, 0, 0);
   
@@ -153,7 +144,8 @@ const Dayexercise = () => {
       console.error("Error fetching exercises:", error);
       setLoading(false);
     }
-  }; 
+  };
+  
 
   if (loading) {
     return (
