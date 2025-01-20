@@ -78,7 +78,7 @@ export const saveWeightRecord = async (weight, date, userId) => {
         user: userId,
       },
     });
-    console.log('saveWeightRecord response:', response.data);
+    // console.log('saveWeightRecord response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error saving weight record:', error);
@@ -95,6 +95,22 @@ export const saveWeightUesr = async (weight, userId) => {
     return response.data;
   } catch (error) {
     console.error('Error in saveWeightUesr:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// ฟังก์ชันนี้ทำหน้าที่อัปเดตส่วนสูงและ BMI ของผู้ใช้
+export const saveHeightUesr = async (height, bmi, userId) => {
+  // console.log('Uesr :',height, bmi, userId);
+  try {
+    const response = await api.put(`/api/users/${userId}`, {
+      height,
+      BMI: bmi, // อัปเดตค่าดัชนีมวลกาย
+    });
+    // console.log('saveHeightUesr response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error in saveHeightUesr:', error.response?.data || error.message);
     throw error;
   }
 };

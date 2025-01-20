@@ -1,60 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Image } from 'expo-image';
-import { getUserId } from './apiExercise';
+import { getUserId, saveHeightUesr } from './apiExercise';
+import { fetchUserProfile } from './api';
 import pet from '../../assets/image/Clothing-Pet/S00P01K00.png'
 
 const BmiRecords = () => {
-  const [weight, setWeight] = useState(58); // น้ำหนัก (กิโลกรัม)
-  const [heightCm, setHeightCm] = useState(167); // ส่วนสูง (เซนติเมตร)
+  const [weight, setWeight] = useState(0); 
+  const [heightCm, setHeightCm] = useState(0); 
   const [bmi, setBmi] = useState(0);
   const [bmiStatus, setBmiStatus] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
-    const calculateBmi = () => {
-      const height = heightCm / 100; // แปลงส่วนสูงจากเซนติเมตรเป็นเมตร
-      const bmiValue = (weight / (height * height)).toFixed(1);
-      setBmi(bmiValue);
-      if (bmiValue < 18.5) {
-        setBmiStatus('น้ำหนักน้อย');
-      } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
-        setBmiStatus('น้ำหนักปกติ');
-      } else if (bmiValue >= 25 && bmiValue < 29.9) {
-        setBmiStatus('น้ำหนักเกิน');
-      } else {
-        setBmiStatus('โรคอ้วน');
+    const fetchData = async () => {
+      try {
+        const userId = await getUserId();
+        const userData = await fetchUserProfile(userId);
+
+        const userWeight = userData.weight || 0;
+        const userHeight = userData.height || 0;
+
+        setWeight(userWeight);
+        setHeightCm(userHeight);
+
+        calculateBmi(userWeight, userHeight);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
       }
     };
 
-    calculateBmi();
-  }, [weight, heightCm]);
+    fetchData();
+  }, []);
 
-  const handleSave = () => {
+  const calculateBmi = (weight, heightCm) => {
+    const height = heightCm / 100;
+    const bmiValue = (weight / (height * height)).toFixed(2);
+    setBmi(bmiValue);
+
+    if (bmiValue < 18.5) {
+      setBmiStatus('น้ำหนักน้อย');
+    } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
+      setBmiStatus('น้ำหนักปกติ');
+    } else if (bmiValue >= 25 && bmiValue < 29.9) {
+      setBmiStatus('น้ำหนักเกิน');
+    } else {
+      setBmiStatus('โรคอ้วน');
+    }
+  };
+
+  const handleSave = async () => {
     const weightValue = parseFloat(weight);
     const heightCmValue = parseFloat(heightCm);
-
-    if (!isNaN(weightValue) && !isNaN(heightCmValue)) {
-      setWeight(weightValue);
-      setHeightCm(heightCmValue);
-      setIsModalVisible(false);
+  
+    if (!isNaN(weightValue) && !isNaN(heightCmValue) && heightCmValue > 0) {
+      // คำนวณ BMI ใหม่
       const height = heightCmValue / 100; // แปลงส่วนสูงจากเซนติเมตรเป็นเมตร
-      const bmiValue = (weightValue / (height * height)).toFixed(1);
-      setBmi(bmiValue);
-      if (bmiValue < 18.5) {
+      const newBmi = (weightValue / (height * height)).toFixed(2); // คำนวณ BMI ใหม่
+      setBmi(newBmi); // อัปเดตค่า BMI ใน state
+  
+      // อัปเดตสถานะ BMI
+      if (newBmi < 18.6) {
         setBmiStatus('น้ำหนักน้อย');
-      } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
+      } else if (newBmi >= 18.6 && newBmi < 24.9) {
         setBmiStatus('น้ำหนักปกติ');
-      } else if (bmiValue >= 25 && bmiValue < 29.9) {
+      } else if (newBmi >= 25 && newBmi < 29.9) {
         setBmiStatus('น้ำหนักเกิน');
       } else {
         setBmiStatus('โรคอ้วน');
       }
+  
+      // เรียกใช้ฟังก์ชัน saveHeightUesr เพื่ออัปเดตข้อมูลในเซิร์ฟเวอร์
+      try {
+        const userId = await getUserId(); // ดึง userId
+        await saveHeightUesr(heightCmValue, newBmi, userId); // ส่งส่วนสูงและ BMI ใหม่
+        alert('บันทึกข้อมูลสำเร็จ');
+        setIsModalVisible(false); // ปิด Modal หลังบันทึกสำเร็จ
+      } catch (error) {
+        console.error('Error updating height and BMI:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      }
     } else {
-      alert('กรุณาใส่ข้อมูลที่ถูกต้อง');
+      alert('กรุณากรอกข้อมูลที่ถูกต้อง');
     }
   };
-
+  
   const handleCancel = () => {
     setIsModalVisible(false);
   };
@@ -92,7 +122,7 @@ const BmiRecords = () => {
             <Text style={styles.modalTitle}>แก้ไขส่วนสูง</Text>
             <TextInput
               style={styles.input}
-              value={heightCm.toString()}
+              value={heightCm}
               onChangeText={(text) => setHeightCm(parseFloat(text))}
               placeholder="ส่วนสูง (cm)"
               keyboardType="numeric"
