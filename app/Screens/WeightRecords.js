@@ -7,7 +7,6 @@ const WeightRecords = () => {
   const [dateLabels, setDateLabels] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newWeight, setNewWeight] = useState('');
-  const [newDate, setNewDate] = useState('');
 
   // ฟังก์ชันดึงข้อมูลจาก API
   const fetchWeightData = async () => {
@@ -16,7 +15,7 @@ const WeightRecords = () => {
       const result = await response.json();
 
       // กรองข้อมูลเฉพาะ user id = 63
-      const filteredData = result.data.filter(item => item.attributes.user.data.id === 63);
+      const filteredData = result.data.filter(item => item.attributes.user.data.id === 67);
 
       // อัปเดตข้อมูลใน state
       setWeightData(filteredData.map(item => item.attributes.weight));
@@ -31,34 +30,55 @@ const WeightRecords = () => {
     fetchWeightData();
   }, []);
 
-  // ฟังก์ชันบันทึกข้อมูลใหม่
-  const handleSaveData = () => {
-    const weightValue = parseFloat(newWeight);
-    const dateValue = newDate.trim();
-
-    // ตรวจสอบความถูกต้องของข้อมูล
-    if (!isNaN(weightValue) && weightValue > 0 && dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-      // ตรวจสอบว่ามีวันที่ซ้ำอยู่แล้วหรือไม่
-      if (dateLabels.includes(dateValue)) {
-        alert('วันที่นี้มีข้อมูลน้ำหนักอยู่แล้ว');
-        return;
-      }
-
-      // อัปเดตข้อมูลใหม่ใน state
-      setWeightData([...weightData, weightValue]);
-      setDateLabels([...dateLabels, dateValue]);
-      setNewWeight('');
-      setNewDate('');
-      setIsModalVisible(false);
-    } else {
-      alert('กรุณาใส่น้ำหนักที่ถูกต้องและวันที่ในรูปแบบ DD/MM/YYYY');
-    }
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // เดือนเริ่มจาก 0 จึงต้อง +1
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // รูปแบบ YYYY-MM-DD
   };
+  
+  const handleSaveData = async () => {
+    const weightValue = parseFloat(newWeight);
+    const currentDate = getCurrentDate(); // วันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
+  
+    if (!isNaN(weightValue) && weightValue > 0) {
+      try {
+        // POST ไปยัง API
+        const response = await fetch('http://192.168.1.199:1337/api/weight-records', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            data: {
+              date: currentDate, // วันที่ปัจจุบัน
+              weight: weightValue,
+              user: 67, // user ID ที่กำหนด
+            },
+          }),
+        });
+  
+        if (response.ok) {
+          alert('บันทึกข้อมูลสำเร็จ!');
+          setNewWeight(''); // รีเซ็ตฟิลด์น้ำหนัก
+          setIsModalVisible(false); // ปิด Modal
+          fetchWeightData(); // ดึงข้อมูลใหม่เพื่ออัปเดตกราฟ
+        } else {
+          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+      } catch (error) {
+        console.error('Error saving data:', error);
+        alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์');
+      }
+    } else {
+      alert('กรุณาใส่น้ำหนักที่ถูกต้อง');
+    }
+  };  
 
   // ฟังก์ชันยกเลิก
   const handleCancel = () => {
     setNewWeight('');
-    setNewDate('');
     setIsModalVisible(false);
   };
 
@@ -126,12 +146,12 @@ const WeightRecords = () => {
               placeholder="น้ำหนัก (kg)"
               keyboardType="numeric"
             />
-            <TextInput
+            {/* <TextInput
               style={styles.inputWeigh}
               value={newDate}
               onChangeText={setNewDate}
               placeholder="วันที่ (DD/MM/YYYY)"
-            />
+            /> */}
             <View style={styles.modalbackButton}>
               <TouchableOpacity onPress={handleSaveData} style={styles.modalButton}>
                 <Text style={styles.modalButtonText}>บันทึก</Text>
