@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { fetchWeightRecords, saveWeightRecord } from './apiAnalysis';
+import { fetchWeightRecords, saveWeightRecord, getUserId } from './apiAnalysis';
 
 const WeightRecords = () => {
   const [weightData, setWeightData] = useState([]);
   const [dateLabels, setDateLabels] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newWeight, setNewWeight] = useState('');
-  const userId = 67; // กำหนด ID ผู้ใช้
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -24,6 +23,7 @@ const WeightRecords = () => {
 
   const fetchData = async () => {
     try {
+      const userId = await getUserId();
       const records = await fetchWeightRecords(userId);
       const sortedData = records.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
       setWeightData(sortedData.map(item => item.attributes.weight));
@@ -32,20 +32,13 @@ const WeightRecords = () => {
       alert('ไม่สามารถโหลดข้อมูลได้');
     }
   };
-
-  const getCurrentDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // เดือนเริ่มจาก 0 จึงต้อง +1
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`; // รูปแบบ YYYY-MM-DD
-  };
   
   const handleSaveData = async () => {
     const weightValue = parseFloat(newWeight);
     const currentDate = new Date().toISOString().split('T')[0];
     if (!isNaN(weightValue) && weightValue > 0) {
       try {
+        const userId = await getUserId();
         await saveWeightRecord(weightValue, currentDate, userId);
         alert('บันทึกข้อมูลสำเร็จ!');
         setNewWeight('');
