@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { fetchWeightRecords, saveWeightRecord, getUserId } from './apiAnalysis';
+import { fetchWeightRecords, saveWeightRecord, getUserId, saveWeightUesr } from './apiAnalysis';
 
 const WeightRecords = () => {
   const [weightData, setWeightData] = useState([]);
@@ -36,19 +36,23 @@ const WeightRecords = () => {
   const handleSaveData = async () => {
     const weightValue = parseFloat(newWeight);
     const currentDate = new Date().toISOString().split('T')[0];
-    if (!isNaN(weightValue) && weightValue > 0) {
+    if (!isNaN(weightValue) && weightValue > 20 && weightValue <= 200) {
       try {
         const userId = await getUserId();
+        console.log('Saving weight to API:', weightValue); // บันทึกการส่งข้อมูล
+        console.log('UserId to API:', userId);
         await saveWeightRecord(weightValue, currentDate, userId);
+        await saveWeightUesr(weightValue, userId);
         alert('บันทึกข้อมูลสำเร็จ!');
         setNewWeight('');
         setIsModalVisible(false);
-        fetchData();
+        fetchData(); // อัปเดตข้อมูลใหม่
       } catch (error) {
+        console.error('Error saving weight data:', error);
         alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       }
     } else {
-      alert('กรุณาใส่น้ำหนักที่ถูกต้อง');
+      alert('กรุณาใส่น้ำหนักที่ถูกต้อง (20-200 กิโลกรัม)');
     }
   };
 
