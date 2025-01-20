@@ -8,26 +8,42 @@ const WeightRecords = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newWeight, setNewWeight] = useState('');
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = [
+      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = String(date.getFullYear() + 543).slice(-2); // แปลงเป็นปี พ.ศ. และเอาเฉพาะ 2 หลักสุดท้าย
+    return `${day} ${month} ${year}`;
+  };
+
   // ฟังก์ชันดึงข้อมูลจาก API
   const fetchWeightData = async () => {
     try {
-      const response = await fetch('http://192.168.1.199:1337/api/weight-records?populate[user][fields][0]=username&fields=date&fields=weight&pagination[limit]=100');
+      const response = await fetch(
+        'http://192.168.1.199:1337/api/weight-records?populate[user][fields][0]=username&fields=date&fields=weight&pagination[limit]=100'
+      );
+      if (!response.ok) throw new Error('Error fetching data');
       const result = await response.json();
 
-      // กรองข้อมูลเฉพาะ user id = 63
-      const filteredData = result.data.filter(item => item.attributes.user.data.id === 67);
+      // กรองข้อมูลเฉพาะ user id = 67
+      const filteredData = result.data.filter((item) => item.attributes.user.data.id === 67);
 
       // เรียงข้อมูลตามวันที่จากปีน้อยไปมาก
       const sortedData = filteredData.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
 
       // อัปเดตข้อมูลใน state
-      setWeightData(sortedData.map(item => item.attributes.weight));
-      setDateLabels(sortedData.map(item => item.attributes.date));
+      setWeightData(sortedData.map((item) => item.attributes.weight));
+      setDateLabels(sortedData.map((item) => formatDate(item.attributes.date))); // แปลงรูปแบบวันที่
     } catch (error) {
       console.error('Error fetching data:', error);
+      alert('ไม่สามารถโหลดข้อมูลได้');
     }
   };
-
+  
   // ดึงข้อมูลจาก API เมื่อ component ถูก mount
   useEffect(() => {
     fetchWeightData();
