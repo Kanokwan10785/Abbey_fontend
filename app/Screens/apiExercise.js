@@ -114,3 +114,22 @@ export const saveHeightUesr = async (height, bmi, userId) => {
     throw error;
   }
 };
+
+// ฟังก์ชัน fetchPetImageByLabel เพื่อค้นหา label ที่ตรงกันและดึง url ของรูปภาพ
+export const fetchPetImageByLabel = async (label) => {
+  try {
+    const response = await api.get('/api/clothing-pets?populate[clothing_pet][fields][0]=url&populate[clothing_pet][fields][1]=name&[fields][1]=label&pagination[limit]=100' );
+
+    const data = response.data?.data || [];
+    const matchingItem = data.find((item) => item.attributes.label === label);
+
+    if (matchingItem && matchingItem.attributes.clothing_pet?.data.length > 0) {
+      return matchingItem.attributes.clothing_pet.data[0].attributes.url;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching pet image by label:', error);
+    return null;
+  }
+};
