@@ -18,6 +18,39 @@ export const getUserId = async () => {
   }
 };
 
+// ฟังก์ชันสำหรับค้นหา Record ในวันเดียวกัน
+export const findRecordByDate = async (userId, date) => {
+  try {
+    const response = await api.get(`/api/weight-records`, {
+      params: {
+        'filters[user][id][$eq]': userId,
+        'filters[date][$eq]': date,
+      },
+    });
+
+    if (response.data.data.length > 0) {
+      return response.data.data[0]; // ส่งคืน record ที่พบ
+    }
+    return null; // หากไม่พบ
+  } catch (error) {
+    console.error('Error finding record by date:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// ฟังก์ชันสำหรับทำการแก้ไข ในวันเดียวกัน
+export const updateWeightRecord = async (recordId, weightValue) => {
+  try {
+    const response = await api.put(`/api/weight-records/${recordId}`, {
+      data: { weight: weightValue },
+    });
+    return response.data; // ส่งกลับข้อมูลหลังอัปเดตสำเร็จ
+  } catch (error) {
+    console.error('Error updating weight record:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // ฟังก์ชันสำหรับดึงข้อมูลน้ำหนัก
 export const fetchWeightRecords = async (userId) => {
   try {
@@ -45,6 +78,7 @@ export const saveWeightRecord = async (weight, date, userId) => {
         user: userId,
       },
     });
+    console.log('saveWeightRecord response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error saving weight record:', error);

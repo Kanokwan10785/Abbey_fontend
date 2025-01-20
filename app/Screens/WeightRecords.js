@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { fetchWeightRecords, saveWeightRecord, getUserId, saveWeightUesr } from './apiAnalysis';
+import { fetchWeightRecords, findRecordByDate, saveWeightRecord, getUserId, saveWeightUesr, updateWeightRecord } from './apiExercise';
 
 const WeightRecords = () => {
   const [weightData, setWeightData] = useState([]);
@@ -32,16 +32,28 @@ const WeightRecords = () => {
       alert('ไม่สามารถโหลดข้อมูลได้');
     }
   };
-  
+
   const handleSaveData = async () => {
     const weightValue = parseFloat(newWeight);
     const currentDate = new Date().toISOString().split('T')[0];
     if (!isNaN(weightValue) && weightValue > 20 && weightValue <= 200) {
       try {
         const userId = await getUserId();
-        console.log('Saving weight to API:', weightValue); // บันทึกการส่งข้อมูล
-        console.log('UserId to API:', userId);
-        await saveWeightRecord(weightValue, currentDate, userId);
+        // console.log('Saving weight to API:', weightValue); // บันทึกการส่งข้อมูล
+        // console.log('UserId to API:', userId);
+
+        // ตรวจสอบว่ามี record ในวันเดียวกันหรือไม่
+        const existingRecord = await findRecordByDate(userId, currentDate);
+        if (existingRecord) {
+          // หากมี record ในวันเดียวกัน ใช้ PUT เพื่ออัปเดต
+          const recordId = existingRecord.id; // ID ของ record
+          await updateWeightRecord(recordId, weightValue); // เรียกฟังก์ชันที่แยกไว้
+        } else {
+          // หากไม่มี record ใช้ POST เพื่อสร้าง record ใหม่
+          await saveWeightRecord(weightValue, currentDate, userId);
+        }
+  
+        // อัปเดตน้ำหนักใน users table
         await saveWeightUesr(weightValue, userId);
         alert('บันทึกข้อมูลสำเร็จ!');
         setNewWeight('');
