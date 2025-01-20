@@ -14,132 +14,134 @@ const Homeexercise = () => {
   const [loading, setLoading] = useState(true);
   const isFocused = useIsFocused();
   const [userId, setUserId] = useState(null);
+  const [isUserIdLoaded, setIsUserIdLoaded] = useState(false);
 
   useEffect(() => {
     const fetchUserId = async () => {
-        try {
-            const storedUserId = await AsyncStorage.getItem('userId');
-            if (!storedUserId) {
-                console.error('User ID not found in AsyncStorage.');
-                return;
-            }
-            setUserId(storedUserId);
-        } catch (error) {
-            console.error('Error fetching userId:', error);
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (!storedUserId) {
+          console.error('User ID not found in AsyncStorage.');
+          setIsUserIdLoaded(true); // แม้ไม่มี userId ก็ถือว่าโหลดเสร็จ
+          return;
         }
+        setUserId(storedUserId);
+      } catch (error) {
+        console.error('Error fetching userId:', error);
+      } finally {
+        setIsUserIdLoaded(true); // ตั้งค่าเป็นโหลดเสร็จเมื่อเสร็จสิ้น
+      }
     };
-
+  
     fetchUserId();
-}, []);
-
-useEffect(() => {
+  }, []);
+  
+  useEffect(() => {
     const fetchData = async () => {
-        if (!userId) {
-            console.error('User ID is not available yet.');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            console.log('User ID found:', userId); // Debugging
-            await fetchWeeks(); // Fetch weeks after userId is available
-            await fetchWorkoutRecords();
-        } catch (error) {
-            console.error('Error loading data:', error);
-        } finally {
-            setLoading(false);
-        }
+      if (!userId) {
+        console.error('User ID is not available yet.');
+        return;
+      }
+  
+      setLoading(true);
+      try {
+        await fetchWeeks();
+        await fetchWorkoutRecords();
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-
-    if (isFocused) {
-        fetchData(); // Fetch data when screen is focused
+  
+    if (isFocused && isUserIdLoaded && userId) {
+      fetchData();
     }
-}, [isFocused, userId]); // Run effect when userId changes
+  }, [isFocused, isUserIdLoaded, userId]);
+  
 
-
-const fetchWeeks = async () => {
-  try {
+  const fetchWeeks = async () => {
+    try {
       console.log('Fetching weeks...');
       const response = await axios.get('http://192.168.1.200:1337/api/weeks?populate=*');
 
+      // ดึง startDate ของ Week 1, Day 1
       const week1StartDate = await fetchStartDateFromHistory(1, 1);
 
       if (!week1StartDate) {
-          console.error('Unable to fetch startDate for Week 1, Day 1. Using default fallback.');
-          // กำหนด fallback startDate หากไม่มีข้อมูล
-          return;
+        console.warn('Unable to fetch startDate for Week 1, Day 1. Setting startDate as today.');
+        week1StartDate = new Date(); // กำหนด fallback startDate เป็นวันนี้
       }
 
       const sortedWeeks = await Promise.all(
-          response.data.data.map(async (week, index) => {
-              // ตรวจสอบและกำหนด startDate
-              const startDate = await fetchStartDateFromHistory(week.id, 1) || 
-                  new Date(week1StartDate.getTime() + index * 7 * 24 * 60 * 60 * 1000); // fallback
-              const daysWithDates = week.attributes.days.data.map((day) => {
-                  const dayDate = new Date(startDate);
-                  dayDate.setDate(dayDate.getDate() + (day.attributes.dayNumber - 1)); // คำนวณวันที่
-                  return {
-                      ...day,
-                      attributes: {
-                          ...day.attributes,
-                          date: dayDate,
-                      },
-                  };
-              });
+        response.data.data.map(async (week, index) => {
+          const startDate = await fetchStartDateFromHistory(week.id, 1) ||
+            new Date(week1StartDate.getTime() + index * 7 * 24 * 60 * 60 * 1000); // fallback
 
-              return {
-                  ...week,
-                  attributes: {
-                      ...week.attributes,
-                      startDate,
-                      days: { data: daysWithDates },
-                  },
-              };
-          })
+          const daysWithDates = week.attributes.days.data.map((day) => {
+            const dayDate = new Date(startDate);
+            dayDate.setDate(dayDate.getDate() + (day.attributes.dayNumber - 1)); // คำนวณวันที่
+            return {
+              ...day,
+              attributes: {
+                ...day.attributes,
+                date: dayDate,
+              },
+            };
+          });
+
+          return {
+            ...week,
+            attributes: {
+              ...week.attributes,
+              startDate,
+              days: { data: daysWithDates },
+            },
+          };
+        })
       );
 
       setWeeks(sortedWeeks.sort((a, b) => a.id - b.id));
-  } catch (error) {
+    } catch (error) {
       console.error('Error fetching weeks:', error);
-  }
-};
+    }
+  };
 
 
-const fetchStartDateFromHistory = async (week, day) => {
-  try {
+
+  const fetchStartDateFromHistory = async (week, day) => {
+    try {
       if (!userId) {
-          console.error('User ID is not set. Cannot fetch history.');
-          return null;
+        console.error('User ID is not set. Cannot fetch history.');
+        return new Date(); // กรณีไม่มี userId ให้ถือว่าวันนี้เป็นวันเริ่มต้น
       }
 
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-          `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
-          {
-              headers: { Authorization: `Bearer ${token}` },
-          }
+        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       const matchingRecords = response.data.data.filter(
-          (record) =>
-              record.attributes.week?.data?.id === week &&
-              record.attributes.day?.data?.attributes?.dayNumber === day
+        (record) =>
+          record.attributes.week?.data?.id === week &&
+          record.attributes.day?.data?.attributes?.dayNumber === day
       );
 
       if (matchingRecords.length > 0 && matchingRecords[0].attributes.timestamp) {
-          console.log('Fetched start date:', matchingRecords[0].attributes.timestamp);
-          return new Date(matchingRecords[0].attributes.timestamp);
+        console.log('Fetched start date:', matchingRecords[0].attributes.timestamp);
+        return new Date(matchingRecords[0].attributes.timestamp);
+      } else {
+        console.warn(`No valid record found for Week ${week}, Day ${day}. Setting startDate as today.`);
+        return new Date(); // กำหนดวันที่เริ่มต้นเป็นวันนี้
       }
-      console.warn(`No timestamp found for Week ${week}, Day ${day}`);
-      return null;
-  } catch (error) {
+    } catch (error) {
       console.error(`Error fetching start date for Week ${week}, Day ${day}:`, error);
-      return null;
-  }
-};
-
-
-
+      return new Date(); // หากเกิดข้อผิดพลาด กำหนดวันที่เริ่มต้นเป็นวันนี้
+    }
+  };
 
   const fetchWorkoutRecords = async () => {
     try {
@@ -159,51 +161,52 @@ const fetchStartDateFromHistory = async (week, day) => {
   };
 
   const isDayCompleted = (weekId, dayNumber, startDate) => {
-    // ตรวจสอบก่อนว่าเป็นวันพลาดหรือไม่
-    if (isDayMissed(weekId, dayNumber, startDate)) {
-        // หากวันนั้นถูกพลาดแล้ว จะไม่เปลี่ยนสถานะเป็น completed
-        return false;
-    }
-
     // ตรวจสอบสถานะจาก workoutRecords
     const record = workoutRecords.find((record) => {
-        const recordWeekId = record.attributes.week?.data?.id;
-        const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
-
-        return recordWeekId === weekId && recordDayNumber === dayNumber;
-    });
-
-    return record?.attributes.status === true;
-};
-
-
-const isDayMissed = (weekId, dayNumber, startDate) => {
-  if (!startDate || isNaN(new Date(startDate))) {
-      // หากไม่มี startDate ให้ถือว่าไม่พลาด
-      return false;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
-  const dayDate = new Date(startDate);
-  dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
-  dayDate.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
-
-  if (dayDate >= today) {
-      // หากวันนั้นยังไม่ถึง หรือเป็นวันนี้ ไม่ถือว่าพลาด
-      return false;
-  }
-
-  // หากวันนั้นผ่านไปแล้ว ตรวจสอบว่ามีการทำกิจกรรมในวันนั้นหรือไม่
-  const record = workoutRecords.find((record) => {
       const recordWeekId = record.attributes.week?.data?.id;
       const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
 
       return recordWeekId === weekId && recordDayNumber === dayNumber;
-  });
+    });
 
-  return !record?.attributes.status; // พลาดหากยังไม่มีการทำสำเร็จ
-};
+    return record?.attributes.status === true; // ถ้าสำเร็จ จะ return true ทันที
+  };
+
+
+
+  const isDayMissed = (weekId, dayNumber, startDate) => {
+    // ถ้าวันนั้นสำเร็จแล้ว ไม่ถือว่าพลาด
+    if (isDayCompleted(weekId, dayNumber, startDate)) {
+      return false;
+    }
+
+    if (!startDate || isNaN(new Date(startDate))) {
+      // หากไม่มี startDate ให้ถือว่าไม่พลาด
+      return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
+    const dayDate = new Date(startDate);
+    dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
+    dayDate.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
+
+    if (dayDate >= today) {
+      // หากวันนั้นยังไม่ถึง หรือเป็นวันนี้ ไม่ถือว่าพลาด
+      return false;
+    }
+
+    // หากวันนั้นผ่านไปแล้ว ตรวจสอบว่ามีการทำกิจกรรมในวันนั้นหรือไม่
+    const record = workoutRecords.find((record) => {
+      const recordWeekId = record.attributes.week?.data?.id;
+      const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
+
+      return recordWeekId === weekId && recordDayNumber === dayNumber;
+    });
+
+    return !record?.attributes.status; // พลาดหากยังไม่มีการทำสำเร็จ
+  };
+
 
   return (
     <View style={styles.container}>
@@ -256,47 +259,48 @@ const isDayMissed = (weekId, dayNumber, startDate) => {
                   }
 
                   const missed = isDayMissed(week.id, day.attributes.dayNumber, week.attributes.startDate);
-const completed = isDayCompleted(week.id, day.attributes.dayNumber, week.attributes.startDate);
+                  const completed = isDayCompleted(week.id, day.attributes.dayNumber, week.attributes.startDate);
 
-return (
-    <TouchableOpacity
-        key={idx}
-        style={styles.dayButton}
-        onPress={() => {
-          const isMissed = missed;
-          console.log(`Navigating to Dayexercise: Week ${week.id}, Day ${day.attributes.dayNumber}, Missed: ${isMissed}`);
-            navigation.navigate('Dayexercise', {
-                dayNumber: day.attributes.dayNumber,
-                weekId: week.id,
-                set: week.attributes.name,
-                userId: userId,
-                isMissed,
-            });
-        }}
-    >
-        <View
-            style={
-                completed
-                    ? { ...styles.dayBoxCompleted, backgroundColor: '#F6A444' }
-                    : missed
-                        ? { ...styles.dayBoxMissed, backgroundColor: 'red' }
-                        : styles.dayBoxPending
-            }
-        >
-            <Text
-                style={
-                    completed
-                        ? styles.dayTextCompleted
-                        : missed
-                            ? styles.dayTextMissed
-                            : styles.dayTextPending
-                }
-            >
-                {day.attributes.dayNumber}
-            </Text>
-        </View>
-    </TouchableOpacity>
-);
+
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.dayButton}
+                      onPress={() => {
+                        const isMissed = missed;
+                        console.log(`Navigating to Dayexercise: Week ${week.id}, Day ${day.attributes.dayNumber}, Missed: ${isMissed}`);
+                        navigation.navigate('Dayexercise', {
+                          dayNumber: day.attributes.dayNumber,
+                          weekId: week.id,
+                          set: week.attributes.name,
+                          userId: userId,
+                          isMissed,
+                        });
+                      }}
+                    >
+                      <View
+                        style={
+                          completed
+                            ? { ...styles.dayBoxCompleted, backgroundColor: '#F6A444' }
+                            : missed
+                              ? { ...styles.dayBoxMissed, backgroundColor: 'red' }
+                              : styles.dayBoxPending
+                        }
+                      >
+                        <Text
+                          style={
+                            completed
+                              ? styles.dayTextCompleted
+                              : missed
+                                ? styles.dayTextMissed
+                                : styles.dayTextPending
+                          }
+                        >
+                          {day.attributes.dayNumber}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
 
                 })}
                 <Icon
