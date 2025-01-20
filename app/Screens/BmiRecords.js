@@ -27,30 +27,13 @@ const BmiRecords = () => {
       try {
         const userId = await getUserId();
         const userData = await fetchUserProfile(userId);
-  
-        // ดึงข้อมูล label และตัด 5 ตัวหน้า
-        let label = userData.clothing_pet?.label || 'ไม่มีข้อมูล';
-        const modifiedLabel = label.slice(5); // ตัด 5 ตัวหน้าออก
-        console.log('Modified Label:', modifiedLabel);
-        console.log('New weight:', weight);
-        console.log('New height:', heightCm);
-        console.log('New bmi:', bmi);
         
         const userWeight = userData.weight || 0;
         const userHeight = userData.height || 0;
   
         setWeight(userWeight);
         setHeightCm(userHeight);
-        const calculatedBmi = calculateBmi(userWeight, userHeight);
-        // เติม 5 ตัวหน้าที่ใหม่ตาม BMI
-        const bmiPrefix = getBmiPrefix(calculatedBmi);
-        const newLabel = `${bmiPrefix}${modifiedLabel}`;
-        console.log('New Label:', newLabel);
-  
-        // ดึงรูปสัตว์เลี้ยงโดยใช้ label
-        const petUrl = await fetchPetImageByLabel(newLabel);
-        setPetImageUrl(petUrl); // อัปเดต URL รูปสัตว์เลี้ยงใน State
-        console.log('User petUrl:', petUrl);
+        calculateBmi(userWeight, userHeight);
 
         // อัปเดต State
         setWeight(userWeight);
@@ -62,6 +45,33 @@ const BmiRecords = () => {
   
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchPetImage = async () => {
+      try {
+        const userId = await getUserId();
+        const userData = await fetchUserProfile(userId);
+  
+        // ตัด 5 ตัวหน้า และสร้าง Label ใหม่
+        const label = userData.clothing_pet?.label || 'ไม่มีข้อมูล';
+        const modifiedLabel = label.slice(5); // ตัด 5 ตัวหน้าออก
+        const bmiPrefix = getBmiPrefix(bmi);
+        const newLabel = `${bmiPrefix}${modifiedLabel}`;
+        // console.log('Updated Label:', newLabel);
+  
+        // ดึง URL รูปภาพใหม่
+        const petUrl = await fetchPetImageByLabel(newLabel);
+        setPetImageUrl(petUrl);
+        // console.log('Updated petUrl:', petUrl);
+      } catch (error) {
+        console.error('Error fetching updated pet image:', error);
+      }
+    };
+  
+    if (bmi) {
+      fetchPetImage();
+    }
+  }, [bmi]); // เพิ่ม bmi เป็น Dependency  
 
   const calculateBmi = (weight, heightCm) => {
     const height = heightCm / 100;
@@ -180,9 +190,9 @@ const styles = StyleSheet.create({
   editButtonText: { color: '#F6A444', fontSize: 16, fontFamily: 'appfont_02' },
   bmiContainer: { flexDirection: 'row', backgroundColor: '#FFECB3', height: 280 },
   petSection: {top: "15%", left: 20},
-  petImages: { width: 180, height: 180 },
+  petImages: { width: 198, height: 180 },
   petImage: { width: '100%', height: '100%',top: '25%' },
-  bmiInfo: { flexDirection: 'row', alignItems: 'center', left: 20  },
+  bmiInfo: { flexDirection: 'row', alignItems: 'center', left: 15  },
   bmiValue: { fontSize: 48, color: '#4CAF50', fontFamily: 'appfont_02' },
   bmiStatus: { fontSize: 18, marginTop: 18, color: '#757575', left: 10, fontFamily: 'appfont_02' },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
