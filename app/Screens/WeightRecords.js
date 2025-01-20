@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
 const WeightRecords = () => {
@@ -11,15 +11,18 @@ const WeightRecords = () => {
   // ฟังก์ชันดึงข้อมูลจาก API
   const fetchWeightData = async () => {
     try {
-      const response = await fetch('http://192.168.1.199:1337/api/weight-records?populate[user][fields][0]=username&fields=date&fields=weight');
+      const response = await fetch('http://192.168.1.199:1337/api/weight-records?populate[user][fields][0]=username&fields=date&fields=weight&pagination[limit]=100');
       const result = await response.json();
 
       // กรองข้อมูลเฉพาะ user id = 63
       const filteredData = result.data.filter(item => item.attributes.user.data.id === 67);
 
+      // เรียงข้อมูลตามวันที่จากปีน้อยไปมาก
+      const sortedData = filteredData.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
+
       // อัปเดตข้อมูลใน state
-      setWeightData(filteredData.map(item => item.attributes.weight));
-      setDateLabels(filteredData.map(item => item.attributes.date));
+      setWeightData(sortedData.map(item => item.attributes.weight));
+      setDateLabels(sortedData.map(item => item.attributes.date));
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -95,23 +98,27 @@ const WeightRecords = () => {
 
       <View style={styles.graphContainer}>
         {weightData.length > 0 ? (
+          <ScrollView horizontal>
           <LineChart
             data={{
               labels: dateLabels,
               datasets: [
                 {
-                  data: weightData,
+                 data: weightData,
+                  // color: (opacity = 1) => `rgba(34, 202, 236, ${opacity})`,
+                  strokeWidth: 2,
                 },
               ],
             }}
-            width={Dimensions.get('window').width - 20} // from react-native
+            width={Math.max(Dimensions.get('window').width, weightData.length * 80)} // ความกว้างของกราฟขึ้นกับจำนวนจุด
             height={250}
             yAxisSuffix="kg"
+            yAxisInterval={1}
             chartConfig={{
-              backgroundColor: '#e26a00',
-              backgroundGradientFrom: '#fb8c00',
-              backgroundGradientTo: '#ffa726',
-              decimalPlaces: 1, // optional, defaults to 2dp
+              backgroundColor: '#F6A444',
+              backgroundGradientFrom: '#fb8c00', // สีเริ่มต้นของพื้นหลังแบบ Gradient
+              backgroundGradientTo: '#414345', // สีสิ้นสุดของพื้นหลังแบบ Gradient
+              decimalPlaces: 2, //จำนวนทศนิยมที่แสดง
               color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               propsForDots: {
@@ -119,11 +126,22 @@ const WeightRecords = () => {
                 strokeWidth: '2',
                 stroke: '#ffa726',
               },
+              propsForBackgroundLines: {
+                stroke: '#FFD580', // สีของเส้นแนวนอนในพื้นหลัง
+              },
             }}
             style={{
-              borderRadius: 6,
+              marginVertical: 8,
+              borderRadius: 10, // มุมโค้ง
+              // borderWidth: 2,
+              // borderColor: '#F6A444', // ขอบรอบกราฟ
+            }}
+            onDataPointClick={(data) => {
+              // แสดงข้อมูลน้ำหนักในจุดที่แตะ
+              alert(`วันที่: ${dateLabels[data.index]} \nน้ำหนัก: ${data.value} kg`);
             }}
           />
+          </ScrollView>
         ) : (
           <Text style={styles.noDataText}>ไม่มีข้อมูลน้ำหนัก</Text>
         )}
