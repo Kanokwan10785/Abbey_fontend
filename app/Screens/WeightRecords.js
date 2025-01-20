@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import { fetchWeightRecords, saveWeightRecord } from './apiAnalysis';
 
 const WeightRecords = () => {
   const [weightData, setWeightData] = useState([]);
   const [dateLabels, setDateLabels] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newWeight, setNewWeight] = useState('');
+  const userId = 67; // กำหนด ID ผู้ใช้
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -20,34 +22,16 @@ const WeightRecords = () => {
     return `${day} ${month} ${year}`;
   };
 
-  // ฟังก์ชันดึงข้อมูลจาก API
-  const fetchWeightData = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch(
-        'http://192.168.1.199:1337/api/weight-records?populate[user][fields][0]=username&fields=date&fields=weight&pagination[limit]=100'
-      );
-      if (!response.ok) throw new Error('Error fetching data');
-      const result = await response.json();
-
-      // กรองข้อมูลเฉพาะ user id = 67
-      const filteredData = result.data.filter((item) => item.attributes.user.data.id === 67);
-
-      // เรียงข้อมูลตามวันที่จากปีน้อยไปมาก
-      const sortedData = filteredData.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
-
-      // อัปเดตข้อมูลใน state
-      setWeightData(sortedData.map((item) => item.attributes.weight));
-      setDateLabels(sortedData.map((item) => formatDate(item.attributes.date))); // แปลงรูปแบบวันที่
+      const records = await fetchWeightRecords(userId);
+      const sortedData = records.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
+      setWeightData(sortedData.map(item => item.attributes.weight));
+      setDateLabels(sortedData.map(item => formatDate(item.attributes.date)));
     } catch (error) {
-      console.error('Error fetching data:', error);
       alert('ไม่สามารถโหลดข้อมูลได้');
     }
   };
-  
-  // ดึงข้อมูลจาก API เมื่อ component ถูก mount
-  useEffect(() => {
-    fetchWeightData();
-  }, []);
 
   const getCurrentDate = () => {
     const today = new Date();
@@ -59,41 +43,25 @@ const WeightRecords = () => {
   
   const handleSaveData = async () => {
     const weightValue = parseFloat(newWeight);
-    const currentDate = getCurrentDate(); // วันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
-  
+    const currentDate = new Date().toISOString().split('T')[0];
     if (!isNaN(weightValue) && weightValue > 0) {
       try {
-        // POST ไปยัง API
-        const response = await fetch('http://192.168.1.199:1337/api/weight-records', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            data: {
-              date: currentDate, // วันที่ปัจจุบัน
-              weight: weightValue,
-              user: 67, // user ID ที่กำหนด
-            },
-          }),
-        });
-  
-        if (response.ok) {
-          alert('บันทึกข้อมูลสำเร็จ!');
-          setNewWeight(''); // รีเซ็ตฟิลด์น้ำหนัก
-          setIsModalVisible(false); // ปิด Modal
-          fetchWeightData(); // ดึงข้อมูลใหม่เพื่ออัปเดตกราฟ
-        } else {
-          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-        }
+        await saveWeightRecord(weightValue, currentDate, userId);
+        alert('บันทึกข้อมูลสำเร็จ!');
+        setNewWeight('');
+        setIsModalVisible(false);
+        fetchData();
       } catch (error) {
-        console.error('Error saving data:', error);
-        alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์');
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       }
     } else {
       alert('กรุณาใส่น้ำหนักที่ถูกต้อง');
     }
-  };  
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // ฟังก์ชันยกเลิก
   const handleCancel = () => {
