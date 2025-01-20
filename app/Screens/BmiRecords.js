@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { Image } from 'expo-image';
+import { getUserId } from './apiExercise';
+import pet from '../../assets/image/Clothing-Pet/S00P01K00.png'
 
 const BmiRecords = () => {
   const [weight, setWeight] = useState(58); // น้ำหนัก (กิโลกรัม)
@@ -64,30 +67,29 @@ const BmiRecords = () => {
           <Text style={styles.editButtonText}>แก้ไข</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.bmiContainerHeader}>
       <View style={styles.bmiContainer}>
-        <Text style={styles.bmiValue}>{bmi}</Text>
-        <Text style={styles.bmiStatus}>{bmiStatus}</Text>
-      </View>
-      </View>
+        {/* Section สำหรับรูปสัตว์เลี้ยง */}
+        <View style={styles.petSection}>
+          <Image source={pet} style={styles.petImages} />
+        </View>
 
+        {/* Section สำหรับค่าดัชนีมวลกาย */}
+        <View style={styles.bmiInfo}>
+          <Text style={styles.bmiValue}>{bmi}</Text>
+          <Text style={styles.bmiStatus}>{bmiStatus}</Text>
+        </View>
+
+      </View>
       {/* Modal สำหรับการแก้ไขข้อมูล */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
         transparent
-        onRequestClose={handleCancel}
+        onRequestClose={() => {}} // ไม่ทำอะไรเมื่อปิด Modal ด้วยปุ่ม Back (Android)
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>แก้ไขข้อมูล</Text>
-            <TextInput
-              style={styles.input}
-              value={weight.toString()}
-              onChangeText={(text) => setWeight(parseFloat(text))}
-              placeholder="น้ำหนัก (kg)"
-              keyboardType="numeric"
-            />
+            <Text style={styles.modalTitle}>แก้ไขส่วนสูง</Text>
             <TextInput
               style={styles.input}
               value={heightCm.toString()}
@@ -112,21 +114,23 @@ const BmiRecords = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
-  bmiHeader: { height: 75, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F6A444', },
+  bmiHeader: { height: 75, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F6A444' },
   bmiLabel: { fontSize: 20, color: '#FFF', fontFamily: "appfont_01", left: 30 },
   editButton: { backgroundColor: '#fff', padding: 5, borderRadius: 10, position: "absolute", top: "32%", right: 20, paddingHorizontal: 25 },
   editButtonText: { color: '#F6A444', fontSize: 16, fontFamily: 'appfont_02' },
-  bmiContainerHeader: {padding: 15},
-  bmiContainer: { backgroundColor: '#FFECB3', borderRadius: 10, padding: 20, marginTop: 5, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 5 },
-  bmiValue: { fontSize: 48, fontWeight: 'bold', color: '#4CAF50', textAlign: 'center' },
-  bmiStatus: { fontSize: 18, textAlign: 'center', marginTop: 10, color: '#757575' },
+  bmiContainer: { flexDirection: 'row', backgroundColor: '#FFECB3', height: 280 },
+  petSection: {top: "15%", left: 20},
+  petImages: { width: 180, height: 180, },
+  bmiInfo: { flexDirection: 'row', alignItems: 'center', left: 20  },
+  bmiValue: { fontSize: 48, color: '#4CAF50', fontFamily: 'appfont_02' },
+  bmiStatus: { fontSize: 18, marginTop: 18, color: '#757575', left: 10, fontFamily: 'appfont_02' },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContent: { width: '80%', backgroundColor: '#FFF', borderRadius: 10, padding: 20, alignItems: 'center' },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+  modalTitle: { fontSize: 18, marginBottom: 15, fontFamily: 'appfont_01' },
   input: { borderWidth: 1, borderColor: '#CCC', borderRadius: 10, padding: 10, width: '100%', marginBottom: 15 },
   buttonGroup: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  saveButton: { backgroundColor: '#F6A444', padding: 10, paddingHorizontal: 25, borderRadius: 5, alignItems: 'center', marginTop: 10 },
-  cancelButton: { backgroundColor: '#F6A444', padding: 10, paddingHorizontal: 25, borderRadius: 5, alignItems: 'center', marginTop: 10 },
+  saveButton: { backgroundColor: '#F6A444', padding: 10, paddingHorizontal: 25, borderRadius: 5 },
+  cancelButton: { backgroundColor: '#F6A444', padding: 10, paddingHorizontal: 25, borderRadius: 5 },
   buttonText: { color: '#FFF', fontFamily: 'appfont_02' },
 });
 
