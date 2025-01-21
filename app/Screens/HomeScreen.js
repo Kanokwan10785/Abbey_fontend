@@ -21,15 +21,7 @@ const FoodButton = () => {
 
 export default function HomeScreen() {
   const [balance, setBalance] = useState(0);
-  const [username, setUsername] = useState(''); // เพิ่ม State
-  const [weight, setWeight] = useState('');
-  const [height, setHeight] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
-  const [level, setLevel] = useState('');
-  const [bmi, setBmi] = useState('');
-  const [profileImage, setProfileImage] = useState(null); // รูปโปรไฟล์
-  const [petImageUrls, setPetImageUrls] = useState([]); // อนิเมชันสัตว์เลี้ยง
+  const [petImageUrls, setPetImageUrls] = useState([]);
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
 
   useFocusEffect(
@@ -42,30 +34,12 @@ export default function HomeScreen() {
           const userData = await fetchUserProfile(userId, {
             headers: { Authorization: `Bearer ${token}` },
           });
-
-          // อัปเดต State สำหรับข้อมูลโปรไฟล์
           setBalance(userData.balance || 0); // โหลดยอดเงิน
-          setUsername(userData.username || "ไม่มีข้อมูล"); // ชื่อผู้ใช้
-          setWeight(userData.weight || "ไม่มีข้อมูล"); // น้ำหนัก
-          setHeight(userData.height || "ไม่มีข้อมูล"); // ส่วนสูง
-          setAge(userData.age || "ไม่มีข้อมูล"); // อายุ
-          setGender(userData.selectedGender === "male" ? "ชาย" : "หญิง"); // เพศ
-          setLevel(userData.level || "1"); // เลเวล
-          setBmi(userData.BMI || "ไม่มีข้อมูล"); // BMI.
-          // console.log("User Data:", userData.BMI);
-
-          // ตั้งค่ารูปโปรไฟล์
-          const profileImageUrl = userData.picture?.formats?.medium?.url || null;
-          if (profileImageUrl) {
-            setProfileImage({ uri: profileImageUrl });
-          } else {
-            setProfileImage(require("../../assets/image/profile02.png")); // รูปเริ่มต้น
-          }
-          
+            console.log("User Data:", userData.BMI);
         } catch (error) {
           console.error("Error fetching user profile", error);
         }
-      };  
+      };
   
       const loadHomePetData = async () => {
         const token = await AsyncStorage.getItem('jwt');
@@ -107,15 +81,7 @@ export default function HomeScreen() {
   return (
     <ImageBackground source={gym} style={styles.background}>
       <View style={styles.header}>
-        <ProfileButton 
-        username = {username}
-        weight = {weight} 
-        height = {height} 
-        age = {age} 
-        gender = {gender} 
-        bmi = {bmi} 
-        profileImage = {profileImage} 
-        level = {level}/>
+        <ProfileButton />
         <DollarIcon balance={balance} /> 
       </View>
       <View style={styles.screenpetImages}>
