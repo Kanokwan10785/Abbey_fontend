@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, ImageBackground } from 'expo-image';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
+import { useNavigation } from '@react-navigation/native';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
@@ -24,72 +24,69 @@ export default function HomeScreen() {
   const [petImageUrls, setPetImageUrls] = useState([]);
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const loadBalance = async () => {
-        const token = await AsyncStorage.getItem('jwt');
-        const userId = await AsyncStorage.getItem('userId');
-        if (!token || !userId) return;
-        try {
-          const userData = await fetchUserProfile(userId, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setBalance(userData.balance || 0); // โหลดยอดเงิน
-            console.log("User Data:", userData.BMI);
-        } catch (error) {
-          console.error("Error fetching user profile", error);
-        }
-      };
-  
-      const loadHomePetData = async () => {
-        const token = await AsyncStorage.getItem('jwt');
-        const userId = await AsyncStorage.getItem('userId');
-        if (!token || !userId) return;
-  
-        try {
-          const userData = await fetchUserProfileWithClothing(userId, token);
-          // console.log("Matching userData found:", userData); 
-          const clothingLabel = userData.clothing_pet?.label || 'BMI03S00P00K00';
-          console.log("Matching pet found:", clothingLabel);
-          const urls = await fetchHomePetUrlByLabel(clothingLabel, userId);
-  
-          if (urls) {
-            setPetImageUrls(urls.map(item => item.url)); // ตั้งค่า URL รูปสัตว์เลี้ยง
-          }
-        } catch (error) {
-          console.error("Error fetching home pet data", error);
-        }
-      };
-  
-      loadBalance();
-      loadHomePetData();
-    }, [])
-  );
-  
-  useFocusEffect(
-    React.useCallback(() => {
-      if (petImageUrls.length > 0) {
-        const interval = setInterval(() => {
-          setCurrentUrlIndex(prevIndex => (prevIndex + 1) % petImageUrls.length);
-        }, 10200);
-
-        return () => clearInterval(interval);
+  // โหลดข้อมูลโปรไฟล์
+  useEffect(() => {
+    const loadBalance = async () => {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      if (!token || !userId) return;
+      try {
+        const userData = await fetchUserProfile(userId, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setBalance(userData.balance || 0); // โหลดยอดเงิน
+        console.log('User Data:', userData.BMI);
+      } catch (error) {
+        console.error('Error fetching user profile', error);
       }
-    }, [petImageUrls])
-  );
+    };
+
+    const loadHomePetData = async () => {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      if (!token || !userId) return;
+
+      try {
+        const userData = await fetchUserProfileWithClothing(userId, token);
+        const clothingLabel = userData.clothing_pet?.label || 'BMI03S00P00K00';
+        console.log('Matching pet found:', clothingLabel);
+        const urls = await fetchHomePetUrlByLabel(clothingLabel, userId);
+
+        if (urls) {
+          setPetImageUrls(urls.map((item) => item.url)); // ตั้งค่า URL รูปสัตว์เลี้ยง
+        }
+      } catch (error) {
+        console.error('Error fetching home pet data', error);
+      }
+    };
+
+    loadBalance();
+    loadHomePetData();
+  }, []); // ดึงข้อมูลครั้งเดียวเมื่อคอมโพเนนต์ถูก mount
+
+  // จัดการอนิเมชันการเปลี่ยนรูปสัตว์เลี้ยง
+  useEffect(() => {
+    if (petImageUrls.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentUrlIndex((prevIndex) => (prevIndex + 1) % petImageUrls.length);
+      }, 10200);
+
+      return () => clearInterval(interval);
+    }
+  }, [petImageUrls]); // ดำเนินการเมื่อ petImageUrls เปลี่ยน
 
   return (
     <ImageBackground source={gym} style={styles.background}>
       <View style={styles.header}>
         <ProfileButton />
-        <DollarIcon balance={balance} /> 
+        <DollarIcon balance={balance} />
       </View>
       <View style={styles.screenpetImages}>
         <View style={styles.sectionpetImages} />
         <View style={styles.sectionpetImages} />
         <View style={styles.sectionpetImages}>
-          {petImageUrls.length > 0 ?(
-             <Image source={{ uri: petImageUrls[currentUrlIndex] }} style={styles.petImages} />
+          {petImageUrls.length > 0 ? (
+            <Image source={{ uri: petImageUrls[currentUrlIndex] }} style={styles.petImages} />
           ) : (
             <Text style={styles.noImageText}>No Image Available</Text>
           )}
