@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, DeviceEventEmitter, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { fetchWeightRecords, findRecordByDate, saveWeightRecord, getUserId, saveWeightUesr, updateWeightRecord } from './apiExercise';
 import { fetchUserProfile } from './api';
@@ -72,6 +72,7 @@ const WeightRecords = () => {
   
         // อัปเดตน้ำหนักใน users table
         await saveWeightUesr(weightValue, userId);
+        DeviceEventEmitter.emit('weightUpdated'); // ส่งเหตุการณ์ว่าข้อมูลเปลี่ยนแปลง
         alert('บันทึกข้อมูลสำเร็จ!');
         setNewWeight('');
         setIsModalVisible(false);

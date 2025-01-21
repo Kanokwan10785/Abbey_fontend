@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, DeviceEventEmitter, StyleSheet, Modal } from 'react-native';
 import { Image } from 'expo-image';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchPetImageByLabel, getUserId, saveHeightUesr } from './apiExercise';
 import { fetchUserProfile } from './api';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
@@ -22,29 +23,27 @@ const BmiRecords = () => {
     return 'BMI04';
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userId = await getUserId();
-        const userData = await fetchUserProfile(userId);
-        
-        const userWeight = userData.weight || 0;
-        const userHeight = userData.height || 0;
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchData = async () => {
+        try {
+          const userId = await getUserId();
+          const userData = await fetchUserProfile(userId);
   
-        setWeight(userWeight);
-        setHeightCm(userHeight);
-        calculateBmi(userWeight, userHeight);
-
-        // อัปเดต State
-        setWeight(userWeight);
-        setHeightCm(userHeight);
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
+          const userWeight = userData.weight || 0;
+          const userHeight = userData.height || 0;
   
-    fetchData();
-  }, []);
+          setWeight(userWeight);
+          setHeightCm(userHeight);
+          calculateBmi(userWeight, userHeight);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+  
+      fetchData();
+    }, [])
+  );
 
   useEffect(() => {
     const fetchPetImage = async () => {
@@ -129,6 +128,32 @@ const BmiRecords = () => {
     setIsModalVisible(false);
   };
 
+  useEffect(() => {
+    const handleWeightUpdate = async () => {
+      try {
+        const userId = await getUserId();
+        const userData = await fetchUserProfile(userId);
+  
+        const userWeight = userData.weight || 0;
+        const userHeight = userData.height || 0;
+  
+        setWeight(userWeight);
+        setHeightCm(userHeight);
+        calculateBmi(userWeight, userHeight);
+      } catch (error) {
+        console.error('Error updating BMI:', error);
+      }
+    };
+  
+    // ฟังเหตุการณ์
+    const subscription = DeviceEventEmitter.addListener('weightUpdated', handleWeightUpdate);
+  
+    return () => {
+      // ลบ Listener เมื่อ Component ถูกลบ
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.bmiHeader}>
@@ -194,7 +219,7 @@ const styles = StyleSheet.create({
   petImage: { width: '100%', height: '100%',top: '25%' },
   bmiInfo: { flexDirection: 'row', alignItems: 'center', left: 15  },
   bmiValue: { fontSize: 48, color: '#4CAF50', fontFamily: 'appfont_02' },
-  bmiStatus: { fontSize: 18, marginTop: 18, color: '#757575', left: 10, fontFamily: 'appfont_02' },
+  bmiStatus: { fontSize: 18, marginTop: 18, color: '#757575', left: 5, fontFamily: 'appfont_02' },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContent: { width: '80%', backgroundColor: '#FFF', borderRadius: 10, padding: 20, alignItems: 'center' },
   modalTitle: { fontSize: 18, marginBottom: 15, fontFamily: 'appfont_01' },
