@@ -163,6 +163,8 @@ const BmiRecords = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.bmiContainer}>
+        {/* แสดงข้อความส่วนสูงบนรูปภาพ */}
+          <Text style={styles.heightText}>{heightCm} cm</Text>
         {/* Section สำหรับรูปสัตว์เลี้ยง */}
         <View style={styles.petImages}>
           <Image source={petImageUrl ? { uri: petImageUrl } : empty} style={styles.petImage} />
@@ -215,6 +217,7 @@ const styles = StyleSheet.create({
   editButtonText: { color: '#F6A444', fontSize: 16, fontFamily: 'appfont_02' },
   bmiContainer: { flexDirection: 'row', backgroundColor: '#FFECB3', height: 280 },
   petSection: {top: "15%", left: 20},
+  heightText: { position: 'absolute', top: 10, left: '0%', transform: [{ translateX: 50 }], fontSize: 20, color: '#FFF', fontFamily: 'appfont_02', backgroundColor: 'rgba(0, 0, 0, 0.5)', paddingHorizontal: 10, borderRadius: 5 },
   petImages: { width: 198, height: 180 },
   petImage: { width: '100%', height: '100%',top: '25%' },
   bmiInfo: { flexDirection: 'row', alignItems: 'center', left: 15  },
