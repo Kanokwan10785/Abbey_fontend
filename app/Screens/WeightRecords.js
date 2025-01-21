@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { fetchWeightRecords, findRecordByDate, saveWeightRecord, getUserId, saveWeightUesr, updateWeightRecord } from './apiExercise';
+import { fetchUserProfile } from './api';
 
 const WeightRecords = () => {
   const [weightData, setWeightData] = useState([]);
@@ -25,13 +26,29 @@ const WeightRecords = () => {
     try {
       const userId = await getUserId();
       const records = await fetchWeightRecords(userId);
-      const sortedData = records.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
-      setWeightData(sortedData.map(item => item.attributes.weight));
-      setDateLabels(sortedData.map(item => formatDate(item.attributes.date)));
+  
+      if (records.length === 0) {
+        // ไม่มีข้อมูลน้ำหนัก สร้างข้อมูลเริ่มต้น
+        const userData = await fetchUserProfile(userId);
+        const userWeight = userData.weight || 0;
+        const currentDate = new Date().toISOString().split('T')[0];
+  
+        if (userWeight > 0) {
+          // บันทึกน้ำหนักเริ่มต้นในระบบ
+          await saveWeightRecord(userWeight, currentDate, userId);
+          setWeightData([userWeight]);
+          setDateLabels([formatDate(currentDate)]);
+        }
+      } else {
+        // จัดการข้อมูลน้ำหนักและวันที่ตามปกติ
+        const sortedData = records.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
+        setWeightData(sortedData.map(item => item.attributes.weight));
+        setDateLabels(sortedData.map(item => formatDate(item.attributes.date)));
+      }
     } catch (error) {
       alert('ไม่สามารถโหลดข้อมูลได้');
     }
-  };
+  }; 
 
   const handleSaveData = async () => {
     const weightValue = parseFloat(newWeight);
