@@ -53,16 +53,16 @@ const BmiRecords = () => {
         const userData = await fetchUserProfile(userId);
   
         // ตัด 5 ตัวหน้า และสร้าง Label ใหม่
-        const label = userData.clothing_pet?.label || 'ไม่มีข้อมูล';
+        const label = userData.clothing_pet?.label || 'BMI00S00P00K00';
         const modifiedLabel = label.slice(5); // ตัด 5 ตัวหน้าออก
         const bmiPrefix = getBmiPrefix(bmi);
         const newLabel = `${bmiPrefix}${modifiedLabel}`;
-        // console.log('Updated Label:', newLabel);
+        console.log('Updated Label:', newLabel);
   
         // ดึง URL รูปภาพใหม่
         const petUrl = await fetchPetImageByLabel(newLabel);
         setPetImageUrl(petUrl);
-        // console.log('Updated petUrl:', petUrl);
+        console.log('Updated petUrl:', petUrl);
       } catch (error) {
         console.error('Error fetching updated pet image:', error);
       }
