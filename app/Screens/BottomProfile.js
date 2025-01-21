@@ -175,51 +175,6 @@ const ProfileButton = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับคำนวณ BMI
-  const calculateBMI = useCallback((weight, height) => {
-    if (!weight || !height) return null;
-    return ((weight / ((height / 100) ** 2)).toFixed(2));
-  }, []);
-
-  // useEffect สำหรับคำนวณ BMI และ PUT ไปยังเซิร์ฟเวอร์เมื่อ weight หรือ height เปลี่ยน
-  useEffect(() => {
-    if (isEditing) {
-      // หยุดอัปเดตข้อมูลขณะกำลังแก้ไข
-      return;
-    }
-    
-    const updateBMIOnServer = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      if (!token || !userId || !weight || !height) return;
-
-      const calculatedBMI = calculateBMI(weight, height);
-      setBmi(calculatedBMI);
-
-      try {
-        setIsSaving(true);
-        const updatedData = { weight, height, BMI: calculatedBMI }; // อัปเดตน้ำหนัก ส่วนสูง และ BMI
-        const response = await updateUserProfile(userId, updatedData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 200) {
-          // console.log("BMI updated successfully on server:", calculatedBMI);
-        } else {
-          console.error("Failed to update BMI on server:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error updating BMI on server:", error);
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    updateBMIOnServer();
-  }, [weight, height]); // Trigger useEffect when weight or height changes
-
   const pickImage = async () => {
     try {
         if (Platform.OS !== 'web') {
@@ -272,7 +227,6 @@ const ProfileButton = () => {
     setModalVisible(false);
     setIsEditing(false);
     setIsImageUpdated(false);
-    // คืนค่าเดิม
     setProfileImage(originalProfileImage);
     setUsername(originalData.username);
     setWeight(originalData.weight);
@@ -313,10 +267,6 @@ const ProfileButton = () => {
         pictureId = uploadData[0].id;
       }
 
-      // คำนวณค่า BMI
-      const calculatedBMI = calculateBMI(weight, height);
-      setBmi(calculatedBMI); // อัปเดต BMI ใน state
-
       // สร้างอ็อบเจ็กต์สำหรับอัปเดตโปรไฟล์ผู้ใช้
       const updatedData = {
         username: username,
@@ -325,7 +275,6 @@ const ProfileButton = () => {
         birthday: birthday,
         age: age,
         selectedGender: gender === 'ชาย' ? 'male' : 'female',
-        BMI: calculatedBMI,
       };
 111
       if (pictureId) {
