@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import BottomBar from '../BottomBar';
 import exercise from '../../../assets/image/exercise.png';
+import { useMemo } from 'react'
 
 const Homeexercise = () => {
   const navigation = useNavigation();
@@ -22,27 +23,27 @@ const Homeexercise = () => {
         const storedUserId = await AsyncStorage.getItem('userId');
         if (!storedUserId) {
           console.error('User ID not found in AsyncStorage.');
-          setIsUserIdLoaded(true); // แม้ไม่มี userId ก็ถือว่าโหลดเสร็จ
+          setIsUserIdLoaded(true);
           return;
         }
         setUserId(storedUserId);
       } catch (error) {
         console.error('Error fetching userId:', error);
       } finally {
-        setIsUserIdLoaded(true); // ตั้งค่าเป็นโหลดเสร็จเมื่อเสร็จสิ้น
+        setIsUserIdLoaded(true);
       }
     };
-  
+
     fetchUserId();
   }, []);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) {
         console.error('User ID is not available yet.');
         return;
       }
-  
+
       setLoading(true);
       try {
         await fetchWeeks();
@@ -53,75 +54,77 @@ const Homeexercise = () => {
         setLoading(false);
       }
     };
-  
+
     if (isFocused && isUserIdLoaded && userId) {
       fetchData();
     }
   }, [isFocused, isUserIdLoaded, userId]);
-  
 
   const fetchWeeks = async () => {
     try {
       console.log('Fetching weeks...');
       const response = await axios.get('http://192.168.1.200:1337/api/weeks?populate=*');
 
-      // ดึง startDate ของ Week 1, Day 1
       const week1StartDate = await fetchStartDateFromHistory(1, 1);
-
       if (!week1StartDate) {
-        console.warn('Unable to fetch startDate for Week 1, Day 1. Setting startDate as today.');
-        week1StartDate = new Date(); // กำหนด fallback startDate เป็นวันนี้
+        throw new Error('Start date for Week 1 is missing. Cannot calculate further weeks.');
+        week1StartDate = new Date();
       }
 
-      const sortedWeeks = await Promise.all(
-        response.data.data.map(async (week, index) => {
-          const startDate = await fetchStartDateFromHistory(week.id, 1) ||
-            new Date(week1StartDate.getTime() + index * 7 * 24 * 60 * 60 * 1000); // fallback
+      const weeksData = response.data.data.sort((a, b) => a.id - b.id);
+      const sortedWeeks = [];
 
-          const daysWithDates = week.attributes.days.data.map((day) => {
-            const dayDate = new Date(startDate);
-            dayDate.setDate(dayDate.getDate() + (day.attributes.dayNumber - 1)); // คำนวณวันที่
-            return {
-              ...day,
-              attributes: {
-                ...day.attributes,
-                date: dayDate,
-              },
-            };
-          });
+      for (let index = 0; index < weeksData.length; index++) {
+        const week = weeksData[index];
+        let startDate;
 
+        if (index === 0) {
+          startDate = week1StartDate;
+        } else {
+          const previousWeek = sortedWeeks[index - 1];
+          startDate = new Date(previousWeek.attributes.startDate);
+          startDate.setDate(startDate.getDate() + 7);
+        }
+
+        const daysWithDates = week.attributes.days.data.map((day) => {
+          const dayDate = new Date(startDate);
+          dayDate.setDate(dayDate.getDate() + (day.attributes.dayNumber - 1));
           return {
-            ...week,
+            ...day,
             attributes: {
-              ...week.attributes,
-              startDate,
-              days: { data: daysWithDates },
+              ...day.attributes,
+              date: dayDate,
             },
           };
-        })
-      );
+        });
 
-      setWeeks(sortedWeeks.sort((a, b) => a.id - b.id));
+        sortedWeeks.push({
+          ...week,
+          attributes: {
+            ...week.attributes,
+            startDate,
+            days: { data: daysWithDates },
+          },
+        });
+      }
+
+      setWeeks(sortedWeeks);
     } catch (error) {
       console.error('Error fetching weeks:', error);
     }
   };
 
-
-
   const fetchStartDateFromHistory = async (week, day) => {
     try {
       if (!userId) {
         console.error('User ID is not set. Cannot fetch history.');
-        return new Date(); // กรณีไม่มี userId ให้ถือว่าวันนี้เป็นวันเริ่มต้น
+        return null;
       }
 
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
         `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const matchingRecords = response.data.data.filter(
@@ -134,12 +137,12 @@ const Homeexercise = () => {
         console.log('Fetched start date:', matchingRecords[0].attributes.timestamp);
         return new Date(matchingRecords[0].attributes.timestamp);
       } else {
-        console.warn(`No valid record found for Week ${week}, Day ${day}. Setting startDate as today.`);
-        return new Date(); // กำหนดวันที่เริ่มต้นเป็นวันนี้
+        console.warn(`No valid record found for Week ${week}, Day ${day}.`);
+        return new Date();
       }
     } catch (error) {
       console.error(`Error fetching start date for Week ${week}, Day ${day}:`, error);
-      return new Date(); // หากเกิดข้อผิดพลาด กำหนดวันที่เริ่มต้นเป็นวันนี้
+      return new Date();
     }
   };
 
@@ -160,53 +163,39 @@ const Homeexercise = () => {
     }
   };
 
-  const isDayCompleted = (weekId, dayNumber, startDate) => {
-    // ตรวจสอบสถานะจาก workoutRecords
-    const record = workoutRecords.find((record) => {
-      const recordWeekId = record.attributes.week?.data?.id;
-      const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
+  const dayStatuses = useMemo(() => {
+    if (!workoutRecords || workoutRecords.length === 0) {
+      console.warn('Workout records not loaded yet.');
+      return {};
+    }
 
-      return recordWeekId === weekId && recordDayNumber === dayNumber;
+    const statuses = {};
+
+    weeks.forEach((week) => {
+      week.attributes.days.data.forEach((day) => {
+        const dayKey = `${week.id}-${day.attributes.dayNumber}`;
+        const record = workoutRecords.find((record) => {
+          const recordWeekId = record.attributes.week?.data?.id;
+          const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
+          return recordWeekId === week.id && recordDayNumber === day.attributes.dayNumber;
+        });
+
+        const completed = record?.attributes.status === true;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dayDate = new Date(day.attributes.date);
+        const missed = !completed && dayDate < today;
+
+        statuses[dayKey] = { completed, missed };
+
+        console.log(
+          `Week: ${week.id}, Day: ${day.attributes.dayNumber}, dayDate: ${dayDate}, missed: ${missed},${today}`
+        );
+      });
     });
 
-    return record?.attributes.status === true; // ถ้าสำเร็จ จะ return true ทันที
-  };
-
-
-
-  const isDayMissed = (weekId, dayNumber, startDate) => {
-    // ถ้าวันนั้นสำเร็จแล้ว ไม่ถือว่าพลาด
-    if (isDayCompleted(weekId, dayNumber, startDate)) {
-      return false;
-    }
-
-    if (!startDate || isNaN(new Date(startDate))) {
-      // หากไม่มี startDate ให้ถือว่าไม่พลาด
-      return false;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
-    const dayDate = new Date(startDate);
-    dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
-    dayDate.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
-
-    if (dayDate >= today) {
-      // หากวันนั้นยังไม่ถึง หรือเป็นวันนี้ ไม่ถือว่าพลาด
-      return false;
-    }
-
-    // หากวันนั้นผ่านไปแล้ว ตรวจสอบว่ามีการทำกิจกรรมในวันนั้นหรือไม่
-    const record = workoutRecords.find((record) => {
-      const recordWeekId = record.attributes.week?.data?.id;
-      const recordDayNumber = record.attributes.day?.data?.attributes?.dayNumber;
-
-      return recordWeekId === weekId && recordDayNumber === dayNumber;
-    });
-
-    return !record?.attributes.status; // พลาดหากยังไม่มีการทำสำเร็จ
-  };
-
+    return statuses;
+  }, [weeks, workoutRecords]);
 
   return (
     <View style={styles.container}>
@@ -228,102 +217,95 @@ const Homeexercise = () => {
           เริ่มการออกกำลังกายในการทำรูปร่าง เพื่อเน้นกล้ามเนื้อ และสร้างร่างกายเป็นเวลา 4 สัปดาห์
         </Text>
         {weeks.length > 0 ? (
-          weeks.map((week) => (
-            <View key={week.id} style={styles.weekBox}>
-              <View style={styles.weekHeader}>
-                <View style={styles.weekIcon}>
-                  <Icon
-                    name={
-                      week.attributes.days.data.some((day) => isDayCompleted(week.id, day.attributes.dayNumber))
-                        ? 'check-circle'
-                        : 'lightning-bolt'
-                    }
-                    size={25}
-                    color="#F6A444"
-                  />
+          weeks.map((week) => {
+            // คำนวณ completedDaysCount สำหรับแต่ละ week
+            const completedDaysCount = week.attributes.days.data.reduce((count, day) => {
+              const dayKey = `${week.id}-${day.attributes.dayNumber}`;
+              return dayStatuses[dayKey]?.completed ? count + 1 : count;
+            }, 0);
+
+            return (
+              <View key={week.id} style={styles.weekBox}>
+                <View style={styles.weekHeader}>
+                  <View style={styles.weekIcon}>
+                    <Icon
+                      name={
+                        week.attributes.days.data.some((day) => {
+                          const dayKey = `${week.id}-${day.attributes.dayNumber}`;
+                          return dayStatuses[dayKey]?.completed;
+                        })
+                          ? 'check-circle'
+                          : 'lightning-bolt'
+                      }
+                      size={25}
+                      color="#F6A444"
+                    />
+                  </View>
+                  <Text style={styles.weekText}>{week.attributes.name || 'N/A'}</Text>
+                  <Text style={styles.weekProgress}>{`${completedDaysCount}/7`}</Text>
                 </View>
 
-                <Text style={styles.weekText}>{week.attributes.name || 'N/A'}</Text>
-                <Text style={styles.weekProgress}>
-                  {`${week.attributes.days.data.filter((day) =>
-                    isDayCompleted(week.id, day.attributes.dayNumber)
-                  ).length}/7`}
-                </Text>
-              </View>
-
-              <View style={styles.daysRow}>
-                {week.attributes.days.data.map((day, idx) => {
-                  if (!day.attributes.dayNumber) {
-                    console.error(`Invalid dayNumber for Week ${week.id}, Day ${idx + 1}`);
-                    return null; // ข้ามวันนั้นไป
-                  }
-
-                  const missed = isDayMissed(week.id, day.attributes.dayNumber, week.attributes.startDate);
-                  const completed = isDayCompleted(week.id, day.attributes.dayNumber, week.attributes.startDate);
-
-
-                  return (
-                    <TouchableOpacity
-                      key={idx}
-                      style={styles.dayButton}
-                      onPress={() => {
-                        const isMissed = missed;
-                        console.log(`Navigating to Dayexercise: Week ${week.id}, Day ${day.attributes.dayNumber}, Missed: ${isMissed}`);
-                        navigation.navigate('Dayexercise', {
-                          dayNumber: day.attributes.dayNumber,
-                          weekId: week.id,
-                          set: week.attributes.name,
-                          userId: userId,
-                          isMissed,
-                        });
-                      }}
-                    >
-                      <View
-                        style={
-                          completed
-                            ? { ...styles.dayBoxCompleted, backgroundColor: '#F6A444' }
-                            : missed
-                              ? { ...styles.dayBoxMissed, backgroundColor: 'red' }
-                              : styles.dayBoxPending
-                        }
+                <View style={styles.daysRow}>
+                  {week.attributes.days.data.map((day, idx) => {
+                    const dayKey = `${week.id}-${day.attributes.dayNumber}`;
+                    const { completed, missed } = dayStatuses[dayKey] || { completed: false, missed: false };
+                    {/* console.log('dayKey completed: missed',dayKey,completed,missed) */}
+                    return (
+                      <TouchableOpacity
+                        key={idx}
+                        style={styles.dayButton}
+                        onPress={() => {
+                          const isMissed = missed;
+                          navigation.navigate('Dayexercise', {
+                            dayNumber: day.attributes.dayNumber,
+                            weekId: week.id,
+                            set: week.attributes.name,
+                            userId: userId,
+                            isMissed,
+                          });
+                          console.log('isMissed',isMissed)
+                        }}
                       >
-                        <Text
+                        <View
                           style={
                             completed
-                              ? styles.dayTextCompleted
+                              ? { ...styles.dayBoxCompleted, backgroundColor: '#F6A444' }
                               : missed
-                                ? styles.dayTextMissed
-                                : styles.dayTextPending
+                                ? { ...styles.dayBoxMissed, backgroundColor: 'red' }
+                                : styles.dayBoxPending
                           }
                         >
-                          {day.attributes.dayNumber}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-
-                })}
-                <Icon
-                  name="trophy"
-                  size={30}
-                  color={
-                    week.attributes.days.data.filter((day) =>
-                      isDayCompleted(week.id, day.attributes.dayNumber)
-                    ).length === 7
-                      ? '#FFD700'
-                      : '#C0C0C0'
-                  }
-                  style={styles.trophyIcon}
-                />
-
+                          <Text
+                            style={
+                              completed
+                                ? styles.dayTextCompleted
+                                : missed
+                                  ? styles.dayTextMissed
+                                  : styles.dayTextPending
+                            }
+                          >
+                            {day.attributes.dayNumber}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  <Icon
+                    name="trophy"
+                    size={30}
+                    color={completedDaysCount === week.attributes.days.data.length ? '#FFD700' : '#C0C0C0'}
+                    style={styles.trophyIcon}
+                  />
+                </View>
               </View>
-
-            </View>
-          ))
+            );
+          })
         ) : (
           <View style={styles.loadingContainer}>
+            {/* <ActivityIndicator size="large" color="#F6A444" /> */}
           </View>
         )}
+
       </ScrollView>
       <BottomBar />
     </View>
