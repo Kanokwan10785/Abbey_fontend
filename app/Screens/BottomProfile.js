@@ -609,13 +609,15 @@ const styles = StyleSheet.create({
     height: 76,
   },
   profileText: {
-    fontSize: 16,
+    fontSize: 14,
+    width: 35,
     color: "white",
     fontFamily: "appfont_02",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    top: 54,
-    right: 2,
+    top: 52,
+    right: 1,
     position: "absolute",
+    textAlign: 'center',
   },
   insidepersonalInformation: {
     width: "65%",
