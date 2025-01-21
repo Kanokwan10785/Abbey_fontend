@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Image, ImageBackground } from 'expo-image';
 import { View, Text, DeviceEventEmitter, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
@@ -30,31 +30,30 @@ export default function HomeScreen() {
         const token = await AsyncStorage.getItem('jwt');
         const userId = await AsyncStorage.getItem('userId');
         if (!token || !userId) return;
-  
         try {
           const userData = await fetchUserProfile(userId, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setBalance(userData.balance || 0);
+          setBalance(userData.balance || 0); // โหลดยอดเงิน
         } catch (error) {
           console.error("Error fetching user profile", error);
         }
       };
-
+  
       const loadHomePetData = async () => {
         const token = await AsyncStorage.getItem('jwt');
         const userId = await AsyncStorage.getItem('userId');
         if (!token || !userId) return;
-    
+  
         try {
           const userData = await fetchUserProfileWithClothing(userId, token);
           // console.log("Matching userData found:", userData); 
           const clothingLabel = userData.clothing_pet?.label || 'BMI03S00P00K00';
           console.log("Matching pet found:", clothingLabel);
           const urls = await fetchHomePetUrlByLabel(clothingLabel, userId);
-
+  
           if (urls) {
-            setPetImageUrls(urls.map(item => item.url));
+            setPetImageUrls(urls.map(item => item.url)); // ตั้งค่า URL รูปสัตว์เลี้ยง
           }
         } catch (error) {
           console.error("Error fetching home pet data", error);
@@ -63,7 +62,7 @@ export default function HomeScreen() {
   
       loadBalance();
       loadHomePetData();
-    }, []) 
+    }, [])
   );
   
   useFocusEffect(
@@ -77,7 +76,6 @@ export default function HomeScreen() {
       }
     }, [petImageUrls])
   );
-
 
   return (
     <ImageBackground source={gym} style={styles.background}>
