@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback  } from "react";
 import { Image } from 'expo-image';
-import { View, Text, TouchableOpacity, DeviceEventEmitter, StyleSheet, Modal, Platform, TextInput, Alert, LogBox } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, TextInput, Alert, LogBox } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -294,8 +294,7 @@ const ProfileButton = () => {
 
       setIsEditing(false);
       setModalVisible(false);
-      setSaveAlertVisible(true); // แสดง CustomAlertsaveProfile เมื่อบันทึกสำเร็จ
-      DeviceEventEmitter.emit('profileUpdated'); // แจ้งเตือน      
+      setSaveAlertVisible(true); // แสดง CustomAlertsaveProfile เมื่อบันทึกสำเร็จ    
 
       // บันทึกข้อมูลที่อัปเดตลงใน AsyncStorage
       await AsyncStorage.setItem('username', username);

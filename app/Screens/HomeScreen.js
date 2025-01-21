@@ -63,10 +63,9 @@ export default function HomeScreen() {
   
       loadBalance();
       loadHomePetData();
-      const subscription = DeviceEventEmitter.addListener('profileUpdated', loadBalance);
-      return () => subscription.remove(); // ลบ Listener เมื่อ component ถูกลบ
     }, []) 
   );
+  
   useFocusEffect(
     React.useCallback(() => {
       if (petImageUrls.length > 0) {
