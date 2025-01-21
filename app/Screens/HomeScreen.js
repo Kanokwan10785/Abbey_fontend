@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Image, ImageBackground } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, DeviceEventEmitter, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
@@ -63,6 +63,8 @@ export default function HomeScreen() {
   
       loadBalance();
       loadHomePetData();
+      const subscription = DeviceEventEmitter.addListener('profileUpdated', loadBalance);
+      return () => subscription.remove(); // ลบ Listener เมื่อ component ถูกลบ
     }, []) 
   );
   useFocusEffect(
@@ -76,6 +78,7 @@ export default function HomeScreen() {
       }
     }, [petImageUrls])
   );
+
 
   return (
     <ImageBackground source={gym} style={styles.background}>
@@ -102,44 +105,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    margin: 20,
-  },
-  screenpetImages: {
-    flex: 1,
-    flexDirection: 'column',
-  },
-  sectionpetImages: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  foodButton: {
-    position: 'absolute',
-    right: 10,
-    top: 100,
-    width: 70,
-    height: 85,
-    borderRadius: 15,
-    backgroundColor: '#FFAF32',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: '#F9E79F',
-    borderWidth: 8,
-  },
-  foodIcon: {
-    width: 50,
-    height: 50,
-  },
-  petImages: {
-    width: '250%',
-    height: '250%',
-    resizeMode: 'contain',
-  },
+  background: { flex: 1, resizeMode: 'cover', },
+  header: { flexDirection: 'row', justifyContent: 'space-between', margin: 20, },
+  screenpetImages: { flex: 1, flexDirection: 'column', },
+  sectionpetImages: { flex: 1, justifyContent: 'center', alignItems: 'center', },
+  foodButton: { position: 'absolute', right: 10, top: 100, width: 70, height: 85, borderRadius: 15, backgroundColor: '#FFAF32', justifyContent: 'center', alignItems: 'center', borderColor: '#F9E79F', borderWidth: 8, },
+  foodIcon: { width: 50, height: 50, },
+  petImages: { width: '250%', height: '250%', resizeMode: 'contain', },
 });
