@@ -257,139 +257,29 @@ const FoodScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gymBackgroundContainer: {
-    flex: 1,
-  },
-  gymBackground: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  orangeBackground: {
-    flex: 1,
-    backgroundColor: "#FFAF32",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 20,
-  },
-  petDisplay: {
-    flex: 2,
-    alignItems: "center",
-  },
-  petImage: {
-    width: "110%",
-    height: "110%",
-    resizeMode: "contain",
-  },
-  wardrobeIcon: {
-    width: 50,
-    height: 50,
-    marginVertical: 10,
-    alignSelf: "center",
-  },
-  wardrobeText: {
-    fontSize: 32,
-    color: "#FFF",
-    fontFamily: "appfont_02",
-    marginLeft: 15,
-  },
-  wardrobeMenu: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  crossButton: {
-    width: 50,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    right: -4,
-    top: -4,
-  },
-  crossIcon: {
-    width: 30,
-    height: 30,
-  },
-  itemsBackground: {
-    backgroundColor: "#9E640A",
-    zIndex: 1,
-    flex: 1,
-    // marginBottom: -20,
-  },
-  itemsMenu: {
-    flex: 1,
-    marginTop: 18,
-  },
-  itemsMenuContent: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "flex-start",
-    // margin: 5,
-  },
-  item: {
-    width: '20%',
-    marginHorizontal: '2.5%',
-    marginBottom: '5%',
-    height: 112,
-    backgroundColor: "#FFAF32",
-    alignItems: "center",
-    borderColor: "#F9E79F",
-    borderWidth: 8,
-  },
-  itemImage: {
-    width: 60,
-    height: 60,
-    bottom: 4,
-  },
-  itemQuantity: {
-    fontSize: 16,
-    bottom: 8,
-    color: "#000",
-    position: "absolute",
-    fontFamily: "appfont_02",
-  },
-  itemName: {
-    fontSize: 14,
-    bottom: 26,
-    color: "#000",
-    position: "absolute",
-    fontFamily: "appfont_02",
-  },
-  itemButton: {
-    backgroundColor: "#F9E79F",
-    borderRadius: 10,
-    paddingVertical: 2,
-    paddingHorizontal: 10,
-    borderWidth: 0.5,
-    bottom: -28,
-    width: '80%',
-    alignItems: "center",
-  },
-  itemButtonText: {
-    fontSize: 14,
-    color: "#000",
-    fontFamily: "appfont_02",
-  },
-  clearButton: {
-    backgroundColor: 'red',
-    padding: 10,
-    top: 90,
-    position: "absolute",
-    zIndex: 100, // ทำให้ปุ่มอยู่ด้านหน้าสุด
-    borderRadius: 5,
-  },
-  clearButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  
-  
+  container: { flex: 1 },
+  gymBackgroundContainer: { flex: 1 },
+  gymBackground: { flex: 1, resizeMode: "cover" },
+  orangeBackground: { flex: 1, backgroundColor: "#FFAF32" },
+  header: { flexDirection: "row", justifyContent: "space-between", padding: 20 },
+  petDisplay: { flex: 2, alignItems: "center" },
+  petImage: { width: "110%", height: "110%", resizeMode: "contain" },
+  wardrobeIcon: { width: 50, height: 50, marginVertical: 10, alignSelf: "center" },
+  wardrobeText: { fontSize: 32, color: "#FFF", fontFamily: "appfont_02", marginLeft: 15 },
+  wardrobeMenu: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  crossButton: { width: 50, height: 50, justifyContent: "center", alignItems: "center", position: "absolute", right: -4, top: -4 },
+  crossIcon: { width: 30, height: 30 },
+  itemsBackground: { backgroundColor: "#9E640A", zIndex: 1, flex: 1 },
+  itemsMenu: { flex: 1, marginTop: 18 },
+  itemsMenuContent: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-start" },
+  item: { width: '20%', marginHorizontal: '2.5%', marginBottom: '5%', height: 112, backgroundColor: "#FFAF32", alignItems: "center", borderColor: "#F9E79F", borderWidth: 8 },
+  itemImage: { width: 60, height: 60, bottom: 4 },
+  itemQuantity: { fontSize: 16, bottom: 8, color: "#000", position: "absolute", fontFamily: "appfont_02" },
+  itemName: { fontSize: 14, bottom: 26, color: "#000", position: "absolute", fontFamily: "appfont_02" },
+  itemButton: { backgroundColor: "#F9E79F", borderRadius: 10, paddingVertical: 2, paddingHorizontal: 10, borderWidth: 0.5, bottom: -28, width: '80%', alignItems: "center" },
+  itemButtonText: { fontSize: 14, color: "#000", fontFamily: "appfont_02" },
+  clearButton: { backgroundColor: 'red', padding: 10, top: 90, position: "absolute", zIndex: 100, borderRadius: 5 },
+  clearButtonText: { color: '#fff', textAlign: 'center', fontSize: 16 },
 });
 
 export default FoodScreen;
