@@ -20,8 +20,9 @@ export const getUserId = async () => {
 
 // ฟังก์ชันสำหรับค้นหา Record ในวันเดียวกัน
 export const findRecordByDate = async (userId, date) => {
+  // console.log('Uesr :',userId, date);
   try {
-    const response = await api.get(`/api/weight-records`, {
+    const response = await api.get(`/api/weight-records?pagination[limit]=100`, {
       params: {
         'filters[user][id][$eq]': userId,
         'filters[date][$eq]': date,
@@ -70,6 +71,7 @@ export const fetchWeightRecords = async (userId) => {
 
 // ฟังก์ชันสำหรับบันทึกข้อมูลน้ำหนัก
 export const saveWeightRecord = async (weight, date, userId) => {
+  // console.log('Uesr :',weight, date, userId);
   try {
     const response = await api.post(`/api/weight-records`, {
       data: {
@@ -88,6 +90,7 @@ export const saveWeightRecord = async (weight, date, userId) => {
 
 // ฟังก์ชันสำหรับบันทึกข้อมูลน้ำหนักของผู้ใช้
 export const saveWeightUesr = async (weight, userId) => {
+    // console.log('Uesr :', weight, userId);
   try {
     const response = await api.put(`/api/users/${userId}`, {
       weight,
