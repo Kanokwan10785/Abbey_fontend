@@ -123,7 +123,10 @@ const WeightRecords = () => {
             width={Math.max(Dimensions.get('window').width, weightData.length * 80)} // ความกว้างของกราฟขึ้นกับจำนวนจุด
             height={250}
             yAxisSuffix="kg"
-            yAxisInterval={1}
+            // fromZero={true} // เริ่มต้นที่ 0
+            yAxisInterval={10} // แสดงตัวเลขเพิ่มทีละ 10
+            verticalLabelRotation={0} //ปรับมุมของป้ายกำกับแกน x
+            segments={7} // จำนวนเส้นสเกลแนวนอน
             chartConfig={{
               backgroundColor: '#F6A444',
               backgroundGradientFrom: '#fb8c00', // สีเริ่มต้นของพื้นหลังแบบ Gradient
