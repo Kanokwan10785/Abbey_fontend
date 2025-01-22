@@ -63,8 +63,9 @@ export default function HomeScreen() {
         const bmiPrefix = getBmiPrefix(bmi);
         const newLabel = `${bmiPrefix}${modifiedLabel}`;
         const clothingLabel = newLabel;
+        console.log('Matching pet found:', bmiPrefix);
         console.log('Matching pet found:', clothingLabel);
-        const urls = await fetchHomePetUrlByLabel(clothingLabel, userId);
+        const urls = await fetchHomePetUrlByLabel(clothingLabel, userId, bmiPrefix);
 
         if (urls) {
           setPetImageUrls(urls.map((item) => item.url)); // ตั้งค่า URL รูปสัตว์เลี้ยง

@@ -1,11 +1,7 @@
 import axios from 'axios';
 
-<<<<<<< HEAD
 const API_URL = 'http://192.168.1.199:1337'; 
-// const API_URL = 'http://172.28.148.66:1337'; 
-=======
-const API_URL = 'http://192.168.1.200:1337'; // Replace with your Strapi URL
->>>>>>> 6f606bbcbe515e0fa02823bba0a193e9be3b96dc
+// const API_URL = 'http://172.28.147.165:1337'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -275,7 +271,7 @@ export const fetchUserProfileWithClothing = async (userId, token) => {
   }
 };
 
-export const fetchHomePetUrlByLabel = async (label, userId) => {
+export const fetchHomePetUrlByLabel = async (label, userId, bmiLabel) => {
   try {
     console.log("Fetching home pet URL for label:", label, "and userId:", userId);
 
@@ -297,7 +293,7 @@ export const fetchHomePetUrlByLabel = async (label, userId) => {
     }
     console.log("Search conditions:", conditions);
 
-    const response = await api.get(`/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&fields[1]=label&pagination[limit]=100`);
+    const response = await api.get(`/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&fields[0]=label&filters[bmi_type][$eq]=${bmiLabel}&pagination[limit]=100`);
     const data = response.data;
 
     const matchingPet = data.data.find(pet => pet.attributes.label === label);
