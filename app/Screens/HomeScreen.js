@@ -27,9 +27,9 @@ export default function HomeScreen() {
   // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
   const getBmiPrefix = (bmi) => {
     if (!bmi || isNaN(bmi)) return 'BMI02'; 
-    if (bmi < 18.5) return 'BMI01';
-    if (bmi >= 18.5 && bmi < 24.9) return 'BMI02';
-    if (bmi >= 25 && bmi < 29.9) return 'BMI03';
+    if (bmi < 18.60) return 'BMI01';
+    if (bmi >= 18.60 && bmi < 24.99) return 'BMI02';
+    if (bmi >= 25.00 && bmi < 29.99) return 'BMI03';
     return 'BMI04';
   };
 

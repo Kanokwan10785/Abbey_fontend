@@ -77,11 +77,11 @@ const BmiRecords = () => {
     const bmiValue = (weight / (height * height)).toFixed(2);
     setBmi(bmiValue);
 
-    if (bmiValue < 18.5) {
+    if (bmiValue < 18.60) {
       setBmiStatus('น้ำหนักน้อย');
-    } else if (bmiValue >= 18.5 && bmiValue < 24.9) {
+    } else if (bmiValue >= 18.60 && bmiValue < 24.99) {
       setBmiStatus('น้ำหนักปกติ');
-    } else if (bmiValue >= 25 && bmiValue < 29.9) {
+    } else if (bmiValue >= 25.00 && bmiValue < 29.99) {
       setBmiStatus('น้ำหนักเกิน');
     } else {
       setBmiStatus('โรคอ้วน');
@@ -99,11 +99,11 @@ const BmiRecords = () => {
       setBmi(newBmi); // อัปเดตค่า BMI ใน state
   
       // อัปเดตสถานะ BMI
-      if (newBmi < 18.6) {
+      if (newBmi < 18.60) {
         setBmiStatus('น้ำหนักน้อย');
-      } else if (newBmi >= 18.6 && newBmi < 24.9) {
+      } else if (newBmi >= 18.60 && newBmi < 24.99) {
         setBmiStatus('น้ำหนักปกติ');
-      } else if (newBmi >= 25 && newBmi < 29.9) {
+      } else if (newBmi >= 25.00 && newBmi < 29.99) {
         setBmiStatus('น้ำหนักเกิน');
       } else {
         setBmiStatus('โรคอ้วน');

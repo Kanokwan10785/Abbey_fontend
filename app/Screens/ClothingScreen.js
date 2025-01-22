@@ -267,14 +267,14 @@ export default function ClothingScreen({ navigation, route }) {
     await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems)); // จัดเก็บการอัปเดตลงใน AsyncStorage
   };
 
-  const getBMICategory = (bmi) => {
-    // console.log('Received BMI for categorization:', bmi);
-    if (!bmi || isNaN(bmi)) return 'BMI01'; 
-    if (bmi >= 30.0) return 'BMI04';
-    if (bmi >= 25.0) return 'BMI03';
-    if (bmi >= 18.6) return 'BMI02';
-    return 'BMI01';
-  };
+    // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
+    const getBMICategory  = (bmi) => {
+      if (!bmi || isNaN(bmi)) return 'BMI02'; 
+      if (bmi < 18.60) return 'BMI01';
+      if (bmi >= 18.60 && bmi < 24.99) return 'BMI02';
+      if (bmi >= 25.00 && bmi < 29.99) return 'BMI03';
+      return 'BMI04';
+    };
 
   // แสดงรายการเสื้อผ้า
   const renderItems = () => {
