@@ -24,6 +24,15 @@ export default function HomeScreen() {
   const [petImageUrls, setPetImageUrls] = useState([]);
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
 
+  // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
+  const getBmiPrefix = (bmi) => {
+    if (!bmi || isNaN(bmi)) return 'BMI02'; 
+    if (bmi < 18.5) return 'BMI01';
+    if (bmi >= 18.5 && bmi < 24.9) return 'BMI02';
+    if (bmi >= 25 && bmi < 29.9) return 'BMI03';
+    return 'BMI04';
+  };
+
   // โหลดข้อมูลโปรไฟล์
   useEffect(() => {
     const loadBalance = async () => {
@@ -35,7 +44,7 @@ export default function HomeScreen() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setBalance(userData.balance || 0); // โหลดยอดเงิน
-        console.log('User Data:', userData.BMI);
+        // console.log('User Data:', userData.BMI);
       } catch (error) {
         console.error('Error fetching user profile', error);
       }
@@ -48,7 +57,12 @@ export default function HomeScreen() {
 
       try {
         const userData = await fetchUserProfileWithClothing(userId, token);
-        const clothingLabel = userData.clothing_pet?.label || 'BMI03S00P00K00';
+        const label = userData.clothing_pet?.label || 'BMI03S00P00K00';
+        const bmi = userData.BMI || '0';
+        const modifiedLabel = label.slice(5); // ตัด 5 ตัวหน้าออก
+        const bmiPrefix = getBmiPrefix(bmi);
+        const newLabel = `${bmiPrefix}${modifiedLabel}`;
+        const clothingLabel = newLabel;
         console.log('Matching pet found:', clothingLabel);
         const urls = await fetchHomePetUrlByLabel(clothingLabel, userId);
 
