@@ -137,14 +137,26 @@ const BmiRecords = () => {
         const userWeight = userData.weight || 0;
         const userHeight = userData.height || 0;
   
+        // อัปเดตน้ำหนักและส่วนสูงใน State
         setWeight(userWeight);
         setHeightCm(userHeight);
         calculateBmi(userWeight, userHeight);
+
+        // คำนวณค่า BMI ใหม่
+        if (userHeight > 0) {
+          const heightInMeters = userHeight / 100;
+          const newBmi = (userWeight / (heightInMeters * heightInMeters)).toFixed(2);
+
+          // ส่งค่า BMI ใหม่ไปยังเซิร์ฟเวอร์
+          await saveHeightUesr(userHeight, newBmi, userId);
+
+          console.log('Updated BMI:', newBmi);
+        }
       } catch (error) {
         console.error('Error updating BMI:', error);
       }
     };
-  
+
     // ฟังเหตุการณ์
     const subscription = DeviceEventEmitter.addListener('weightUpdated', handleWeightUpdate);
   
