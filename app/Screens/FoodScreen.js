@@ -61,6 +61,15 @@ const FoodScreen = ({ navigation }) => {
     await AsyncStorage.setItem('foodData', JSON.stringify(updatedFoodData)); // บันทึกลง AsyncStorage
   };
 
+  // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
+  const getBmiPrefix = (bmi) => {
+    if (!bmi || isNaN(bmi)) return 'BMI02'; 
+    if (bmi < 18.60) return 'BMI01';
+    if (bmi >= 18.60 && bmi < 24.99) return 'BMI02';
+    if (bmi >= 25.00 && bmi < 29.99) return 'BMI03';
+    return 'BMI04';
+  };
+
   // ฟังก์ชันสำหรับการตั้งค่าภาพสัตว์เลี้ยง
   const updatePetImage = async () => {
     try {
@@ -69,10 +78,14 @@ const FoodScreen = ({ navigation }) => {
       
       const userData = await fetchUserProfileWithClothing(userId, token);
       const fetchedClothingLabel = userData.clothing_pet?.label || 'S00P00K00';
-      setClothingLabel(fetchedClothingLabel); // เก็บ clothingLabel ใน state
+      const bmi = userData.BMI || '0';
+      const modifiedLabel = fetchedClothingLabel.slice(5); // ตัด 5 ตัวหน้าออก
+      const bmiPrefix = getBmiPrefix(bmi);
+      const newfetchedClothingLabel = `${bmiPrefix}${modifiedLabel}`;
+      setClothingLabel(newfetchedClothingLabel); // เก็บ clothingLabel ใน state
 
       // ตรวจสอบใน AsyncStorage ว่ามีภาพสัตว์เลี้ยงที่เคยบันทึกไว้หรือไม่
-      const cachedPetImageUrl = await AsyncStorage.getItem(`petImage_${fetchedClothingLabel}_F00`);
+      const cachedPetImageUrl = await AsyncStorage.getItem(`petImage_${newfetchedClothingLabel}_F00`);
 
       if (cachedPetImageUrl) {
         // ถ้ามี URL ใน AsyncStorage, ใช้ URL นั้นโดยไม่ต้องดึงจาก API
@@ -80,12 +93,12 @@ const FoodScreen = ({ navigation }) => {
         setCurrentPetImage(cachedPetImageUrl);
       } else {
         // ดึง URL ภาพสัตว์เลี้ยง (ค่าเริ่มต้นเป็น F00) จาก API หากไม่มีใน AsyncStorage
-        const { url: petImageUrl } = await fetchFoodPetUrlByLabel(fetchedClothingLabel, 'F00');
+        const { url: petImageUrl } = await fetchFoodPetUrlByLabel(newfetchedClothingLabel, 'F00');
         
         // ตั้งค่า URL ของภาพเริ่มต้น หากภาพที่ดึงมาไม่ตรงกับภาพปัจจุบัน และบันทึกลงใน AsyncStorage
         if (petImageUrl && petImageUrl !== currentPetImage) {
           setCurrentPetImage(petImageUrl);
-          await AsyncStorage.setItem(`petImage_${fetchedClothingLabel}_F00`, petImageUrl); // บันทึก URL ใน AsyncStorage
+          await AsyncStorage.setItem(`petImage_${newfetchedClothingLabel}_F00`, petImageUrl); // บันทึก URL ใน AsyncStorage
           console.log('Fetched and saved pet image from API:', petImageUrl);
         }
       }
