@@ -90,12 +90,13 @@ export const saveWeightRecord = async (weight, date, userId) => {
 
 // ฟังก์ชันสำหรับบันทึกข้อมูลน้ำหนักของผู้ใช้
 export const saveWeightUesr = async (weight, userId) => {
-    // console.log('Uesr :', weight, userId);
+    // console.log('Uesr saveWeightUesr weight, userId :', weight, userId);
   try {
     const response = await api.put(`/api/users/${userId}`, {
       weight,
     });
-    return response.data;
+    // console.log('Uesr saveWeightUesr :', response.data.weight);
+    return response.data;    
   } catch (error) {
     console.error('Error in saveWeightUesr:', error.response?.data || error.message);
     throw error;
