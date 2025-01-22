@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import ExerciseScreen from './app/Screens/Exercise/ExerciseScreen.js';
 import AnalysisScreen from './app/Screens/AnalysisScreen.js';
 import ShopScreen from './app/Screens/ShopScreen.js';
 import ClothingScreen from './app/Screens/ClothingScreen.js';
@@ -29,10 +28,8 @@ import Couse_startc from './app/Screens/Couse_add/Couse_startc.js';
 import Couse_relax from './app/Screens/Couse_add/Couse_relax.js';
 import Couse_finish from './app/Screens/Couse_add/Couse_finish.js';
 import Couse_des from './app/Screens/Couse_add/Couse_des.js';
-import Couseexercies1 from './app/Screens/Couse_add/Couseexercies1.js';
 import Musclesexercies from './app/Screens/Additional_Exercises/Muscles/Musclesexercies.js';
 import Muscles_startc from './app/Screens/Additional_Exercises/Muscles/Muscles_startc.js';
-import Musclesexercies1 from './app/Screens/Additional_Exercises/Muscles/Musclesexercies1.js';
 import Muscles_start from './app/Screens/Additional_Exercises/Muscles/Muscles_start.js';
 import Muscles_relax from './app/Screens/Additional_Exercises/Muscles/Muscles_relax.js';
 import Muscles_finish from './app/Screens/Additional_Exercises/Muscles/Muscles_finish.js';
@@ -56,7 +53,6 @@ const AppNavigator = () => (
       <Stack.Screen name="ShopScreen" component={ShopScreen} />
       <Stack.Screen name="ClothingScreen" component={ClothingScreen} />
       <Stack.Screen name="FoodScreen" component={FoodScreen} />
-      <Stack.Screen name="ExerciseScreen" component={ExerciseScreen} />
       <Stack.Screen name="AnalysisScreen" component={AnalysisScreen} />
       <Stack.Screen name="Description" component={Description} />
       <Stack.Screen name="Question" component={Question} />
@@ -65,7 +61,6 @@ const AppNavigator = () => (
       <Stack.Screen name="Exercise2" component={Exercise2} />
       <Stack.Screen name="Exercise4" component={Exercise4} />
       <Stack.Screen name="Couseexercies" component={Couseexercies} />
-      <Stack.Screen name="Couseexercies1" component={Couseexercies1} />
       <Stack.Screen name='Couse_start' component={Couse_start} />
       <Stack.Screen name='Couse_startc' component={Couse_startc} />
       <Stack.Screen name='Couse_relax' component={Couse_relax} />
@@ -73,7 +68,6 @@ const AppNavigator = () => (
       <Stack.Screen name='Couse_des' component={Couse_des} />
       <Stack.Screen name="Addexercises" component={Addexercises} />
       <Stack.Screen name='Musclesexercies' component={Musclesexercies} />
-      <Stack.Screen name='Musclesexercies1' component={Musclesexercies1} />  
       <Stack.Screen name='Muscles_startc' component={Muscles_startc} /> 
       <Stack.Screen name='Muscles_start' component={Muscles_start} /> 
       <Stack.Screen name='Muscles_relax' component={Muscles_relax} /> 

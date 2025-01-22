@@ -8,14 +8,7 @@ const Startex = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { items,dayNumber, weekId,set, isMissed } = route.params || {};
-
-  // ใช้รายการแรกเป็น item ที่ต้องการแสดง
   const item = items ? items[0] : null;
-
-  if (!item) {
-    return <View style={styles.container}><Text>Loading...</Text></View>;
-  }
-
   const [isRunning, setIsRunning] = useState(true);
   const [time, setTime] = useState(3); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
   const [intervalId, setIntervalId] = useState(null);
@@ -27,6 +20,13 @@ const Startex = () => {
 
 
   useEffect(() => {
+    if (time === 0 && !isRunning) {
+      // นำทางเมื่อเวลาหมด
+      navigation.navigate('Exercise1', { items, currentIndex: 0, dayNumber, weekId, set, isMissed });
+    }
+  }, [time, isRunning, navigation]);
+  
+  useEffect(() => {
     if (isRunning) {
       const id = setInterval(() => {
         setTime((prevTime) => {
@@ -35,18 +35,16 @@ const Startex = () => {
           } else {
             clearInterval(id);
             setIsRunning(false);
-            navigation.navigate('Exercise1', { items, currentIndex: 0,dayNumber, weekId,set, isMissed  }); // ไปยังหน้า Exercise1 หลังจากครบ 5 วินาที
             return 0;
           }
         });
       }, 1000);
+  
       setIntervalId(id);
-
+  
       return () => clearInterval(id);
-    } else if (intervalId) {
-      clearInterval(intervalId);
     }
-  }, [isRunning, navigation]);
+  }, [isRunning]);  
 
   const handleStartPause = () => {
     setIsRunning(!isRunning);
@@ -74,7 +72,7 @@ const Startex = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{dayNumber, weekId,set, isMissed})}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{items,dayNumber, weekId,set, isMissed})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

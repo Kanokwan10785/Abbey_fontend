@@ -11,7 +11,7 @@ const Couse_start = () => {
 
   useEffect(() => {
     // console.log('Received currentIndex in couse :', currentIndex);
-    console.log('courseId in couse start :', courseId);
+    // console.log('courseId in couse start :', courseId);
   }, [currentIndex]);
 
   if (!items || currentIndex === undefined) {
@@ -37,8 +37,6 @@ const Couse_start = () => {
       setTime(0);
     }
   }, [item]);
-
-  // console.log('Exercise1:', item);
 
   useEffect(() => {
     if (isRunning && time >= 0) {

@@ -51,6 +51,7 @@ const Muscles_finish = () => {
 
   useEffect(() => {
     const updateBalanceOnce = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const updatedBalance = balance + item.trophy;
       setBalance(updatedBalance);
 
@@ -126,7 +127,7 @@ const Muscles_finish = () => {
             return false;
         }
 
-        console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
+        // console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
 
         // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
         const userResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}?populate=exercise_levels`, {
@@ -145,7 +146,7 @@ const Muscles_finish = () => {
 
         // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
         const existingExerciseLevels = userData?.data?.exercise_levels?.map((level) => level.id) || [];
-        console.log('Existing exercise levels:', existingExerciseLevels);
+        // console.log('Existing exercise levels:', existingExerciseLevels);
 
         // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
         const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน

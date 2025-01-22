@@ -7,7 +7,7 @@ import previous from '../../../assets/image/previous.png';
 import { useNavigation } from '@react-navigation/native';
 
 const Couseexercies = ({ route }) => {
-  const { courseId } = route.params;  // Get courseId from navigation
+  const { item, items, currentIndex, courseId } = route.params;  // Get courseId from navigation
     const [exercises, setExercises] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalTime, setTotalTime] = useState(0);
@@ -15,11 +15,10 @@ const Couseexercies = ({ route }) => {
     const [courseImage, setCourseImage] = useState(null);
 
     useEffect(() => {      
-      // ดึงข้อมูลเมื่อ courseId ถูกส่งมา
       fetchexercises();
-    }, [courseId]);
+    }, [item, items, currentIndex, courseId]);
 
-    console.log('courseId',courseId)
+    // console.log('courseId',courseId)
   
     const fetchexercises = async () => {
       try {

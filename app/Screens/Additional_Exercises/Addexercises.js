@@ -33,7 +33,6 @@ const Addexercises = () => {
       const courseData = data.data.map((course) => {
         const courseAttributes = course.attributes;
         const courseImageUrl = courseAttributes?.image?.data?.[0]?.attributes?.url || null;
-        console.log('courseImageUrl',courseImageUrl)
 
         let totalDuration = 0;
 
@@ -90,7 +89,6 @@ const Addexercises = () => {
     try {
       const response = await fetch('http://192.168.1.200:1337/api/muscles-exercises?populate=*');
       const data = await response.json();
-      // console.log('Mu',data)
 
       if (data && data.data) {
         setExercises(data.data); // จัดเก็บข้อมูล addexercises ลงใน state

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Image } from "expo-image";
-import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity,} from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, ScrollView, } from "react-native";
 import { Calendar } from "react-native-calendars";
 import axios from "axios";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import BottomBar from "./BottomBar";
 import WeightRecords from "./WeightRecords.js";
 import BmiRecords from "./BmiRecords.js";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AnalysisScreen = () => {
   const [weeklySummary, setWeeklySummary] = useState([]);
@@ -22,10 +23,13 @@ const AnalysisScreen = () => {
   });
 
   useEffect(() => {
+    setCurrentPage(1);
     const fetchWorkoutRecords = async () => {
       try {
+        const userId = await AsyncStorage.getItem('userId');
+        console.log('userId', userId)
         const response = await axios.get(
-          'http://192.168.1.199:1337/api/users/67?populate=workout_records,workout_records.exercise_level,workout_records.exercise_level.image,workout_records.add_course,workout_records.week,workout_records.day,workout_records.add_course.image,workout_records.add_course.all_exercises,workout_records.day.all_exercises,workout_records.exercise_level.all_exercises,workout_records.day.image'
+          `http://192.168.1.200:1337/api/users/${userId}?populate=workout_records,workout_records.exercise_level,workout_records.exercise_level.image,workout_records.add_course,workout_records.week,workout_records.day,workout_records.add_course.image,workout_records.add_course.all_exercises,workout_records.day.all_exercises,workout_records.exercise_level.all_exercises,workout_records.day.image`
         );
 
         const workoutRecords = response.data?.workout_records || [];
@@ -187,45 +191,44 @@ const AnalysisScreen = () => {
     setSelectedWeek(startOfWeek);
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+
+  const getPaginatedRecords = () => {
+    const records = weeklySummary[0]?.records || [];
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return records.slice(startIndex, endIndex);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < Math.ceil((weeklySummary[0]?.records?.length || 0) / itemsPerPage)) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
   const renderRecord = ({ item }) => {
     const totalDurationInSeconds = item.duration || 0;
     const minutes = Math.floor(totalDurationInSeconds / 60);
     const seconds = totalDurationInSeconds % 60;
-
     return (
       <View style={styles.summaryItem}>
-        {item.imageUrl && (
-          <Image source={{ uri: item.imageUrl }} style={styles.summaryImage} />
-        )}
+        {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={styles.summaryImage} />}
         <View style={styles.summaryDetails}>
-          <Text
-            style={styles.summaryTitle}
-          >{`${item.date} - ${item.title}`}</Text>
+          <Text style={styles.summaryTitle}>{`${item.date} - ${item.title}`}</Text>
           <View style={styles.summaryStats}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 5,
-              }}
-            >
-              <Icon
-                name="clock"
-                size={20}
-                color="#F6A444"
-                style={{ marginRight: 10 }}
-              />
-              <Text
-                style={styles.statText}
-              >{`${minutes} นาที ${seconds} วินาที`}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+              <Icon name="clock" size={20} color="#F6A444" style={{ marginRight: 10 }} />
+              <Text style={styles.statText}>{`${minutes} นาที ${seconds} วินาที`}</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Icon
-                name="dumbbell"
-                size={20}
-                color="#F6A444"
-                style={{ marginRight: 10 }}
-              />
+              <Icon name="dumbbell" size={20} color="#F6A444" style={{ marginRight: 10 }} />
               <Text style={styles.statText}>{item.exercises}</Text>
             </View>
           </View>
@@ -234,88 +237,117 @@ const AnalysisScreen = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#F6A444" />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      <FlatList
-        ListHeaderComponent={
-          <>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>ปฏิทินการออกกำลังกาย</Text>
-            </View>
+      {/* Scrollable Content */}
+      <ScrollView style={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>ปฏิทินการออกกำลังกาย</Text>
+        </View>
 
-            {/* ปฏิทิน */}
-            <Calendar
-              current={new Date().toISOString().split("T")[0]}
-              markedDates={markedDates}
-              onDayPress={handleDayPress}
-              theme={{
-                calendarBackground: "#ffffff",
-                textSectionTitleColor: "#b6c1cd",
-                selectedDayBackgroundColor: "#F6A444",
-                selectedDayTextColor: "#ffffff",
-                todayTextColor: "#F6A444",
-                dayTextColor: "#2d4150",
-                textDisabledColor: "#d9e1e8",
-                arrowColor: "#F6A444",
-                monthTextColor: "#F6A444",
-                indicatorColor: "#F6A444",
-              }}
-            />
+        {/* Calendar */}
+        <Calendar
+          current={new Date().toISOString().split("T")[0]}
+          markedDates={markedDates}
+          onDayPress={handleDayPress}
+          theme={{
+            calendarBackground: "#ffffff",
+            textSectionTitleColor: "#b6c1cd",
+            selectedDayBackgroundColor: "#F6A444",
+            selectedDayTextColor: "#ffffff",
+            todayTextColor: "#F6A444",
+            dayTextColor: "#2d4150",
+            textDisabledColor: "#d9e1e8",
+            arrowColor: "#F6A444",
+            monthTextColor: "#F6A444",
+            indicatorColor: "#F6A444",
+          }}
+        />
 
-            {/* ส่วน Header ของสัปดาห์ */}
-            <View style={styles.weekHeader}>
-              <TouchableOpacity
-                onPress={handlePrevWeek}
-                style={styles.weekButton}
-              >
-                <Icon name="chevron-left" size={30} color="#FFFFFF" />
-              </TouchableOpacity>
-              <View style={styles.weekInfo}>
-                <Text style={styles.data}>
-                  {`วันที่ ${weeklySummary[0]?.weekRange || ""}`}
-                </Text>
-                <Text style={styles.list}>
-                  {`${weeklySummary[0]?.totalItems || 0} รายการ`}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={handleNextWeek}
-                style={styles.weekButton}
-              >
-                <Icon name="chevron-right" size={30} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </>
-        }
-        data={weeklySummary[0]?.records || []}
-        renderItem={renderRecord}
-        keyExtractor={(item) => item.id}
-        ListFooterComponent={
-          <View>
-            <WeightRecords />
-            <BmiRecords />
+        {/* Weekly Summary Header */}
+        <View style={styles.weekHeader}>
+          <TouchableOpacity onPress={handlePrevWeek} style={styles.weekButton}>
+            <Icon name="chevron-left" size={30} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.weekInfo}>
+            <Text style={styles.data}>
+              {`วันที่ ${weeklySummary[0]?.weekRange || ""}`}
+            </Text>
+            <Text style={styles.list}>
+              {`${weeklySummary[0]?.totalItems || 0} รายการ`}
+            </Text>
           </View>
-        }
-      />
+          <TouchableOpacity onPress={handleNextWeek} style={styles.weekButton}>
+            <Icon name="chevron-right" size={30} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
 
-      <BottomBar />
+        {/* Paginated Records */}
+        <FlatList
+          data={getPaginatedRecords()}
+          renderItem={renderRecord}
+          keyExtractor={(item) => item.id}
+          ListFooterComponent={
+            <View style={styles.paginationContainer}>
+              {/* Pagination */}
+              <TouchableOpacity
+                onPress={handlePrevPage}
+                disabled={currentPage === 1}
+                style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+              >
+                <Icon name="chevron-left" size={20} color="#FFF" />
+              </TouchableOpacity>
+
+              <Text style={styles.pageInfo}>
+                หน้าที่ {weeklySummary[0]?.records?.length > 0 ? currentPage : 0} /{" "}
+                {weeklySummary[0]?.records?.length > 0
+                  ? Math.ceil(weeklySummary[0]?.records?.length / itemsPerPage)
+                  : 0}
+              </Text>
+
+              <TouchableOpacity
+                onPress={handleNextPage}
+                disabled={
+                  currentPage >=
+                  (weeklySummary[0]?.records?.length > 0
+                    ? Math.ceil(weeklySummary[0]?.records?.length / itemsPerPage)
+                    : 0)
+                }
+                style={[
+                  styles.pageButton,
+                  currentPage >=
+                  (weeklySummary[0]?.records?.length > 0
+                    ? Math.ceil(weeklySummary[0]?.records?.length / itemsPerPage)
+                    : 0) && styles.disabledButton,
+                ]}
+              >
+                <Icon name="chevron-right" size={20} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          }
+        />
+        <View>
+          <WeightRecords />
+          <BmiRecords />
+        </View>
+      </ScrollView>
+      <View>
+        <BottomBar />
+      </View>
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF",
+  },
+  scrollContent: {
+    flex: 1,
   },
   header: {
     backgroundColor: "#F6A444",
@@ -357,6 +389,26 @@ const styles = StyleSheet.create({
     fontFamily: "appfont_01",
     color: "#FFFFFF",
   },
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  pageButton: {
+    padding: 10,
+    backgroundColor: "#F6A444",
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  disabledButton: {
+    backgroundColor: "#C0C0C0",
+  },
+  pageInfo: {
+    fontSize: 16,
+    color: "#000",
+    fontFamily: "appfont_01",
+  },
   summaryItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -375,7 +427,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   summaryTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "appfont_01",
     marginBottom: 5,
   },

@@ -10,7 +10,7 @@ const Exercise1 = () => {
   const { items, currentIndex,dayNumber, weekId,set, isMissed } = route.params || {};
 
   useEffect(() => {
-    console.log('Received currentIndex in Exercise1:', currentIndex);
+    // console.log('Received currentIndex in Exercise1:', currentIndex);
   }, [currentIndex,dayNumber, weekId,set, isMissed]);
 
   if (!items || currentIndex === undefined) {
@@ -20,7 +20,7 @@ const Exercise1 = () => {
       </View>
     );
   }
-  console.log('dayNumber, weekId ex1 ',dayNumber, weekId,set, isMissed)
+  // console.log('dayNumber, weekId ex1 ',dayNumber, weekId,set, isMissed)
 
   const item = items[currentIndex];
   const [isRunning, setIsRunning] = useState(false);

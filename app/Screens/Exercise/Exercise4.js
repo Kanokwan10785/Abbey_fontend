@@ -1,70 +1,86 @@
-import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect, useContext } from 'react';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import coin from '../../../assets/image/coin.png';
-import cancel from '../../../assets/image/cancel.png'
-import { BalanceContext } from './../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import coin from '../../../assets/image/coin.png';
+import cancel from '../../../assets/image/cancel.png';
+import { BalanceContext } from './../BalanceContext';
 
 const Exercise4 = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const [intervalId, setIntervalId] = useState(null);
   const { item } = route.params || {};
   const { dayNumber, weekId, set, isMissed } = route.params || {};
+  const [bonusMessage, setBonusMessage] = useState(null); // สถานะสำหรับข้อความโบนัส
+  const [localBalance, setLocalBalance] = useState(balance); // เก็บค่า balance ภายใน component
 
-  // ตรวจสอบว่า item ถูกกำหนดค่าหรือไม่
   if (!item || !item.trophy) {
-    return <View style={styles.container}><Text>Loading...</Text></View>;
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
   }
 
-  // console.log('Exercise4:', item);
-
   useEffect(() => {
-    const updateBalanceOnce = async () => {
-      // เพิ่มค่า item.trophy เข้าไปใน balance
-      const updatedBalance = balance + item.trophy;
-      setBalance(updatedBalance);  // อัปเดต balance ใน state
-
-      // บันทึก balance ใหม่ลงใน AsyncStorage และส่งไปยังเซิร์ฟเวอร์
+    const processWorkoutAndBonus = async () => {
       try {
+        let updatedBalance = localBalance;
+  
+        console.log('Initial balance:', updatedBalance);
+  
+        // เพิ่มเงินรางวัล
+        updatedBalance += item.trophy;
+        console.log(`Added trophy reward (${item.trophy}). Updated balance:`, updatedBalance);
+  
+        // ตรวจสอบโบนัส
+        const isContinuous = await checkContinuousWorkout();
+        console.log('Is continuous workout (last 3 days):', isContinuous);
+  
+        if (isContinuous) {
+          updatedBalance += 2; // เพิ่มโบนัส 2 เหรียญ
+          setBonusMessage('คุณได้รับโบนัส 2 เหรียญจากการออกกำลังกายต่อเนื่อง!');
+          console.log('Bonus applied! Added 2 coins. Updated balance:', updatedBalance);
+        } else {
+          console.log('No bonus applied.');
+        }
+  
+        // อัปเดต balance ทั้งใน state และ AsyncStorage
+        setLocalBalance(updatedBalance);
+        setBalance(updatedBalance);
         await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
+        console.log('Balance updated in AsyncStorage:', updatedBalance);
+        
+        await updateUserBalance(updatedBalance);
+
+        // บันทึกข้อมูลการออกกำลังกาย
+        await updateWorkoutRecord();
+        console.log('Workout record updated successfully.');
       } catch (error) {
-        console.error('Error saving balance:', error);
+        console.error('Error processing workout and bonus:', error);
       }
     };
-
-    // เรียกใช้งานฟังก์ชันนี้ครั้งเดียว
-    updateBalanceOnce();
+  
+    processWorkoutAndBonus();
   }, [dayNumber, weekId, set]);
-
-  console.log('dayNumber, weekId ex4', dayNumber, weekId, set, isMissed)
+  
 
   const updateUserBalance = async (newBalance) => {
     try {
-      const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
-      const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
-
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
       const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
-          'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
-        }),
+        body: JSON.stringify({ balance: newBalance }),
       });
-
       const data = await response.json();
-
-      if (response.ok) {
-        console.log('Balance updated successfully:', data);
-      } else {
+      // console.log('API Response:', data);
+      if (!response.ok) {
         console.log('Failed to update balance:', data.message);
       }
     } catch (error) {
@@ -77,14 +93,16 @@ const Exercise4 = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
       const timestamp = new Date().toISOString();
-
       const status = isMissed ? false : true;
-
+  
+      console.log('Updating workout record for user:', userId);
+      // console.log('Week ID:', weekId, 'Day Number:', dayNumber, 'Status:', status);
+  
       const response = await fetch('http://192.168.1.200:1337/api/workout-records', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           data: {
@@ -97,53 +115,142 @@ const Exercise4 = () => {
           },
         }),
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Workout record updated successfully:', data);
-        return true; // Return success
-      } else {
+  
+      if (!response.ok) {
+        const data = await response.json();
         console.error('Failed to update workout record:', data.error.message);
-        return false;
+      } else {
+        console.log('Workout record updated successfully at:', timestamp);
       }
     } catch (error) {
       console.error('Error updating workout record:', error);
+    }
+  };
+  
+
+  const checkContinuousWorkout = async () => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      const response = await fetch(
+        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Failed to fetch workout records:', data.error.message);
+        return false;
+      }
+  
+      const records = data.data;
+  
+      // console.log('Fetched workout records:', records);
+  
+      // เรียงลำดับ records ตาม week และ day
+      const sortedRecords = records.sort((a, b) => {
+        const weekA = a.attributes.week?.data?.id || 0;
+        const weekB = b.attributes.week?.data?.id || 0;
+        const dayA = a.attributes.day?.data?.attributes?.dayNumber || 0;
+        const dayB = b.attributes.day?.data?.attributes?.dayNumber || 0;
+  
+        if (weekA !== weekB) {
+          return weekA - weekB;
+        }
+        return dayA - dayB;
+      });
+  
+      // console.log('Sorted workout records:', sortedRecords);
+  
+      // ตรวจสอบว่า week และ day ปัจจุบันถูกบันทึกแล้วหรือไม่
+      const currentRecord = sortedRecords.find(
+        (r) =>
+          r.attributes.week?.data?.id === weekId &&
+          r.attributes.day?.data?.attributes?.dayNumber === dayNumber
+      );
+  
+      if (currentRecord) {
+        console.log(
+          `Current week (${weekId}) and day (${dayNumber}) already exist in records. Bonus will not be given.`
+        );
+        return false; // หากเคยบันทึก week/day นี้แล้ว จะไม่ให้โบนัส
+      }
+  
+      // ตรวจสอบ 3 วันที่ต่อเนื่องก่อนหน้า
+      for (let i = 1; i <= 3; i++) {
+        const targetDay = dayNumber - i;
+  
+        if (targetDay <= 0) {
+          console.log(`Skipping day ${targetDay} (invalid day).`);
+          return false;
+        }
+  
+        const record = sortedRecords.find(
+          (r) =>
+            r.attributes.week?.data?.id === weekId &&
+            r.attributes.day?.data?.attributes?.dayNumber === targetDay
+        );
+  
+        if (!record) {
+          console.log(`No record found for Week ${weekId}, Day ${targetDay}.`);
+          return false;
+        }
+  
+        if (record.attributes.status === false) {
+          console.log(
+            `Record found for Week ${weekId}, Day ${targetDay} with status = false. No bonus will be given.`
+          );
+          return false;
+        }
+  
+        console.log(`Record found for Week ${weekId}, Day ${targetDay}:`, record);
+      }
+  
+      console.log('All previous 3 days are completed with status = true.');
+      return true;
+    } catch (error) {
+      console.error('Error checking continuous workout:', error);
       return false;
     }
   };
-
+  
+  
+  
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton}
-          onPress={() => navigation.navigate('Homeexercise')}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => navigation.navigate('Homeexercise')}
+        >
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
           <Image source={coin} style={styles.coin} />
-          <Text style={styles.coinsText}>{balance !== null ? balance.toLocaleString() : "0"}</Text>
+          <Text style={styles.coinsText}>
+            {localBalance !== null ? localBalance.toLocaleString() : '0'}
+          </Text>
         </View>
       </View>
       <View style={styles.trophyContainer}>
-        <Image source={require('../../../assets/image/trophy.png')} style={styles.trophyImage} />
+        <Image
+          source={require('../../../assets/image/trophy.png')}
+          style={styles.trophyImage}
+        />
         <View style={styles.coinRewardContainer}>
           <Image source={coin} style={styles.coin} />
           <Text style={styles.coinRewardText}>{item.trophy}</Text>
         </View>
+        {bonusMessage && <Text style={styles.bonusMessage}>{bonusMessage}</Text>}
       </View>
       <TouchableOpacity
         style={styles.finishButton}
-        onPress={() => {
-          updateWorkoutRecord().then((success) => {
-            if (success) {
-              console.log('Record updated and navigating to Homeexercise');
-              navigation.navigate('Homeexercise'); // นำทางไปหน้าหลัก
-            } else {
-              console.error('Failed to update record');
-            }
-          });
-        }}
+        onPress={() => navigation.navigate('Homeexercise')}
       >
         <Text style={styles.finishButtonText}>เสร็จสิ้น</Text>
       </TouchableOpacity>
@@ -205,7 +312,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFA500',
     padding: 8,
     borderRadius: 25,
-    marginVertical: 60,
+    marginVertical: 20,
   },
   coinRewardText: {
     fontFamily: 'appfont_01',
@@ -213,6 +320,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginLeft: 8,
     marginHorizontal: 10,
+  },
+  bonusMessage: {
+    fontSize: 16,
+    color: '#FFA500',
+    marginTop: 20,
+    textAlign: 'center',
+    fontFamily: 'appfont_01',
   },
   finishButton: {
     backgroundColor: '#FFA500',

@@ -8,9 +8,8 @@ const Muscles_startc = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { items,musclesId } = route.params || {};
-  console.log('musclesId in couse :', musclesId);
+  // console.log('musclesId in couse :', musclesId);
 
-  // ใช้รายการแรกเป็น item ที่ต้องการแสดง
   const item = items ? items[0] : null;
 
   if (!item) {

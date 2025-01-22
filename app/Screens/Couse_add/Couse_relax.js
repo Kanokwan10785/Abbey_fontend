@@ -13,7 +13,7 @@ const Couse_relax = () => {
   const route = useRoute();
   const { item, items, currentIndex, courseId } = route.params || {};
 
-  console.log('courseId in couse relax:', courseId);
+  // console.log('courseId in couse relax:', courseId);
 
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;

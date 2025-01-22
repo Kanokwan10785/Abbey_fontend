@@ -12,7 +12,7 @@ const Couse_finish = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex, courseId } = route.params || {};
-  console.log('courseId in couse fin:', courseId);
+  // console.log('courseId in couse fin:', courseId);
 
   if (!item) {
     console.log("Item is undefined");
@@ -84,11 +84,11 @@ const Couse_finish = () => {
 
         // Map courseId to exercise level and workout records
         const mappedExerciseLevel = mapExerciseLevel(courseId);
-        console.log('mappedExerciseLevel', mappedExerciseLevel);
+        // console.log('mappedExerciseLevel', mappedExerciseLevel);
 
         // Validate mappings
         if (mappedExerciseLevel === "unknown") {
-            console.error("Invalid mapping for courseId:", courseId);
+            // console.error("Invalid mapping for courseId:", courseId);
             return false;
         }
 
@@ -134,11 +134,11 @@ const Couse_finish = () => {
 
         // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
         const existingExerciseLevels = userData?.data?.add_course?.map((level) => level.id) || [];
-        console.log('Existing exercise levels:', existingExerciseLevels);
+        // console.log('Existing exercise levels:', existingExerciseLevels);
 
         // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
         const updatedExerciseLevels = [...new Set([...existingExerciseLevels, courseId])];
-        console.log('updatedExerciseLevels:', updatedExerciseLevels);
+        // console.log('updatedExerciseLevels:', updatedExerciseLevels);
 
         // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
         const userUpdateResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
@@ -190,7 +190,7 @@ const Couse_finish = () => {
         style={styles.finishButton}
         onPress={() => {
           updateWorkoutRecord().then(() => {
-            navigation.navigate('Couseexercies1', { item, items, currentIndex, courseId });
+            navigation.navigate('Couseexercies', { item, items, currentIndex, courseId });
           });
         }}
       >

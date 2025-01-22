@@ -49,7 +49,7 @@ const Exercise2 = () => {
     return () => clearInterval(id);
   }, [currentIndex,dayNumber, weekId,set, isMissed]);
 
-  console.log('dayNumber, weekId ex2',dayNumber,weekId,set, isMissed)
+  // console.log('dayNumber, weekId ex2',dayNumber,weekId,set, isMissed)
 
   const updateBalance = async () => {
     const updatedBalance = balance + item.dollar;
@@ -82,7 +82,7 @@ const Exercise2 = () => {
       const data = await response.json();
   
       if (response.ok) {
-        console.log('Balance updated successfully:', data);
+        // console.log('Balance updated successfully:', data);
       } else {
         console.log('Failed to update balance:', data.message);
       }

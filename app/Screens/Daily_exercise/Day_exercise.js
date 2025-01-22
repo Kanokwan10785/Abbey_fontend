@@ -19,19 +19,19 @@ const Dayexercise = () => {
   const [unlockDate, setUnlockDate] = useState(null);
 
   useEffect(() => {
-    setIsLocked(false);
-    setUnlockDate(null);
-    setExercises([]);
     if (dayNumber && weekId && set && userId) {
       fetchExercises(dayNumber, weekId, set, userId, isMissed);
+      // console.log('Dayexercise:', { dayNumber, weekId, set, isMissed });
+    } else if (!userId) {
+      console.warn('User ID is not available yet.');
     } else {
       console.error('Missing dayNumber or weekId');
       setLoading(false);
     }
-  }, [dayNumber, weekId, set, userId, isMissed]);
+  }, [dayNumber, weekId, set, userId, isMissed]);  
   
 
-  console.log('Dayexercise: Received params:', { dayNumber, weekId, set, isMissed });
+  // console.log('Dayexercise: Received params:', { dayNumber, weekId, set, isMissed });
 
   const fetchStartDateFromHistory = async (week, day) => {
     try {
@@ -46,7 +46,7 @@ const Dayexercise = () => {
         }
       );
       const data = await response.json();
-      console.log('Fetched workout-records data:', data);
+      // console.log('Fetched workout-records data:', data);
   
       // กรองเฉพาะประวัติที่ตรงกับ week และ day ที่ต้องการ
       const matchingRecords = data.data.filter(
@@ -54,15 +54,21 @@ const Dayexercise = () => {
           record.attributes.week?.data?.id === week &&
           record.attributes.day?.data?.attributes?.dayNumber === day
       );
-      console.log('Matching records:', matchingRecords);
+      // console.log('Matching records:', matchingRecords);
   
       if (matchingRecords.length > 0) {
-        return new Date(matchingRecords[0].attributes.timestamp);
+        const record = matchingRecords[0].attributes;
+        return record.resetTimestamp
+          ? new Date(record.resetTimestamp)
+          : new Date(record.timestamp);
       }
-        return null; // ไม่มีข้อมูลในประวัติ
+  
+      console.warn(`No record found for Week ${week}, Day ${day}. Returning current date as fallback.`);
+      return new Date();
+       // ไม่มีข้อมูลในประวัติ
     } catch (error) {
       console.error('Error fetching workout history:', error);
-      return null;
+      return new Date();
     }
   };
   

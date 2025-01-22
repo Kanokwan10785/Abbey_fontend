@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../../assets/image/cancel.png';
@@ -12,8 +12,9 @@ const Muscles_relax = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex, musclesId } = route.params || {};
+  const hasUpdatedBalance = useRef(false);
 
-  console.log('musclesId in couse relax:', musclesId);
+  // console.log('musclesId in couse relax:', musclesId);
 
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -30,6 +31,7 @@ const Muscles_relax = () => {
         if (prevTime === 3) {
           // อัปเดต balance เมื่อเหลือเวลา 3 วินาที
           updateBalance();
+          hasUpdatedBalance.current = true;
         }
 
         if (prevTime > 0) {

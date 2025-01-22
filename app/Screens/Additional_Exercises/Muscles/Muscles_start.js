@@ -11,7 +11,7 @@ const Muscles_start = () => {
 
   useEffect(() => {
     // console.log('Received currentIndex in couse :', currentIndex);
-    console.log('musclesId in couse start :', musclesId);
+    // console.log('musclesId in couse start :', musclesId);
   }, [currentIndex]);
 
   if (!items || currentIndex === undefined) {

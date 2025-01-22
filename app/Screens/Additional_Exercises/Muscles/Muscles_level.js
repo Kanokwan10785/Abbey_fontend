@@ -22,7 +22,7 @@ const MusclesLevel = ({route}) => {
             );
             const data = await response.json();
         
-            console.log('Fetched Data:', data);
+            // console.log('Fetched Data:', data);
         
             if (!data || !data.data || !data.data.attributes.exercise_levels.data) {
               console.error("ไม่มีข้อมูลจาก API");

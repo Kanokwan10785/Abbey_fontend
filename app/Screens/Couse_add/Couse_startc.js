@@ -8,9 +8,8 @@ const Couse_startc = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { items,courseId } = route.params || {};
-  console.log('courseId in couse :', courseId);
+  // console.log('courseId in couse :', courseId);
 
-  // ใช้รายการแรกเป็น item ที่ต้องการแสดง
   const item = items ? items[0] : null;
 
   if (!item) {
