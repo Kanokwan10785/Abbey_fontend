@@ -302,7 +302,7 @@ const AnalysisScreen = () => {
         ListFooterComponent={
           <View>
             <WeightRecords />
-            {/* <BmiRecords /> */}
+            <BmiRecords />
           </View>
         }
       />
