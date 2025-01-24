@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import coin from '../../../assets/image/coin.png';
 import cancel from '../../../assets/image/cancel.png';
-import { BalanceContext } from './../BalanceContext';
+import { BalanceContext } from '../BalanceContext';
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './apiConfig.js';
 
 const Exercise4 = () => {
   const navigation = useNavigation();
@@ -26,37 +28,39 @@ const Exercise4 = () => {
   useEffect(() => {
     const processWorkoutAndBonus = async () => {
       try {
-        let updatedBalance = localBalance;
+        let rewardCoins = item.trophy;
   
-        console.log('Initial balance:', updatedBalance);
-  
-        // เพิ่มเงินรางวัล
-        updatedBalance += item.trophy;
-        console.log(`Added trophy reward (${item.trophy}). Updated balance:`, updatedBalance);
+        console.log('Initial balance:', localBalance);
   
         // ตรวจสอบโบนัส
         const isContinuous = await checkContinuousWorkout();
         console.log('Is continuous workout (last 3 days):', isContinuous);
   
         if (isContinuous) {
-          updatedBalance += 2; // เพิ่มโบนัส 2 เหรียญ
+          rewardCoins += 2; // เพิ่มโบนัส 2 เหรียญ
           setBonusMessage('คุณได้รับโบนัส 2 เหรียญจากการออกกำลังกายต่อเนื่อง!');
-          console.log('Bonus applied! Added 2 coins. Updated balance:', updatedBalance);
-        } else {
-          console.log('No bonus applied.');
+          console.log('Bonus applied! Added 2 coins.');
         }
   
-        // อัปเดต balance ทั้งใน state และ AsyncStorage
+        // ตรวจสอบและอัปเดตเหรียญรายสัปดาห์
+        const success = await updateWeeklyCoins(rewardCoins);
+        if (!success) {
+          console.log('เหรียญรวมเกินขีดจำกัด 100 เหรียญในสัปดาห์นี้');
+          return;
+        }
+  
+        // อัปเดต Balance ใน Context
+        const updatedBalance = localBalance + rewardCoins;
         setLocalBalance(updatedBalance);
         setBalance(updatedBalance);
-        await AsyncStorage.setItem('balance', updatedBalance.toString());
-        console.log('Balance updated in AsyncStorage:', updatedBalance);
-        
+  
+        // อัปเดตข้อมูลผู้ใช้ใน Backend
         await updateUserBalance(updatedBalance);
-
+  
         // บันทึกข้อมูลการออกกำลังกาย
         await updateWorkoutRecord();
-        console.log('Workout record updated successfully.');
+  
+        console.log('Workout record and balance updated successfully.');
       } catch (error) {
         console.error('Error processing workout and bonus:', error);
       }
@@ -65,12 +69,13 @@ const Exercise4 = () => {
     processWorkoutAndBonus();
   }, [dayNumber, weekId, set]);
   
+  
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
-      const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +103,7 @@ const Exercise4 = () => {
       console.log('Updating workout record for user:', userId);
       // console.log('Week ID:', weekId, 'Day Number:', dayNumber, 'Status:', status);
   
-      const response = await fetch('http://192.168.1.200:1337/api/workout-records', {
+      const response = await fetch(`${API_BASE_URL}/api/workout-records`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +138,7 @@ const Exercise4 = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
       const response = await fetch(
-        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -217,8 +222,51 @@ const Exercise4 = () => {
       return false;
     }
   };
+
+  const getCurrentWeekNumber = () => {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const daysSinceStartOfYear = (now - startOfYear) / (1000 * 60 * 60 * 24);
+    return Math.ceil(daysSinceStartOfYear / 7);
+  };
+
+  const updateWeeklyCoins = async (coinsToAdd) => {
+    const currentWeek = getCurrentWeekNumber();
   
+    try {
+      // ดึงข้อมูลสัปดาห์และเหรียญที่ได้รับจาก AsyncStorage
+      const storedData = await AsyncStorage.getItem('weeklyCoins');
+      let weeklyCoinsData = storedData
+        ? JSON.parse(storedData)
+        : { currentWeekCoins: 0, lastUpdatedWeek: currentWeek };
   
+      // รีเซ็ตข้อมูลถ้าสัปดาห์เปลี่ยน
+      if (weeklyCoinsData.lastUpdatedWeek !== currentWeek) {
+        weeklyCoinsData = { currentWeekCoins: 0, lastUpdatedWeek: currentWeek };
+      }
+  
+      // ตรวจสอบว่าการเพิ่มเหรียญจะเกิน 100 หรือไม่
+      if (weeklyCoinsData.currentWeekCoins + coinsToAdd > 100) {
+        alert('คุณได้รับเหรียญเกินขีดจำกัด 100 เหรียญสำหรับสัปดาห์นี้!');
+        return false;
+      }
+  
+      // อัปเดตจำนวนเหรียญในสัปดาห์ปัจจุบัน
+      weeklyCoinsData.currentWeekCoins += coinsToAdd;
+      await AsyncStorage.setItem('weeklyCoins', JSON.stringify(weeklyCoinsData));
+  
+      // อัปเดต Balance
+      const currentBalance = parseInt(await AsyncStorage.getItem('balance')) || 0;
+      const updatedBalance = currentBalance + coinsToAdd;
+      await AsyncStorage.setItem('balance', updatedBalance.toString());
+  
+      return true;
+    } catch (error) {
+      console.error('Error updating weekly coins:', error);
+      return false;
+    }
+  };
+
   
 
   return (

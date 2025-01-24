@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -7,6 +7,9 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import BottomBar from '../BottomBar';
 import exercise from '../../../assets/image/exercise.png';
 import { useMemo } from 'react'
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './apiConfig.js';
+
 
 const Homeexercise = () => {
   const navigation = useNavigation();
@@ -65,7 +68,7 @@ const Homeexercise = () => {
   const fetchWeeks = async () => {
     try {
       console.log('Fetching weeks...');
-      const response = await axios.get('http://192.168.1.200:1337/api/weeks?populate=*');
+      const response = await axios.get(`${API_BASE_URL}/api/weeks?populate=*`);
 
       const week1StartDate = await fetchStartDateFromHistory(1, 1);
       if (!week1StartDate) {
@@ -124,7 +127,7 @@ const Homeexercise = () => {
 
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -158,7 +161,7 @@ const Homeexercise = () => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user]=${userId}&populate=*`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user]=${userId}&populate=*`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -218,7 +221,7 @@ const Homeexercise = () => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -238,7 +241,7 @@ const Homeexercise = () => {
 
       if (week1Day1Record) {
         await axios.put(
-          `http://192.168.1.200:1337/api/workout-records/${week1Day1Record.id}`,
+          `${API_BASE_URL}/api/workout-records/${week1Day1Record.id}`,
           { data: { resetTimestamp: nextDate.toISOString() } },
           {
             headers: {
@@ -253,7 +256,7 @@ const Homeexercise = () => {
       // รีเซ็ตสถานะทั้งหมด (อัปเดต status = false)
       for (const record of records) {
         await axios.put(
-          `http://192.168.1.200:1337/api/workout-records/${record.id}`,
+          `${API_BASE_URL}/api/workout-records/${record.id}`,
           { data: { status: null } },
           {
             headers: {
@@ -275,7 +278,7 @@ const Homeexercise = () => {
       try {
         const token = await AsyncStorage.getItem('jwt');
         const response = await axios.get(
-          `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
+          `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

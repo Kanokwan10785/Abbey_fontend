@@ -1,8 +1,9 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../assets/image/cancel.png';
+import { Image } from 'expo-image';
 
 const Exercise1 = () => {
   const navigation = useNavigation();

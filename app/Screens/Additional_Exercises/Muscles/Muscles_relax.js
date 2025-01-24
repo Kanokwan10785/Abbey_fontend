@@ -1,11 +1,13 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import cancel from '../../../../assets/image/cancel.png';
 import { BalanceContext } from '../../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import coin from '../../../../assets/image/coin.png';
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './../apiConfig.js';
 
 const Muscles_relax = () => {
   const navigation = useNavigation();
@@ -70,7 +72,7 @@ const Muscles_relax = () => {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
   
-      const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

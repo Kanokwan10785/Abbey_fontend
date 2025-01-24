@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Image,TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../../BottomBar';
 import previous from '../../../../assets/image/previous.png';
 import { useNavigation } from '@react-navigation/native';
+import { API_BASE_URL } from './../apiConfig.js';
 
 const MusclesLevel = ({route}) => {
   const navigation = useNavigation();
@@ -18,7 +19,7 @@ const MusclesLevel = ({route}) => {
         const fetchCourses = async () => {
           try {
             const response = await fetch(
-              `http://192.168.1.200:1337/api/muscles-exercises/${musclesId}?populate=exercise_levels.image,icon,exercise_levels.all_exercises`
+              `${API_BASE_URL}/api/muscles-exercises/${musclesId}?populate=exercise_levels.image,icon,exercise_levels.all_exercises`
             );
             const data = await response.json();
         
@@ -35,6 +36,7 @@ const MusclesLevel = ({route}) => {
             const levelsData = data.data.attributes.exercise_levels.data.map((level) => {
               let totalDuration = 0;
               const exercises = level.attributes.all_exercises.data.map((exercise) => {
+              let displayText = '';
 
                 if (exercise.attributes.reps) {
                   displayText = `${exercise.attributes.reps} ครั้ง`;

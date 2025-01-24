@@ -1,11 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import coin from '../../../assets/image/coin.png';
 import cancel from '../../../assets/image/cancel.png';
 import { useRoute } from '@react-navigation/native';
 import { BalanceContext } from '../BalanceContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './apiConfig.js';
 
 const Couse_finish = () => {
   const navigation = useNavigation();
@@ -24,32 +26,30 @@ const Couse_finish = () => {
     return <View style={styles.container}><Text>Loading trophy...</Text></View>;
   }
 
-  // อัปเดต balance เมื่อหน้า Couse_finish ถูกโหลดครั้งแรก
-  useEffect(() => {
-    const updateBalanceOnce = async () => {
-      // เพิ่มค่า item.trophy เข้าไปใน balance
+useEffect(() => {
+  const updateBalanceOnce = async () => {
+    setTimeout(async () => {
       const updatedBalance = balance + item.trophy;
-      setBalance(updatedBalance);  // อัปเดต balance ใน state
+      setBalance(updatedBalance); // อัปเดต balance ใน state
 
-      // บันทึก balance ใหม่ลงใน AsyncStorage และส่งไปยังเซิร์ฟเวอร์
       try {
         await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
+        await updateUserBalance(updatedBalance); 
       } catch (error) {
         console.error('Error saving balance:', error);
       }
-    };
+    }, 1000); 
+  };
 
-    // เรียกใช้งานฟังก์ชันนี้ครั้งเดียว
-    updateBalanceOnce();
-  }, []); // ใช้ dependency array ที่ว่างเปล่าเพื่อให้ฟังก์ชันทำงานแค่ครั้งเดียว
+  updateBalanceOnce();
+}, []);
 
   const updateUserBalance = async (newBalance) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -82,18 +82,15 @@ const Couse_finish = () => {
         const userId = await AsyncStorage.getItem('userId');
         const timestamp = new Date().toISOString();
 
-        // Map courseId to exercise level and workout records
         const mappedExerciseLevel = mapExerciseLevel(courseId);
         // console.log('mappedExerciseLevel', mappedExerciseLevel);
 
-        // Validate mappings
         if (mappedExerciseLevel === "unknown") {
             // console.error("Invalid mapping for courseId:", courseId);
             return false;
         }
 
-        // 1. สร้าง workout record ใหม่
-        const workoutRecordResponse = await fetch('http://192.168.1.200:1337/api/workout-records', {
+        const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -117,8 +114,7 @@ const Couse_finish = () => {
 
         console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
 
-        // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
-        const userResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}?populate=add_courses`, {
+        const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}?populate=add_courses`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -141,7 +137,7 @@ const Couse_finish = () => {
         // console.log('updatedExerciseLevels:', updatedExerciseLevels);
 
         // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
-        const userUpdateResponse = await fetch(`http://192.168.1.200:1337/api/users/${userId}`, {
+        const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -161,7 +157,7 @@ const Couse_finish = () => {
         console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
         return true;
     } catch (error) {
-        console.error('เกิดข้อผิดพลาดในการอัปเดต exercise_levels:', error);
+        console.error('เกิดข้อผิดพลาดในการอัปเดต', error);
         return false;
     }
 };

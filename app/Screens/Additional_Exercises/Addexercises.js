@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../BottomBar';
 import { useNavigation } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './apiConfig.js';
 
 const Addexercises = () => {
   const navigation = useNavigation();
@@ -19,7 +21,7 @@ const Addexercises = () => {
   const fetchCourses = async () => {
     try {
       const response = await fetch(
-        `http://192.168.1.200:1337/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
+        `${API_BASE_URL}/api/add-courses?populate=image,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
 
@@ -87,7 +89,7 @@ const Addexercises = () => {
   // เรียกข้อมูลการออกกำลังกายจาก API
   const fetchExercises = async () => {
     try {
-      const response = await fetch('http://192.168.1.200:1337/api/muscles-exercises?populate=*');
+      const response = await fetch(`${API_BASE_URL}/api/muscles-exercises?populate=*`);
       const data = await response.json();
 
       if (data && data.data) {

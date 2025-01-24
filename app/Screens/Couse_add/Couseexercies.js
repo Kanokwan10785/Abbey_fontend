@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../BottomBar';
 import exercise from '../../../assets/image/exercise.png';
 import previous from '../../../assets/image/previous.png';
 import { useNavigation } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './apiConfig.js';
 
 const Couseexercies = ({ route }) => {
   const { item, items, currentIndex, courseId } = route.params;  // Get courseId from navigation
@@ -23,7 +25,7 @@ const Couseexercies = ({ route }) => {
     const fetchexercises = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.200:1337/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
+          `${API_BASE_URL}/api/add-courses/${courseId}?populate=image,all_exercises.animation,all_exercises.muscle`
         );
         const data = await response.json();
         // console.log("API Response:", data);

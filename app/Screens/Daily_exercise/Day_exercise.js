@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../BottomBar';
 import exercise from '../../../assets/image/exercise.png';
 import previous from '../../../assets/image/previous.png';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
+import { API_BASE_URL } from './apiConfig.js';
 
 const Dayexercise = () => {
   const route = useRoute();
@@ -38,7 +40,7 @@ const Dayexercise = () => {
 
       const token = await AsyncStorage.getItem('jwt'); // ดึง token สำหรับการเชื่อมต่อ
       const response = await fetch(
-        `http://192.168.1.200:1337/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,7 +77,7 @@ const Dayexercise = () => {
   const fetchExercises = async (day, week) => {
     try {
       const response = await fetch(
-        `http://192.168.1.200:1337/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
+        `${API_BASE_URL}/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
       );
       const data = await response.json();
   
