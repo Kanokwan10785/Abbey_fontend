@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import bar01 from '../../assets/image/bar-01.png';
 import bar02 from '../../assets/image/bar-02.png';
-import bar03 from '../../assets/image/bar-03.png';
+import bar03 from '../../assets/image/bar-03B.png';
+// import bar03 from '../../assets/image/bar-03.png';
 import bar04 from '../../assets/image/bar-04.png';
 import bar05 from '../../assets/image/bar-05.png';
 
