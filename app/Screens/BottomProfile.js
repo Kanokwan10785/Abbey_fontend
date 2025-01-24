@@ -315,9 +315,9 @@ const ProfileButton = () => {
     if (!bmi) return "ไม่มีข้อมูล";
     const bmiValue = parseFloat(bmi); // แปลงค่า BMI เป็นตัวเลข
     if (bmiValue < 18.6) return "ผอมเกินไป";
-    if (bmiValue < 25.0) return "ปกติ";
-    if (bmiValue < 30.0) return "เริ่มอ้วน";
-    return "อ้วนเกินไป";
+    if (bmiValue < 25.0) return "น้ำหนักปกติ";
+    if (bmiValue < 30.0) return "น้ำหนักเริ่มมาก";
+    return "อ้วนมาก";
   };
   
   const logout = async () => {

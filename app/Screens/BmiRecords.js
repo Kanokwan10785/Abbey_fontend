@@ -17,9 +17,9 @@ const BmiRecords = () => {
   // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
   const getBmiPrefix = (bmi) => {
     if (!bmi || isNaN(bmi)) return 'BMI02'; 
-    if (bmi < 18.5) return 'BMI01';
-    if (bmi >= 18.5 && bmi < 24.9) return 'BMI02';
-    if (bmi >= 25 && bmi < 29.9) return 'BMI03';
+    if (bmi < 18.60) return 'BMI01';
+    if (bmi >= 18.60 && bmi < 24.99) return 'BMI02';
+    if (bmi >= 25.00 && bmi < 29.99) return 'BMI03';
     return 'BMI04';
   };
 
@@ -78,13 +78,13 @@ const BmiRecords = () => {
     setBmi(bmiValue);
 
     if (bmiValue < 18.60) {
-      setBmiStatus('น้ำหนักน้อย');
+      setBmiStatus('ผอมเกินไป');
     } else if (bmiValue >= 18.60 && bmiValue < 24.99) {
       setBmiStatus('น้ำหนักปกติ');
     } else if (bmiValue >= 25.00 && bmiValue < 29.99) {
       setBmiStatus('น้ำหนักเกิน');
     } else {
-      setBmiStatus('โรคอ้วน');
+      setBmiStatus('อ้วนมาก');
     }
   };
 
@@ -100,13 +100,13 @@ const BmiRecords = () => {
   
       // อัปเดตสถานะ BMI
       if (newBmi < 18.60) {
-        setBmiStatus('น้ำหนักน้อย');
+        setBmiStatus('ผอมเกินไป');
       } else if (newBmi >= 18.60 && newBmi < 24.99) {
         setBmiStatus('น้ำหนักปกติ');
       } else if (newBmi >= 25.00 && newBmi < 29.99) {
-        setBmiStatus('น้ำหนักเกิน');
+        setBmiStatus('น้ำหนักเริ่มมาก');
       } else {
-        setBmiStatus('โรคอ้วน');
+        setBmiStatus('อ้วนมาก');
       }
   
       // เรียกใช้ฟังก์ชัน saveHeightUesr เพื่ออัปเดตข้อมูลในเซิร์ฟเวอร์
@@ -181,11 +181,12 @@ const BmiRecords = () => {
         <View style={styles.petImages}>
           <Image source={petImageUrl ? { uri: petImageUrl } : empty} style={styles.petImage} />
         </View>
-
         {/* Section สำหรับค่าดัชนีมวลกาย */}
         <View style={styles.bmiInfo}>
-          <Text style={styles.bmiValue}>{bmi}</Text>
+        <View style={styles.bmiOnfo}>
+          <Text style={styles.bmiValue}>BMI: {bmi}</Text>
           <Text style={styles.bmiStatus}>{bmiStatus}</Text>
+        </View>
         </View>
 
       </View>
@@ -232,9 +233,10 @@ const styles = StyleSheet.create({
   heightText: { position: 'absolute', top: 10, left: '0%', transform: [{ translateX: 50 }], fontSize: 20, color: '#FFF', fontFamily: 'appfont_02', backgroundColor: 'rgba(0, 0, 0, 0.5)', paddingHorizontal: 10, borderRadius: 5 },
   petImages: { width: 198, height: 180 },
   petImage: { width: '100%', height: '100%',top: '25%' },
-  bmiInfo: { flexDirection: 'row', alignItems: 'center', left: 15  },
+  bmiInfo: { flexDirection: "row", alignItems: "center", marginTop: -35,},
+  bmiOnfo: { flexDirection: "column", alignItems: "flex-start" },
   bmiValue: { fontSize: 48, color: '#4CAF50', fontFamily: 'appfont_02' },
-  bmiStatus: { fontSize: 18, marginTop: 18, color: '#757575', left: 5, fontFamily: 'appfont_02' },
+  bmiStatus: { fontSize: 18, marginTop: 0, color: '#757575', left: 5, fontFamily: 'appfont_02' },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContent: { width: '80%', backgroundColor: '#FFF', borderRadius: 10, padding: 20, alignItems: 'center' },
   modalTitle: { fontSize: 18, marginBottom: 15, fontFamily: 'appfont_01' },
