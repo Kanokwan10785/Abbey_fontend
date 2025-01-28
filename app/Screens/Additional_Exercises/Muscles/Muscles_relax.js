@@ -15,6 +15,8 @@ const Muscles_relax = () => {
   const route = useRoute();
   const { item, items, currentIndex, musclesId } = route.params || {};
   const hasUpdatedBalance = useRef(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertColor, setAlertColor] = useState('#FF0000');
 
   // console.log('musclesId in couse relax:', musclesId);
 
@@ -27,7 +29,7 @@ const Muscles_relax = () => {
 
   useEffect(() => {
     setTime(5); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
-  
+
     const id = setInterval(() => {
       setTime((prevTime) => {
         if (prevTime === 3) {
@@ -49,15 +51,21 @@ const Muscles_relax = () => {
         }
       });
     }, 1000);
-  
+
     setIntervalId(id);
-  
+
     return () => clearInterval(id);
   }, [currentIndex]);
 
   const updateBalance = async () => {
     const updatedBalance = balance + item.dollar;
+    if (updatedBalance > 15) {
+      setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญแล้ว!');
+      setAlertColor('#FF0000'); // สีแดงสำหรับแจ้งเตือน
+      return; // ไม่เพิ่มเหรียญ
+    }
     setBalance(updatedBalance);
+    setAlertMessage('');
 
     try {
       await AsyncStorage.setItem('balance', updatedBalance.toString());
@@ -71,7 +79,7 @@ const Muscles_relax = () => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
-  
+
       const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
@@ -82,9 +90,9 @@ const Muscles_relax = () => {
           balance: newBalance,
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         console.log('Balance updated successfully:', data);
       } else {
@@ -151,6 +159,11 @@ const Muscles_relax = () => {
           <Text style={styles.coinRewardText}>{item.dollar}</Text>
         </View>
       </View>
+      {alertMessage && (
+        <Text style={[styles.alertMessage, { color: alertColor }]}>
+          {alertMessage}
+        </Text>
+      )}
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
           <Icon name="chevron-left" size={60} color="#808080" />
@@ -262,6 +275,12 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginLeft: 8,
     marginHorizontal: 10,
+  },
+  alertMessage: {
+    fontSize: 16,
+    marginTop: 10,
+    fontFamily: 'appfont_01',
+    textAlign: 'center',
   },
 });
 

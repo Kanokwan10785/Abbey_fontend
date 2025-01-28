@@ -32,6 +32,8 @@ const Muscles_finish = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex, musclesId } = route.params || {};
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertColor, setAlertColor] = useState('#FF0000');
 
   if (!item) {
     console.error("Item is undefined");
@@ -55,7 +57,13 @@ const Muscles_finish = () => {
     const updateBalanceOnce = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       const updatedBalance = balance + item.trophy;
+      if (updatedBalance > 15) {
+        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญแล้ว!');
+        setAlertColor('#FF0000');
+        return;
+      }
       setBalance(updatedBalance);
+      setAlertMessage('');
 
       try {
         await AsyncStorage.setItem('balance', updatedBalance.toString());
@@ -93,94 +101,94 @@ const Muscles_finish = () => {
 
   const updateWorkoutRecord = async () => {
     try {
-        const token = await AsyncStorage.getItem('jwt');
-        const userId = await AsyncStorage.getItem('userId');
-        const timestamp = new Date().toISOString();
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      const timestamp = new Date().toISOString();
 
-        // Map musclesId to exercise level and workout records
-        const mappedExerciseLevel = mapExerciseLevel(musclesId);
+      // Map musclesId to exercise level and workout records
+      const mappedExerciseLevel = mapExerciseLevel(musclesId);
 
-        // Validate mappings
-        if (mappedExerciseLevel === "unknown") {
-            console.error("Invalid mapping for musclesId:", musclesId);
-            return false;
-        }
-
-        // 1. สร้าง workout record ใหม่
-        const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                data: {
-                    users_permissions_user: userId,
-                    exercise_level: musclesId, // ID จริง
-                    exercise_levels: mappedExerciseLevel, // คีย์ที่สัมพันธ์
-                    timestamp, // บันทึกเวลาการออกกำลังกาย
-                },
-            }),
-        });
-
-        const workoutRecordData = await workoutRecordResponse.json();
-        if (!workoutRecordResponse.ok) {
-            console.error('สร้าง workout record ไม่สำเร็จ:', workoutRecordData.error?.message || workoutRecordData);
-            return false;
-        }
-
-        // console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
-
-        // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
-        const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}?populate=exercise_levels`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        const userData = await userResponse.json();
-        if (!userResponse.ok) {
-            console.error('ดึงข้อมูลผู้ใช้ล้มเหลว:', userData.error?.message || userData);
-            return false;
-        }
-
-        // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
-        const existingExerciseLevels = userData?.data?.exercise_levels?.map((level) => level.id) || [];
-        // console.log('Existing exercise levels:', existingExerciseLevels);
-
-        // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
-        const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน
-
-        // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
-        const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                exercise_levels: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
-            }),
-        });
-
-        const userUpdateData = await userUpdateResponse.json();
-        if (!userUpdateResponse.ok) {
-            console.error('อัปเดต exercise_levels ของผู้ใช้ล้มเหลว:', userUpdateData.error?.message || userUpdateData);
-            return false;
-        }
-
-        console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
-        return true;
-    } catch (error) {
-        console.error('เกิดข้อผิดพลาดในการอัปเดต exercise_levels:', error);
+      // Validate mappings
+      if (mappedExerciseLevel === "unknown") {
+        console.error("Invalid mapping for musclesId:", musclesId);
         return false;
+      }
+
+      // 1. สร้าง workout record ใหม่
+      const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          data: {
+            users_permissions_user: userId,
+            exercise_level: musclesId, // ID จริง
+            exercise_levels: mappedExerciseLevel, // คีย์ที่สัมพันธ์
+            timestamp, // บันทึกเวลาการออกกำลังกาย
+          },
+        }),
+      });
+
+      const workoutRecordData = await workoutRecordResponse.json();
+      if (!workoutRecordResponse.ok) {
+        console.error('สร้าง workout record ไม่สำเร็จ:', workoutRecordData.error?.message || workoutRecordData);
+        return false;
+      }
+
+      // console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
+
+      // 2. ดึง `exercise_levels` ที่มีอยู่ของผู้ใช้
+      const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}?populate=exercise_levels`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const userData = await userResponse.json();
+      if (!userResponse.ok) {
+        console.error('ดึงข้อมูลผู้ใช้ล้มเหลว:', userData.error?.message || userData);
+        return false;
+      }
+
+      // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
+      const existingExerciseLevels = userData?.data?.exercise_levels?.map((level) => level.id) || [];
+      // console.log('Existing exercise levels:', existingExerciseLevels);
+
+      // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
+      const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน
+
+      // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
+      const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          exercise_levels: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
+        }),
+      });
+
+      const userUpdateData = await userUpdateResponse.json();
+      if (!userUpdateResponse.ok) {
+        console.error('อัปเดต exercise_levels ของผู้ใช้ล้มเหลว:', userUpdateData.error?.message || userUpdateData);
+        return false;
+      }
+
+      console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
+      return true;
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการอัปเดต exercise_levels:', error);
+      return false;
     }
-};
+  };
 
 
-  
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -198,6 +206,11 @@ const Muscles_finish = () => {
           <Image source={coin} style={styles.coin} />
           <Text style={styles.coinRewardText}>{item.trophy}</Text>
         </View>
+        {alertMessage && (
+          <Text style={[styles.alertMessage, { color: alertColor }]}>
+            {alertMessage}
+          </Text>
+        )}
       </View>
       <TouchableOpacity
         style={styles.finishButton}
@@ -287,6 +300,12 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 20,
     fontFamily: 'appfont_01',
+  },
+  alertMessage: {
+    fontSize: 16,
+    marginTop: 20,
+    fontFamily: 'appfont_01',
+    textAlign: 'center',
   },
 });
 

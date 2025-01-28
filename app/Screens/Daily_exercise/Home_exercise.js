@@ -68,7 +68,7 @@ const Homeexercise = () => {
   const fetchWeeks = async () => {
     try {
       console.log('Fetching weeks...');
-      const response = await axios.get(`${API_BASE_URL}/api/weeks?populate=*`);
+      const response = await axios.get(`${API_BASE_URL}/api/weeks?populate=*&pagination[limit]=100`);
 
       const week1StartDate = await fetchStartDateFromHistory(1, 1);
       if (!week1StartDate) {
@@ -127,7 +127,7 @@ const Homeexercise = () => {
 
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week&pagination[limit]=100`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -161,7 +161,7 @@ const Homeexercise = () => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user]=${userId}&populate=*`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user]=${userId}&populate=*&pagination[limit]=100`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -221,7 +221,7 @@ const Homeexercise = () => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const response = await axios.get(
-        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*&pagination[limit]=100`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -241,7 +241,7 @@ const Homeexercise = () => {
 
       if (week1Day1Record) {
         await axios.put(
-          `${API_BASE_URL}/api/workout-records/${week1Day1Record.id}`,
+          `${API_BASE_URL}/api/workout-records/${week1Day1Record.id}?pagination[limit]=100`,
           { data: { resetTimestamp: nextDate.toISOString() } },
           {
             headers: {
@@ -256,7 +256,7 @@ const Homeexercise = () => {
       // รีเซ็ตสถานะทั้งหมด (อัปเดต status = false)
       for (const record of records) {
         await axios.put(
-          `${API_BASE_URL}/api/workout-records/${record.id}`,
+          `${API_BASE_URL}/api/workout-records/${record.id}?pagination[limit]=100`,
           { data: { status: null } },
           {
             headers: {
@@ -278,7 +278,7 @@ const Homeexercise = () => {
       try {
         const token = await AsyncStorage.getItem('jwt');
         const response = await axios.get(
-          `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*`,
+          `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&populate=*&pagination[limit]=100`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -307,6 +307,24 @@ const Homeexercise = () => {
       checkWeek4Day7Status();
     }
   }, [userId, isFocused]);
+
+  // ฟังก์ชันสำหรับจัดรูปแบบวันที่
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = d.getDate();
+    const month = d.toLocaleString('th-TH', { month: 'short' }); // เดือนแบบย่อในภาษาไทย
+    const year = d.getFullYear() + 543; // แปลงเป็น พ.ศ.
+    return `${day} ${month} ${year}`;
+  };
+
+  // ฟังก์ชันสำหรับหาวันสุดท้ายของสัปดาห์
+  const getEndDate = (week) => {
+    const startDate = new Date(week.attributes.startDate);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6); // เพิ่ม 6 วัน
+    return endDate;
+  };
+
 
 
   return (
@@ -353,7 +371,9 @@ const Homeexercise = () => {
                       color="#F6A444"
                     />
                   </View>
-                  <Text style={styles.weekText}>{week.attributes.name || 'N/A'}</Text>
+                  <Text style={styles.weekText}>
+                    {`${week.attributes.name || 'N/A'} / ${formatDate(week.attributes.startDate)} - ${formatDate(getEndDate(week))}`}
+                  </Text>
                   <Text style={styles.weekProgress}>{`${completedDaysCount}/7`}</Text>
                 </View>
 
@@ -361,7 +381,8 @@ const Homeexercise = () => {
                   {week.attributes.days.data.map((day, idx) => {
                     const dayKey = `${week.id}-${day.attributes.dayNumber}`;
                     const { completed, missed } = dayStatuses[dayKey] || { completed: false, missed: false };
-                    {/* console.log('dayKey completed: missed',dayKey,completed,missed) */ }
+                    {/* console.log('dayKey completed: missed',dayKey,completed,missed,day.attributes.date) */ }
+                    {/* console.log(`dayDate:  ${day.attributes.date}`) */}
                     return (
                       <TouchableOpacity
                         key={idx}
@@ -374,6 +395,7 @@ const Homeexercise = () => {
                             set: week.attributes.name,
                             userId: userId,
                             isMissed,
+                            dayDate: day.attributes.date,
                           });
                         }}
                       >

@@ -14,6 +14,8 @@ const Couse_finish = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
   const { item, items, currentIndex, courseId } = route.params || {};
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertColor, setAlertColor] = useState('#FF0000');
   // console.log('courseId in couse fin:', courseId);
 
   if (!item) {
@@ -26,23 +28,29 @@ const Couse_finish = () => {
     return <View style={styles.container}><Text>Loading trophy...</Text></View>;
   }
 
-useEffect(() => {
-  const updateBalanceOnce = async () => {
-    setTimeout(async () => {
-      const updatedBalance = balance + item.trophy;
-      setBalance(updatedBalance); // อัปเดต balance ใน state
+  useEffect(() => {
+    const updateBalanceOnce = async () => {
+      setTimeout(async () => {
+        const updatedBalance = balance + item.trophy;
+        if (updatedBalance > 15) {
+          setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญแล้ว!');
+          setAlertColor('#FF0000');
+          return;
+        }
+        setBalance(updatedBalance);
+        setAlertMessage('');
 
-      try {
-        await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance); 
-      } catch (error) {
-        console.error('Error saving balance:', error);
-      }
-    }, 1000); 
-  };
+        try {
+          await AsyncStorage.setItem('balance', updatedBalance.toString());
+          await updateUserBalance(updatedBalance);
+        } catch (error) {
+          console.error('Error saving balance:', error);
+        }
+      }, 1000);
+    };
 
-  updateBalanceOnce();
-}, []);
+    updateBalanceOnce();
+  }, []);
 
   const updateUserBalance = async (newBalance) => {
     try {
@@ -78,89 +86,89 @@ useEffect(() => {
 
   const updateWorkoutRecord = async () => {
     try {
-        const token = await AsyncStorage.getItem('jwt');
-        const userId = await AsyncStorage.getItem('userId');
-        const timestamp = new Date().toISOString();
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+      const timestamp = new Date().toISOString();
 
-        const mappedExerciseLevel = mapExerciseLevel(courseId);
-        // console.log('mappedExerciseLevel', mappedExerciseLevel);
+      const mappedExerciseLevel = mapExerciseLevel(courseId);
+      // console.log('mappedExerciseLevel', mappedExerciseLevel);
 
-        if (mappedExerciseLevel === "unknown") {
-            // console.error("Invalid mapping for courseId:", courseId);
-            return false;
-        }
-
-        const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                data: {
-                    users_permissions_user: userId,
-                    add_course: courseId, // ID จริง
-                    add_courses: mappedExerciseLevel, // คีย์ที่สัมพันธ์
-                    timestamp, // บันทึกเวลาการออกกำลังกาย
-                },
-            }),
-        });
-
-        const workoutRecordData = await workoutRecordResponse.json();
-        if (!workoutRecordResponse.ok) {
-            console.error('สร้าง workout record ไม่สำเร็จ:', workoutRecordData.error?.message || workoutRecordData);
-            return false;
-        }
-
-        console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
-
-        const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}?populate=add_courses`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        const userData = await userResponse.json();
-        if (!userResponse.ok) {
-            console.error('ดึงข้อมูลผู้ใช้ล้มเหลว:', userData.error?.message || userData);
-            return false;
-        }
-
-        // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
-        const existingExerciseLevels = userData?.data?.add_course?.map((level) => level.id) || [];
-        // console.log('Existing exercise levels:', existingExerciseLevels);
-
-        // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
-        const updatedExerciseLevels = [...new Set([...existingExerciseLevels, courseId])];
-        // console.log('updatedExerciseLevels:', updatedExerciseLevels);
-
-        // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
-        const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                add_course: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
-            }),
-        });
-
-        const userUpdateData = await userUpdateResponse.json();
-        if (!userUpdateResponse.ok) {
-            console.error('อัปเดต exercise_levels ของผู้ใช้ล้มเหลว:', userUpdateData.error?.message || userUpdateData);
-            return false;
-        }
-
-        console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
-        return true;
-    } catch (error) {
-        console.error('เกิดข้อผิดพลาดในการอัปเดต', error);
+      if (mappedExerciseLevel === "unknown") {
+        // console.error("Invalid mapping for courseId:", courseId);
         return false;
+      }
+
+      const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          data: {
+            users_permissions_user: userId,
+            add_course: courseId, // ID จริง
+            add_courses: mappedExerciseLevel, // คีย์ที่สัมพันธ์
+            timestamp, // บันทึกเวลาการออกกำลังกาย
+          },
+        }),
+      });
+
+      const workoutRecordData = await workoutRecordResponse.json();
+      if (!workoutRecordResponse.ok) {
+        console.error('สร้าง workout record ไม่สำเร็จ:', workoutRecordData.error?.message || workoutRecordData);
+        return false;
+      }
+
+      console.log('สร้าง workout record สำเร็จ:', workoutRecordData);
+
+      const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}?populate=add_courses`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const userData = await userResponse.json();
+      if (!userResponse.ok) {
+        console.error('ดึงข้อมูลผู้ใช้ล้มเหลว:', userData.error?.message || userData);
+        return false;
+      }
+
+      // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
+      const existingExerciseLevels = userData?.data?.add_course?.map((level) => level.id) || [];
+      // console.log('Existing exercise levels:', existingExerciseLevels);
+
+      // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
+      const updatedExerciseLevels = [...new Set([...existingExerciseLevels, courseId])];
+      // console.log('updatedExerciseLevels:', updatedExerciseLevels);
+
+      // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
+      const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          add_course: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
+        }),
+      });
+
+      const userUpdateData = await userUpdateResponse.json();
+      if (!userUpdateResponse.ok) {
+        console.error('อัปเดต exercise_levels ของผู้ใช้ล้มเหลว:', userUpdateData.error?.message || userUpdateData);
+        return false;
+      }
+
+      console.log('อัปเดต exercise_levels ของผู้ใช้สำเร็จ:', userUpdateData);
+      return true;
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการอัปเดต', error);
+      return false;
     }
-};
+  };
 
 
   return (
@@ -181,6 +189,11 @@ useEffect(() => {
           <Image source={coin} style={styles.coin} />
           <Text style={styles.coinRewardText}>{item.trophy}</Text>
         </View>
+        {alertMessage && (
+          <Text style={[styles.alertMessage, { color: alertColor }]}>
+            {alertMessage}
+          </Text>
+        )}
       </View>
       <TouchableOpacity
         style={styles.finishButton}
@@ -250,7 +263,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFA500',
     padding: 8,
     borderRadius: 25,
-    marginVertical: 60,
+    marginVertical: 20,
   },
   coinRewardText: {
     fontFamily: 'appfont_01',
@@ -271,6 +284,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'appfont_01',
   },
+  alertMessage: {
+    fontSize: 16,
+    marginTop: 20,
+    fontFamily: 'appfont_01',
+    textAlign: 'center',
+  },
+
 });
 
 export default Couse_finish;

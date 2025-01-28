@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 const Startex = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items,dayNumber, weekId,set, isMissed } = route.params || {};
+  const { items,dayNumber, weekId,set, isMissed,dayDate } = route.params || {};
   const item = items ? items[0] : null;
   const [isRunning, setIsRunning] = useState(true);
   const [time, setTime] = useState(3); // นับถอยหลัง 5 วินาทีสำหรับการออกกำลังกาย
@@ -17,13 +17,14 @@ const Startex = () => {
   useEffect(() => {
     setTime(3);
     setIsRunning(true);
-  }, [item,dayNumber, weekId,set, isMissed]);
+  }, [item,dayNumber, weekId,set, isMissed,dayDate]);
+  // console.log('Dayexercise: Received params:', { dayDate});
 
 
   useEffect(() => {
     if (time === 0 && !isRunning) {
       // นำทางเมื่อเวลาหมด
-      navigation.navigate('Exercise1', { items, currentIndex: 0, dayNumber, weekId, set, isMissed });
+      navigation.navigate('Exercise1', { items, currentIndex: 0, dayNumber, weekId, set, isMissed,dayDate });
     }
   }, [time, isRunning, navigation]);
   
@@ -55,14 +56,14 @@ const Startex = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Exercise1', { items, currentIndex: 0,dayNumber, weekId,set, isMissed }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
+    navigation.navigate('Exercise1', { items, currentIndex: 0,dayNumber, weekId,set, isMissed,dayDate }); // ไปยังหน้า Exercise1 ทันทีเมื่อกดปุ่มไปข้างหน้า
   };
 
   const handlePrevious = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Dayexercise',{dayNumber, weekId,set, isMissed}); // กลับไปยังหน้า ExerciseScreen เมื่อกดปุ่มไปข้างหลัง
+    navigation.navigate('Dayexercise',{dayNumber, weekId,set, isMissed,dayDate}); // กลับไปยังหน้า ExerciseScreen เมื่อกดปุ่มไปข้างหลัง
   };
 
   const formatTime = (seconds) => {
@@ -73,7 +74,7 @@ const Startex = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{items,dayNumber, weekId,set, isMissed})}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{items,dayNumber, weekId,set, isMissed,dayDate})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

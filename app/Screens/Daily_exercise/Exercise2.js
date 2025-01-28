@@ -13,8 +13,8 @@ const Exercise2 = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const { item, items, currentIndex,dayNumber, weekId,set, isMissed } = route.params || {};
-
+  const { item, items, currentIndex, dayNumber, weekId, set, isMissed, dayDate } = route.params || {};
+  const [alertMessage, setAlertMessage] = useState('');
   const [time, setTime] = useState(5);
   const [intervalId, setIntervalId] = useState(null);
 
@@ -24,7 +24,7 @@ const Exercise2 = () => {
 
   useEffect(() => {
     setTime(5); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
-  
+
     const id = setInterval(() => {
       setTime((prevTime) => {
         if (prevTime === 3) {
@@ -37,25 +37,34 @@ const Exercise2 = () => {
         } else {
           clearInterval(id);
           if (currentIndex < items.length - 1) {
-            navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1,dayNumber, weekId,set, isMissed});
+            navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, dayNumber, weekId, set, isMissed, dayDate });
           } else {
-            navigation.navigate('Exercise4', { item, items, currentIndex,dayNumber, weekId,set, isMissed });
+            navigation.navigate('Exercise4', { item, items, currentIndex, dayNumber, weekId, set, isMissed, dayDate });
           }
           return 0;
         }
       });
     }, 1000);
-  
-    setIntervalId(id);
-  
-    return () => clearInterval(id);
-  }, [currentIndex,dayNumber, weekId,set, isMissed]);
 
+    setIntervalId(id);
+
+    return () => clearInterval(id);
+  }, [currentIndex, dayNumber, weekId, set, isMissed, dayDate]);
+
+  console.log('Dayexercise: Received params:', { dayDate });
   // console.log('dayNumber, weekId ex2',dayNumber,weekId,set, isMissed)
+
 
   const updateBalance = async () => {
     const updatedBalance = balance + item.dollar;
+    // ตรวจสอบว่าการเพิ่มเหรียญเกิน 15 หรือไม่
+    if (updatedBalance > 15) {
+      setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+      return; // หยุดการทำงานหากเกินขีดจำกัด
+    }
+
     setBalance(updatedBalance);
+    setAlertMessage('')
 
     try {
       await AsyncStorage.setItem('balance', updatedBalance.toString());
@@ -69,8 +78,8 @@ const Exercise2 = () => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
-  
-      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}?pagination[limit]=100`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
@@ -80,9 +89,9 @@ const Exercise2 = () => {
           balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         // console.log('Balance updated successfully:', data);
       } else {
@@ -92,16 +101,16 @@ const Exercise2 = () => {
       console.error('Error updating balance:', error);
     }
   };
-  
-  
+
+
   const handleNext = async () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
     if (currentIndex < items.length) {
-      navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1,dayNumber, weekId,set, isMissed });
+      navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, dayNumber, weekId, set, isMissed, dayDate });
     } else {
-      navigation.navigate('Exercise4',{dayNumber, weekId,set, isMissed});
+      navigation.navigate('Exercise4', { dayNumber, weekId, set, isMissed, dayDate });
     }
   };
 
@@ -111,9 +120,9 @@ const Exercise2 = () => {
     }
 
     if (currentIndex > 0) {
-      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,dayNumber, weekId,set, isMissed });
+      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, dayNumber, weekId, set, isMissed, dayDate });
     } else {
-      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0,dayNumber, weekId,set, isMissed });
+      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0, dayNumber, weekId, set, isMissed, dayDate });
     }
   };
 
@@ -122,12 +131,12 @@ const Exercise2 = () => {
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-  
+
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise',{dayNumber, weekId,set, isMissed})}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise', { dayNumber, weekId, set, isMissed, dayDate })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -152,6 +161,9 @@ const Exercise2 = () => {
           <Text style={styles.coinRewardText}>{item.dollar}</Text>
         </View>
       </View>
+      {alertMessage !== '' && (
+        <Text style={styles.alertMessage}>{alertMessage}</Text>
+      )}
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
           <Icon name="chevron-left" size={60} color="#808080" />
@@ -217,7 +229,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     fontFamily: 'appfont_01',
   },
-navigationContainer: {
+  navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
@@ -268,6 +280,14 @@ navigationContainer: {
     marginLeft: 8,
     marginHorizontal: 10,
   },
+  alertMessage: {
+    color: 'red', // สีข้อความแดง
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+    fontFamily: 'appfont_01', // ปรับใช้ฟอนต์ที่มี
+  },
+
 });
 
 export default Exercise2;

@@ -12,7 +12,7 @@ import { API_BASE_URL } from './apiConfig.js';
 const Dayexercise = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { dayNumber, weekId, set , userId , isMissed } = route.params || {}; // Extract dayNumber and weekId from route params
+  const { dayNumber, weekId, set , userId , isMissed,dayDate } = route.params || {}; // Extract dayNumber and weekId from route params
 
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,17 +30,18 @@ const Dayexercise = () => {
       console.error('Missing dayNumber or weekId');
       setLoading(false);
     }
-  }, [dayNumber, weekId, set, userId, isMissed]);  
+  }, [dayNumber, weekId, set, userId, isMissed,dayDate]);  
   
 
-  // console.log('Dayexercise: Received params:', { dayNumber, weekId, set, isMissed });
+  // console.log('Dayexercise: Received params:', { dayNumber, weekId, set, isMissed ,dayDate});
+  // console.log('Dayexercise: Received params:', { dayDate});
 
   const fetchStartDateFromHistory = async (week, day) => {
     try {
 
       const token = await AsyncStorage.getItem('jwt'); // ดึง token สำหรับการเชื่อมต่อ
       const response = await fetch(
-        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week`,
+        `${API_BASE_URL}/api/workout-records?filters[users_permissions_user][id][$eq]=${userId}&filters[week][id][$eq]=${week}&filters[day][dayNumber][$eq]=${day}&populate=day,week&pagination[limit]=100`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -77,7 +78,7 @@ const Dayexercise = () => {
   const fetchExercises = async (day, week) => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle`
+        `${API_BASE_URL}/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle&pagination[limit]=100`
       );
       const data = await response.json();
   
@@ -208,7 +209,7 @@ const Dayexercise = () => {
         <TouchableOpacity
           style={styles.startButton}
           onPress={() =>
-            navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false, dayNumber, weekId, set, isMissed })
+            navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false, dayNumber, weekId, set, isMissed,dayDate })
           }
         >
           <Text style={styles.startButtonText}>เริ่ม</Text>
