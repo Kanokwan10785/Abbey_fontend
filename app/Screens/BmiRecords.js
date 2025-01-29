@@ -104,7 +104,7 @@ const BmiRecords = () => {
       } else if (newBmi >= 18.60 && newBmi < 24.99) {
         setBmiStatus('น้ำหนักปกติ');
       } else if (newBmi >= 25.00 && newBmi < 29.99) {
-        setBmiStatus('น้ำหนักเริ่มมาก');
+        setBmiStatus('น้ำหนักเกิน');
       } else {
         setBmiStatus('อ้วนมาก');
       }
