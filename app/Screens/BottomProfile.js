@@ -270,11 +270,7 @@ const ProfileButton = () => {
       // สร้างอ็อบเจ็กต์สำหรับอัปเดตโปรไฟล์ผู้ใช้
       const updatedData = {
         username: username,
-        weight: weight,
-        height: height,
-        birthday: birthday,
         age: age,
-        selectedGender: gender === 'ชาย' ? 'male' : 'female',
       };
 111
       if (pictureId) {
