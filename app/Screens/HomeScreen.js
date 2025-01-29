@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Image, ImageBackground } from 'expo-image';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
@@ -19,7 +19,10 @@ const FoodButton = () => {
   );
 };
 
+// ในฟังก์ชัน HomeScreen
 export default function HomeScreen() {
+  const isFocused = useIsFocused(); // ใช้ useIsFocused เพื่อให้รู้ว่าอยู่ใน focus หรือไม่
+
   const [balance, setBalance] = useState(0);
   const [petImageUrls, setPetImageUrls] = useState([]);
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
@@ -33,53 +36,50 @@ export default function HomeScreen() {
     return 'BMI04';
   };
 
-  // โหลดข้อมูลโปรไฟล์
+  const loadBalance = async () => {
+    const token = await AsyncStorage.getItem('jwt');
+    const userId = await AsyncStorage.getItem('userId');
+    if (!token || !userId) return;
+    try {
+      const userData = await fetchUserProfile(userId, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBalance(userData.balance || 0); 
+    } catch (error) {
+      console.error('Error fetching user profile', error);
+    }
+  };
+
+  const loadHomePetData = async () => {
+    const token = await AsyncStorage.getItem('jwt');
+    const userId = await AsyncStorage.getItem('userId');
+    if (!token || !userId) return;
+
+    try {
+      const userData = await fetchUserProfileWithClothing(userId, token);
+      const label = userData.clothing_pet?.label || 'BMI03S00P00K00';
+      const bmi = userData.BMI || '0';
+      const modifiedLabel = label.slice(5);
+      const bmiPrefix = getBmiPrefix(bmi);
+      const newLabel = `${bmiPrefix}${modifiedLabel}`;
+      const clothingLabel = newLabel;
+      const urls = await fetchHomePetUrlByLabel(clothingLabel, userId, bmiPrefix);
+
+      if (urls) {
+        setPetImageUrls(urls.map((item) => item.url));
+      }
+    } catch (error) {
+      console.error('Error fetching home pet data', error);
+    }
+  };
+
   useEffect(() => {
-    const loadBalance = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      if (!token || !userId) return;
-      try {
-        const userData = await fetchUserProfile(userId, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setBalance(userData.balance || 0); // โหลดยอดเงิน
-        // console.log('User Data:', userData.BMI);
-      } catch (error) {
-        console.error('Error fetching user profile', error);
-      }
-    };
+    if (isFocused) {  // ใช้ useIsFocused เพื่อเช็คว่าหน้า HomeScreen ถูกเปิดอยู่
+      loadBalance();
+      loadHomePetData();
+    }
+  }, [isFocused]); // รีเฟรชข้อมูลเมื่อหน้า HomeScreen อยู่ใน focus
 
-    const loadHomePetData = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      if (!token || !userId) return;
-
-      try {
-        const userData = await fetchUserProfileWithClothing(userId, token);
-        const label = userData.clothing_pet?.label || 'BMI03S00P00K00';
-        const bmi = userData.BMI || '0';
-        const modifiedLabel = label.slice(5); // ตัด 5 ตัวหน้าออก
-        const bmiPrefix = getBmiPrefix(bmi);
-        const newLabel = `${bmiPrefix}${modifiedLabel}`;
-        const clothingLabel = newLabel;
-        console.log('Matching pet found:', bmiPrefix);
-        console.log('Matching pet found:', clothingLabel);
-        const urls = await fetchHomePetUrlByLabel(clothingLabel, userId, bmiPrefix);
-
-        if (urls) {
-          setPetImageUrls(urls.map((item) => item.url)); // ตั้งค่า URL รูปสัตว์เลี้ยง
-        }
-      } catch (error) {
-        console.error('Error fetching home pet data', error);
-      }
-    };
-
-    loadBalance();
-    loadHomePetData();
-  }, []); // ดึงข้อมูลครั้งเดียวเมื่อคอมโพเนนต์ถูก mount
-
-  // จัดการอนิเมชันการเปลี่ยนรูปสัตว์เลี้ยง
   useEffect(() => {
     if (petImageUrls.length > 0) {
       const interval = setInterval(() => {
@@ -88,7 +88,7 @@ export default function HomeScreen() {
 
       return () => clearInterval(interval);
     }
-  }, [petImageUrls]); // ดำเนินการเมื่อ petImageUrls เปลี่ยน
+  }, [petImageUrls]);
 
   return (
     <ImageBackground source={gym} style={styles.background}>
