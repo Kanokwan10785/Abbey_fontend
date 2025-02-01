@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback  } from "react";
 import { Image } from 'expo-image';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, TextInput, Alert, LogBox } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, DeviceEventEmitter, TextInput, Alert, LogBox } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -162,6 +162,17 @@ const ProfileButton = () => {
   useEffect(() => {
     loadUserProfileFromStorage(); // โหลดข้อมูลจาก AsyncStorage ก่อน
     loadUserProfileFromAPI(); // อัปเดตข้อมูลจาก API หลังจากนั้น
+  }, []);
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('bmiUpdated', async () => {
+      console.log("BMI Updated, fetching new data...");
+      await loadUserProfileFromAPI(); // โหลดข้อมูลใหม่
+    });
+  
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const transformGenderToThai = (gender) => {

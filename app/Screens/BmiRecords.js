@@ -113,6 +113,7 @@ const BmiRecords = () => {
       try {
         const userId = await getUserId(); // ดึง userId
         await saveHeightUesr(heightCmValue, newBmi, userId); // ส่งส่วนสูงและ BMI ใหม่
+        DeviceEventEmitter.emit('bmiUpdated'); // ส่ง Event แจ้งเตือนให้หน้า BottomProfile.js โหลดข้อมูลใหม่
         alert('บันทึกข้อมูลสำเร็จ');
         setIsModalVisible(false); // ปิด Modal หลังบันทึกสำเร็จ
       } catch (error) {
