@@ -186,6 +186,18 @@ const ProfileButton = () => {
     };
   }, []);  
 
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('WeightRecordsUpdated', async ({ bmi }) => {
+      console.log("Weight Updated, fetching new data...");
+      await loadUserProfileFromAPI(); // โหลดข้อมูลใหม่
+      console.log("WeightRecordsUpdated BMI:", bmi); // ตรวจสอบค่า BMI ที่ส่งมา
+    });
+  
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+  
   const transformGenderToThai = (gender) => {
     switch(gender) {
       case 'male':

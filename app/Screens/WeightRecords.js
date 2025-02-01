@@ -72,7 +72,19 @@ const WeightRecords = () => {
   
         // อัปเดตน้ำหนักใน users table
         await saveWeightUesr(weightValue, userId);
-        DeviceEventEmitter.emit('weightUpdated'); // ส่งเหตุการณ์ว่าข้อมูลเปลี่ยนแปลง
+
+        // เรียกข้อมูลใหม่จากเซิร์ฟเวอร์เพื่อคำนวณ BMI
+        const userData = await fetchUserProfile(userId);
+        const height = userData.height;
+        const newBmi = (weightValue / ((height / 100) ** 2)).toFixed(2);
+        
+        // แจ้งเตือนการอัปเดต
+        DeviceEventEmitter.emit('weightUpdated'); // ส่งเหตุการณ์ว่าข้อมูลเปลี่ยนแปลง WeightRecords
+        DeviceEventEmitter.emit('WeightRecordsUpdated', { bmi: newBmi }); // แจ้งเตือนให้ BottomProfile โหลดข้อมูลใหม่
+        setTimeout(() => {                        
+            DeviceEventEmitter.emit('bmiUpdated');
+        }, 1000); // รอ 1 วินาที
+
         alert('บันทึกข้อมูลสำเร็จ!');
         setNewWeight('');
         setIsModalVisible(false);
