@@ -175,6 +175,17 @@ const ProfileButton = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('profileUpdated', async () => {
+      console.log("Profile Updated, fetching new data...");
+      await loadUserProfileFromAPI(); // โหลดข้อมูลใหม่
+    });
+  
+    return () => {
+      subscription.remove();
+    };
+  }, []);  
+
   const transformGenderToThai = (gender) => {
     switch(gender) {
       case 'male':
@@ -283,7 +294,7 @@ const ProfileButton = () => {
         username: username,
         age: age,
       };
-111
+
       if (pictureId) {
         updatedData.picture = pictureId; // อัปเดตรูปโปรไฟล์ถ้ามีการอัปโหลดใหม่
       }
@@ -309,6 +320,8 @@ const ProfileButton = () => {
       if (profileImage.uri) {
         await AsyncStorage.setItem('profileImage', profileImage.uri);
       }
+
+      DeviceEventEmitter.emit('profileUpdated'); // แจ้งเตือนให้ BottomProfile โหลดข้อมูลใหม่
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile.');
     } finally {
