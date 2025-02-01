@@ -13,6 +13,7 @@ const BmiRecords = () => {
   const [bmiStatus, setBmiStatus] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [petImageUrl, setPetImageUrl] = useState(null);
+  const [originalHeightCm, setOriginalHeightCm] = useState(0);
 
   // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
   const getBmiPrefix = (bmi) => {
@@ -126,7 +127,8 @@ const BmiRecords = () => {
   };
   
   const handleCancel = () => {
-    setIsModalVisible(false);
+    setHeightCm(originalHeightCm); // คืนค่าความสูงเดิม
+    setIsModalVisible(false); // ปิด Modal
   };
 
   useEffect(() => {
@@ -171,7 +173,12 @@ const BmiRecords = () => {
     <View style={styles.container}>
       <View style={styles.bmiHeader}>
         <Text style={styles.bmiLabel}>ค่าดัชนีมวลกาย</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => setIsModalVisible(true)}>
+        <TouchableOpacity 
+          style={styles.editButton} onPress={() => {
+              setOriginalHeightCm(heightCm); // บันทึกค่าปัจจุบันของ heightCm
+              setIsModalVisible(true);
+          }}
+      >
           <Text style={styles.editButtonText}>แก้ไข</Text>
         </TouchableOpacity>
       </View>
