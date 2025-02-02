@@ -143,6 +143,7 @@ const Dayexercise = () => {
           description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
           dollar: exercise.attributes.dollar,
           trophy: data.data[0]?.attributes?.trophy || 0,
+          exp: data.data[0]?.attributes?.exp || 0,
         };
       });
   

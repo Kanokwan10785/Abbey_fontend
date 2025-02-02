@@ -16,64 +16,92 @@ const Couse_finish = () => {
   const { item, items, currentIndex, courseId } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
   const [alertColor, setAlertColor] = useState('#FF0000');
-  // console.log('courseId in couse fin:', courseId);
-
-  if (!item) {
-    console.log("Item is undefined");
-    return <View style={styles.container}><Text>Loading item...</Text></View>;
-  }
-
-  if (!item.trophy) {
-    console.log("Trophy is undefined in item");
-    return <View style={styles.container}><Text>Loading trophy...</Text></View>;
-  }
+  const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
 
   useEffect(() => {
-    const updateBalanceOnce = async () => {
-      setTimeout(async () => {
-        const updatedBalance = balance + item.trophy;
-        if (updatedBalance > 15) {
-          setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญแล้ว!');
-          setAlertColor('#FF0000');
-          return;
-        }
-        setBalance(updatedBalance);
-        setAlertMessage('');
-
-        try {
-          await AsyncStorage.setItem('balance', updatedBalance.toString());
-          await updateUserBalance(updatedBalance);
-        } catch (error) {
-          console.error('Error saving balance:', error);
-        }
-      }, 1000);
-    };
-
-    updateBalanceOnce();
+    fetchCurrentWeekCoins();
   }, []);
 
-  const updateUserBalance = async (newBalance) => {
+  useEffect(() => {
+    if (currentWeekCoins !== 0) {
+      updateBalanceOnce();
+    }
+  }, [currentWeekCoins]);
+
+  const fetchCurrentWeekCoins = async () => {
     try {
-      const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
-      const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch user data');
+
+      const userData = await response.json();
+      setCurrentWeekCoins(userData.currentWeekCoins || 0);
+      console.log(`📥 ดึงข้อมูลเหรียญจาก API: ${userData.currentWeekCoins || 0}`);
+    } catch (error) {
+      console.error('❌ Error fetching currentWeekCoins:', error);
+    }
+  };
+
+  const updateBalanceOnce = async () => {
+    try {
+      const updatedWeekCoins = currentWeekCoins + item.trophy;
+      const updatedBalance = balance + item.trophy;
+
+      console.log(`🔍 ตรวจสอบค่า: currentWeekCoins = ${currentWeekCoins}, item.trophy = ${item.trophy}, updatedWeekCoins = ${updatedWeekCoins}`);
+
+      if (currentWeekCoins > 15) {
+        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+        setAlertColor('red');
+        return; 
+      }
+
+      setBalance(updatedBalance);
+      setCurrentWeekCoins(updatedWeekCoins);
+      setAlertMessage('');
+
+      await AsyncStorage.setItem('balance', updatedBalance.toString());
+      await AsyncStorage.setItem('currentWeekCoins', updatedWeekCoins.toString());
+      await updateUserBalance(updatedBalance, updatedWeekCoins);
+
+    } catch (error) {
+      console.error('❌ Error saving balance:', error);
+    }
+  };
+
+  const updateUserBalance = async (newBalance, newWeekCoins) => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
 
       const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
-          'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
+          balance: newBalance,
+          currentWeekCoins: newWeekCoins,
         }),
       });
+      console.log(`balance: ${newBalance}
+                  currentWeekCoins: ${newWeekCoins}`)
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('Failed to update balance:', error.message);
+        console.error('❌ Failed to update balance:', error.message);
+      } else {
+        console.log(`✅ อัปเดตสำเร็จ! Balance: ${newBalance}, CurrentWeekCoins: ${newWeekCoins}`);
       }
     } catch (error) {
-      console.error('Error updating balance:', error);
+      console.error('❌ Error updating balance:', error);
     }
   };
 
@@ -107,9 +135,9 @@ const Couse_finish = () => {
         body: JSON.stringify({
           data: {
             users_permissions_user: userId,
-            add_course: courseId, // ID จริง
-            add_courses: mappedExerciseLevel, // คีย์ที่สัมพันธ์
-            timestamp, // บันทึกเวลาการออกกำลังกาย
+            add_course: courseId, 
+            add_courses: mappedExerciseLevel,
+            timestamp, 
           },
         }),
       });
@@ -136,15 +164,12 @@ const Couse_finish = () => {
         return false;
       }
 
-      // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
       const existingExerciseLevels = userData?.data?.add_course?.map((level) => level.id) || [];
       // console.log('Existing exercise levels:', existingExerciseLevels);
 
-      // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
       const updatedExerciseLevels = [...new Set([...existingExerciseLevels, courseId])];
       // console.log('updatedExerciseLevels:', updatedExerciseLevels);
 
-      // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
       const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
@@ -152,7 +177,7 @@ const Couse_finish = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          add_course: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
+          add_course: updatedExerciseLevels, 
         }),
       });
 
@@ -170,6 +195,7 @@ const Couse_finish = () => {
     }
   };
 
+  
 
   return (
     <View style={styles.container}>
@@ -199,8 +225,8 @@ const Couse_finish = () => {
         style={styles.finishButton}
         onPress={() => {
           updateWorkoutRecord().then(() => {
-            navigation.navigate('Couseexercies', { item, items, currentIndex, courseId });
-          });
+          navigation.navigate('Couseexercies', { item, items, currentIndex, courseId });
+        });
         }}
       >
         <Text style={styles.finishButtonText}>เสร็จสิ้น</Text>
@@ -290,7 +316,6 @@ const styles = StyleSheet.create({
     fontFamily: 'appfont_01',
     textAlign: 'center',
   },
-
 });
 
 export default Couse_finish;

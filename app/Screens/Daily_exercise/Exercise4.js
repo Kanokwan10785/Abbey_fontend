@@ -13,9 +13,11 @@ const Exercise4 = () => {
   const route = useRoute();
   const { item } = route.params || {};
   const { dayNumber, weekId, set, isMissed, dayDate } = route.params || {};
-  const [bonusMessage, setBonusMessage] = useState(''); // ข้อความ
-  const [bonusMessageColor, setBonusMessageColor] = useState('#FFA500'); // สีข้อความ
-  const [localBalance, setLocalBalance] = useState(balance); // เก็บค่า balance ภายใน component
+  const [bonusMessage, setBonusMessage] = useState('');
+  const [bonusMessageColor, setBonusMessageColor] = useState('#FFA500');
+  const [localBalance, setLocalBalance] = useState(balance);
+  const [exp, setExp] = useState(0);
+  const [expText, setExpText] = useState(0);
 
   if (!item || !item.trophy) {
     return (
@@ -25,119 +27,134 @@ const Exercise4 = () => {
     );
   }
   useEffect(() => {
+    const loadExpAndBalance = async () => {
+      const savedExp = await AsyncStorage.getItem('exp');
+      setExp(savedExp ? parseInt(savedExp, 10) : 0);
+      const savedWeekExp = await AsyncStorage.getItem('currentWeekExp');
+      setExpText(savedWeekExp ? parseInt(savedWeekExp, 10) : 0);
+    };
+    loadExpAndBalance();
     processWorkoutAndBonus();
   }, [dayNumber, weekId, set, dayDate]);
-  console.log(`dayDate:  ${dayDate}`)
+
+  // console.log(`dayDate:  ${dayDate}`)
+  // console.log(`item ${item.exp}`);
 
   const processWorkoutAndBonus = async () => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
 
-      // ดึงข้อมูลผู้ใช้จาก Strapi
+      // 🔄 ดึงข้อมูลผู้ใช้จาก Strapi
       const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const userData = await userResponse.json();
 
-      let { currentWeekCoins = 0,resetDate } = userData;
-      
+      let { currentWeekCoins = 0, currentWeekExp = 0, EXP = 0, resetDate } = userData;
+      console.log(`✅ ข้อมูลก่อนอัปเดต: currentWeekCoins: ${currentWeekCoins}, currentWeekExp: ${currentWeekExp}, EXP: ${EXP}, resetDate: ${resetDate}`);
+
       const currentDate = new Date(dayDate);
       resetDate = resetDate ? new Date(resetDate) : null;
 
-      console.log(`currentDate:  ${currentDate}, resetDate: ${resetDate}`);
-
+      // ✅ รีเซ็ตเหรียญและ EXP หากถึงวันรีเซ็ต
       if (!resetDate || currentDate >= resetDate) {
-        currentWeekCoins = 0; // รีเซ็ตเหรียญ
+        currentWeekCoins = 0;
+        currentWeekExp = 0;
         resetDate = new Date(currentDate);
-        resetDate.setDate(resetDate.getDate() + 7); // ตั้ง resetDate เป็นอีก 7 วันข้างหน้า
-        console.log(`Resetting week coins. Next reset date: ${resetDate.toISOString()}`);
+        resetDate.setDate(resetDate.getDate() + 7);
+        console.log(`🔄 Resetting week coins: ${resetDate.toISOString()}`);
       }
 
       const rewardCoins = item.trophy;
+      const rewardExp = item.exp;
+      console.log(`🎁 Reward Coins: ${rewardCoins}, Reward EXP: ${rewardExp}`);
 
-      // ตรวจสอบเหรียญสะสมในสัปดาห์
-      if (currentWeekCoins + rewardCoins > 15) {
-        setBonusMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
-        setBonusMessageColor('red');
-        // บันทึกข้อมูลการออกกำลังกาย แต่ไม่เพิ่มเหรียญ
-        await updateWorkoutRecord();
-        return;
+      let bonusMessages = [];
+
+      // ✅ ตรวจสอบ EXP สะสมในสัปดาห์
+      if (currentWeekExp > 15) {
+        bonusMessages.push('คุณสะสม EXP ครบ 15 ในสัปดาห์นี้!');
+      } else {
+        currentWeekExp += rewardExp;
+        EXP += rewardExp;
       }
 
-
-      // เพิ่มเหรียญรางวัล
-      currentWeekCoins += rewardCoins;
-
+      // ✅ ตรวจสอบเหรียญสะสมในสัปดาห์
       let updatedBalance = localBalance;
-      console.log(`เพิ่มเหรียญรางวัล currentWeekCoins: ${currentWeekCoins}`);
-
-      // ตรวจสอบโบนัส
-      const isContinuous = await checkContinuousWorkout();
-      if (isContinuous) {
-        if (currentWeekCoins + 2 <= 15) {
-          updatedBalance += 2; // เพิ่มโบนัส 2 เหรียญ
-          currentWeekCoins += 2;
-          setBonusMessage('คุณได้รับโบนัส 2 เหรียญจากการออกกำลังกายต่อเนื่อง!');
-        } else {
-          setBonusMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
-          setBonusMessageColor('red');
-        }
+      if (currentWeekCoins > 15) {
+        bonusMessages.push('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+      } else {
+        currentWeekCoins += rewardCoins;
+        updatedBalance += rewardCoins;
       }
 
-      // อัปเดต balance
-      updatedBalance += rewardCoins;
-      setLocalBalance(updatedBalance);
-      setBalance(updatedBalance);
-      await AsyncStorage.setItem('balance', updatedBalance.toString());
+      // ✅ ตรวจสอบโบนัสออกกำลังกายต่อเนื่อง
+      const isContinuous = await checkContinuousWorkout();
+      if (isContinuous && currentWeekCoins + 2 <= 15) {
+        updatedBalance += 2;
+        currentWeekCoins += 2;
+        bonusMessages.push('คุณได้รับโบนัส 2 เหรียญจากการออกกำลังกายต่อเนื่อง!');
+      }
 
-      // อัปเดตข้อมูลใน Strapi
-      await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+      // ✅ อัปเดตค่าในแอป
+      setBonusMessage(bonusMessages);
+      setBonusMessageColor(bonusMessages.length > 0 ? 'red' : '#FFA500');
+      setBalance(updatedBalance);
+      setExpText(currentWeekExp);
+      setExp(EXP);
+      setLocalBalance(updatedBalance);
+
+      // ✅ บันทึกค่าใน AsyncStorage
+      await AsyncStorage.setItem('balance', updatedBalance.toString());
+      await AsyncStorage.setItem('exp', EXP.toString());
+      await AsyncStorage.setItem('currentWeekExp', currentWeekExp.toString());
+
+      // ✅ ส่งค่าไปยัง API
+      console.log("🛠 กำลังอัปเดตข้อมูลใน Strapi...");
+      await updateUserBalance(updatedBalance, currentWeekCoins, EXP, currentWeekExp, resetDate);
+
+      // ✅ บันทึก workout record
+      await updateWorkoutRecord();
+    } catch (error) {
+      console.error('❌ Error processing workout and bonus:', error);
+    }
+  };
+
+  /**
+   * 📤 อัปเดตข้อมูล Balance, EXP และเหรียญไปยัง Strapi
+   */
+  const updateUserBalance = async (balance, weekCoins, exp, weekExp, resetDate) => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          balance: updatedBalance,
-          currentWeekCoins,
+          balance,
+          currentWeekCoins: weekCoins,
+          currentWeekExp: weekExp,
           resetDate: resetDate.toISOString(),
+          EXP: exp,
         }),
       });
 
-      // บันทึกข้อมูลการออกกำลังกาย
-      await updateWorkoutRecord();
-
-      console.log(`Updated balance: ${updatedBalance}, currentWeekCoins: ${currentWeekCoins}`);
-    } catch (error) {
-      console.error('Error processing workout and bonus:', error);
-    }
-  };
-
-
-  // console.log('Dayexercise: Received params:', { dayDate});
-
-  const updateUserBalance = async (newBalance) => {
-    try {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-      const response = await fetch(`${API_BASE_URL}/api/users/${userId}?pagination[limit]=100`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ balance: newBalance }),
-      });
       const data = await response.json();
-      // console.log('API Response:', data);
       if (!response.ok) {
-        console.log('Failed to update balance:', data.message);
+        console.error('❌ ไม่สามารถอัปเดตข้อมูลใน Strapi', data);
+      } else {
+        console.log(`✅ อัปเดตข้อมูลสำเร็จ: Balance: ${balance}, currentWeekCoins: ${weekCoins}, currentWeekExp: ${weekExp}, EXP: ${exp}`);
       }
     } catch (error) {
-      console.error('Error updating balance:', error);
+      console.error('❌ เกิดข้อผิดพลาดขณะอัปเดตข้อมูล:', error);
     }
   };
+
 
   const updateWorkoutRecord = async () => {
     try {
@@ -231,13 +248,15 @@ const Exercise4 = () => {
         return false; // หากเคยบันทึก week/day นี้แล้ว จะไม่ให้โบนัส
       }
 
+      let validRecords = 0
+
       // ตรวจสอบ 3 วันที่ต่อเนื่องก่อนหน้า
       for (let i = 1; i <= 3; i++) {
         const targetDay = dayNumber - i;
 
-        if (targetDay <= 0) {
+        if (targetDay < 1) {
           console.log(`Skipping day ${targetDay} (invalid day).`);
-          return false;
+          continue; // ❗ ข้ามวันนั้นไปแต่ไม่ return false
         }
 
         const record = sortedRecords.find(
@@ -257,8 +276,13 @@ const Exercise4 = () => {
           );
           return false;
         }
-
+        validRecords++;
         console.log(`Record found for Week ${weekId}, Day ${targetDay}:`, record);
+      }
+
+      if (validRecords >= 3) {
+        console.log('🎉 โบนัสออกกำลังกายต่อเนื่องสำเร็จ!');
+        return true;
       }
 
       console.log('All previous 3 days are completed with status = true.');
@@ -269,9 +293,6 @@ const Exercise4 = () => {
     }
   };
 
-
-
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -281,24 +302,33 @@ const Exercise4 = () => {
         >
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
-        <View style={styles.coinsContainer}>
-          <Image source={coin} style={styles.coin} />
-          <Text style={styles.coinsText}>
-            {localBalance !== null ? localBalance.toLocaleString() : '0'}
-          </Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Image source={coin} style={styles.statIcon} />
+            <Text style={styles.statText}>{localBalance?.toLocaleString() || '0'}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>EXP:</Text>
+            <Text style={styles.statText}>{exp}</Text>
+          </View>
         </View>
       </View>
       <View style={styles.trophyContainer}>
         <Image source={require('../../../assets/image/trophy.png')} style={styles.trophyImage} />
-        <View style={styles.coinRewardContainer}>
-          <Image source={coin} style={styles.coin} />
-          <Text style={styles.coinRewardText}>{item.trophy}</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.coinRewardContainer}>
+            <Image source={coin} style={styles.statIcon} />
+            <Text style={styles.coinRewardText}>+{item.trophy}</Text>
+          </View>
+          <View style={styles.coinRewardContainer}>
+            <Text style={styles.coinRewardText}>EXP : +{item.exp}</Text>
+          </View>
         </View>
-        {bonusMessage && (
-          <Text style={[styles.bonusMessage, { color: bonusMessageColor }]}>
-            {bonusMessage}
+        {bonusMessage && bonusMessage.map((message, index) => (
+          <Text key={index} style={[styles.bonusMessage, { color: bonusMessageColor }]}>
+            {message}
           </Text>
-        )}
+        ))}
       </View>
       <TouchableOpacity
         style={styles.finishButton}
@@ -321,33 +351,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
   },
   closeButton: {
-    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   close: {
     width: 35,
     height: 35,
   },
-  coin: {
-    width: 30,
-    height: 30,
-  },
-  coinsContainer: {
-    backgroundColor: '#FFA500',
-    padding: 5,
-    paddingHorizontal: 10,
-    borderRadius: 25,
-    marginVertical: 20,
+  statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 16,
+    gap: 20,
   },
-  coinsText: {
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFA500',
+    // marginVertical: 20,
+    paddingHorizontal: 10,
+    borderRadius: 25,
+    padding: 5,
+  },
+  statIcon: {
+    width: 25,
+    height: 25,
+    marginRight: 5,
+  },
+  statLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  statText: {
     fontSize: 18,
-    marginLeft: 8,
-    fontFamily: 'appfont_01',
-    color: '#fff',
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   trophyContainer: {
     alignItems: 'center',
@@ -365,6 +407,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 25,
     marginVertical: 20,
+    marginTop: 40,
   },
   coinRewardText: {
     fontFamily: 'appfont_01',
@@ -376,7 +419,7 @@ const styles = StyleSheet.create({
   bonusMessage: {
     fontSize: 16,
     color: '#FFA500',
-    marginTop: 20,
+    marginTop: 30,
     textAlign: 'center',
     fontFamily: 'appfont_01',
   },
@@ -391,6 +434,23 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 20,
     fontFamily: 'appfont_01',
+  },
+  expBarContainer: {
+    width: '80%',
+    height: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    marginVertical: 10,
+    overflow: 'hidden',
+  },
+  expBar: {
+    height: '100%',
+    backgroundColor: '#FFA500',
+  },
+  expText: {
+    fontSize: 16,
+    fontFamily: 'appfont_01',
+    color: '#808080',
   },
 });
 

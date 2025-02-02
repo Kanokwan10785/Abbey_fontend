@@ -12,6 +12,8 @@ import { API_BASE_URL } from './apiConfig.js';
 const Exercise2 = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
+  const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
+  console.log('currentWeekCoins :', currentWeekCoins)
   const route = useRoute();
   const { item, items, currentIndex, dayNumber, weekId, set, isMissed, dayDate } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
@@ -23,6 +25,29 @@ const Exercise2 = () => {
   }
 
   useEffect(() => {
+    const fetchCurrentWeekCoins = async () => {
+      try {
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+
+        const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const userData = await response.json();
+        const weekCoins = userData.currentWeekCoins || 0;
+        setCurrentWeekCoins(weekCoins);
+      } catch (error) {
+        console.error('Error fetching currentWeekCoins:', error);
+      }
+    };
+    fetchCurrentWeekCoins();
     setTime(5); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
 
     const id = setInterval(() => {
@@ -51,129 +76,159 @@ const Exercise2 = () => {
     return () => clearInterval(id);
   }, [currentIndex, dayNumber, weekId, set, isMissed, dayDate]);
 
-  console.log('Dayexercise: Received params:', { dayDate });
+
+  // console.log('Dayexercise: Received params:', { dayDate });
   // console.log('dayNumber, weekId ex2',dayNumber,weekId,set, isMissed)
 
-
   const updateBalance = async () => {
-    const updatedBalance = balance + item.dollar;
-    // ตรวจสอบว่าการเพิ่มเหรียญเกิน 15 หรือไม่
-    if (updatedBalance > 15) {
-      setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
-      return; // หยุดการทำงานหากเกินขีดจำกัด
+    if (currentWeekCoins === null) {
+      console.error('CurrentWeekCoins is not initialized yet.');
+      return;
     }
+  
+    const updatedBalance = balance + item.dollar;
+  
+    setCurrentWeekCoins((prevCoins) => {
+      const updatedWeekCoins = prevCoins + item.dollar;
+      console.log('CurrentWeekCoins + item.dollar:', prevCoins, '+', item.dollar, '=', updatedWeekCoins);
+      
+      if (prevCoins + item.dollar <= 15) {
+        console.log(`currentWeekCoins + item.dollar <= 15 : ${prevCoins} +  ${item.dollar} <= 15 `);
+        setBalance(updatedBalance);
+        setAlertMessage('');
+      }
 
-    setBalance(updatedBalance);
-    setAlertMessage('')
-
+      // ✅ หยุดการทำงานหากเกินขีดจำกัด
+      if (updatedWeekCoins > 15) {
+        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+        return prevCoins; // คืนค่าเดิมแทน undefined
+      }
+      
+    
+      // ✅ ใช้ `setTimeout` เพื่อรอให้ `setState` อัปเดตก่อนเรียก API
+      setTimeout(() => {
+        console.log('✅ API Update:', { balance: updatedBalance, currentWeekCoins: updatedWeekCoins });
+        updateUserBalance(updatedBalance, updatedWeekCoins);
+      }, 0);
+  
+      return updatedWeekCoins;
+      
+    });
+  
     try {
       await AsyncStorage.setItem('balance', updatedBalance.toString());
-      await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
     } catch (error) {
       console.error('Error saving balance:', error);
     }
   };
+  
 
-  const updateUserBalance = async (newBalance) => {
-    try {
-      const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
-      const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
+const updateUserBalance = async (newBalance, newWeekCoins) => {
+  try {
+    const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
+    const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
 
-      const response = await fetch(`${API_BASE_URL}/api/users/${userId}?pagination[limit]=100`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
-          'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
-        },
-        body: JSON.stringify({
-          balance: newBalance,  // ส่ง balance ที่อัปเดตไปยัง Backend
-        }),
-      });
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}?pagination[limit]=100`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',  // กำหนดประเภทของข้อมูลที่ส่งไปยังเซิร์ฟเวอร์
+        'Authorization': `Bearer ${token}`,  // ส่ง JWT token เพื่อยืนยันตัวตน
+      },
+      body: JSON.stringify({
+        balance: newBalance,
+        currentWeekCoins: newWeekCoins,
+      }),
+    });
+    console.log('Body being sent to API:', {
+      balance: newBalance,
+      currentWeekCoins: newWeekCoins,
+    });
+    
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok) {
-        // console.log('Balance updated successfully:', data);
-      } else {
-        console.log('Failed to update balance:', data.message);
-      }
-    } catch (error) {
-      console.error('Error updating balance:', error);
-    }
-  };
-
-
-  const handleNext = async () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-    if (currentIndex < items.length) {
-      navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, dayNumber, weekId, set, isMissed, dayDate });
+    if (!response.ok) {
+      console.error('❌ Failed to update balance:', data);
     } else {
-      navigation.navigate('Exercise4', { dayNumber, weekId, set, isMissed, dayDate });
+      console.log('✅ Balance updated successfully:', data);
     }
-  };
-
-  const handlePrevious = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-
-    if (currentIndex > 0) {
-      navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, dayNumber, weekId, set, isMissed, dayDate });
-    } else {
-      navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0, dayNumber, weekId, set, isMissed, dayDate });
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  } catch (error) {
+    console.error('Error updating balance:', error);
+  }
+};
 
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise', { dayNumber, weekId, set, isMissed, dayDate })}>
-          <Image source={cancel} style={styles.close} />
-        </TouchableOpacity>
-        <View style={styles.coinsContainer}>
-          <Image source={coin} style={styles.coin} />
-          <Text style={styles.coinsText}>{balance !== null ? balance.toLocaleString() : "0"}</Text>
-        </View>
-      </View>
-      <View style={styles.exerciseContainer}>
-        <View style={styles.exerciseImageContainer}>
-          <Image source={{ uri: items[currentIndex + 1]?.animation }} style={styles.exerciseImage} />
-        </View>
-        <View style={styles.exerciseDetails}>
-          <Text style={styles.exerciseCounter}>ท่าถัดไป</Text>
-          <Text style={styles.exerciseTitle}>{items[currentIndex + 1]?.name}</Text>
-        </View>
-      </View>
-      <Text style={styles.timer}>พักผ่อน</Text>
-      <Text style={styles.timer}>{formatTime(time)}</Text>
-      <View style={styles.trophyContainer}>
-        <View style={styles.coinRewardContainer}>
-          <Image source={coin} style={styles.coin} />
-          <Text style={styles.coinRewardText}>{item.dollar}</Text>
-        </View>
-      </View>
-      {alertMessage !== '' && (
-        <Text style={styles.alertMessage}>{alertMessage}</Text>
-      )}
-      <View style={styles.navigationContainer}>
-        <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
-          <Icon name="chevron-left" size={60} color="#808080" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-          <Icon name="chevron-right" size={60} color="#FFA500" />
-        </TouchableOpacity>
+const handleNext = async () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  if (currentIndex < items.length) {
+    navigation.navigate('Exercise1', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, dayNumber, weekId, set, isMissed, dayDate });
+  } else {
+    navigation.navigate('Exercise4', { dayNumber, weekId, set, isMissed, dayDate });
+  }
+};
+
+const handlePrevious = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+
+  if (currentIndex > 0) {
+    navigation.navigate('Exercise1', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, dayNumber, weekId, set, isMissed, dayDate });
+  } else {
+    navigation.navigate('Exercise1', { item: items[0], items, currentIndex: 0, dayNumber, weekId, set, isMissed, dayDate });
+  }
+};
+
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+
+return (
+  <View style={styles.container}>
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Dayexercise', { dayNumber, weekId, set, isMissed, dayDate })}>
+        <Image source={cancel} style={styles.close} />
+      </TouchableOpacity>
+      <View style={styles.coinsContainer}>
+        <Image source={coin} style={styles.coin} />
+        <Text style={styles.coinsText}>{balance !== null ? balance.toLocaleString() : "0"}</Text>
       </View>
     </View>
-  );
+    <View style={styles.exerciseContainer}>
+      <View style={styles.exerciseImageContainer}>
+        <Image source={{ uri: items[currentIndex + 1]?.animation }} style={styles.exerciseImage} />
+      </View>
+      <View style={styles.exerciseDetails}>
+        <Text style={styles.exerciseCounter}>ท่าถัดไป</Text>
+        <Text style={styles.exerciseTitle}>{items[currentIndex + 1]?.name}</Text>
+      </View>
+    </View>
+    <Text style={styles.timer}>พักผ่อน</Text>
+    <Text style={styles.timer}>{formatTime(time)}</Text>
+    <View style={styles.trophyContainer}>
+      <View style={styles.coinRewardContainer}>
+        <Image source={coin} style={styles.coin} />
+        <Text style={styles.coinRewardText}>{item.dollar}</Text>
+      </View>
+    </View>
+    {alertMessage !== '' && (
+      <Text style={styles.alertMessage}>{alertMessage}</Text>
+    )}
+    <View style={styles.navigationContainer}>
+      <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
+        <Icon name="chevron-left" size={60} color="#808080" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.navButton} onPress={handleNext}>
+        <Icon name="chevron-right" size={60} color="#FFA500" />
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 };
 
 

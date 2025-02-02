@@ -12,11 +12,12 @@ import { API_BASE_URL } from './../apiConfig.js';
 const Muscles_relax = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
+  const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
   const route = useRoute();
   const { item, items, currentIndex, musclesId } = route.params || {};
-  const hasUpdatedBalance = useRef(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertColor, setAlertColor] = useState('#FF0000');
+  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
+  const [intervalId, setIntervalId] = useState(null);
 
   // console.log('musclesId in couse relax:', musclesId);
 
@@ -24,10 +25,30 @@ const Muscles_relax = () => {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
-  const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
-  const [intervalId, setIntervalId] = useState(null);
-
   useEffect(() => {
+    const fetchCurrentWeekCoins = async () => {
+      try {
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+
+        const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const userData = await response.json();
+        const weekCoins = userData.currentWeekCoins || 0;
+        setCurrentWeekCoins(weekCoins);
+      } catch (error) {
+        console.error('Error fetching currentWeekCoins:', error);
+      }
+    };
+    fetchCurrentWeekCoins();
     setTime(5); // รีเซ็ตเวลาเมื่อเริ่มต้นใหม่
 
     const id = setInterval(() => {
@@ -35,7 +56,6 @@ const Muscles_relax = () => {
         if (prevTime === 3) {
           // อัปเดต balance เมื่อเหลือเวลา 3 วินาที
           updateBalance();
-          hasUpdatedBalance.current = true;
         }
 
         if (prevTime > 0) {
@@ -58,24 +78,44 @@ const Muscles_relax = () => {
   }, [currentIndex]);
 
   const updateBalance = async () => {
-    const updatedBalance = balance + item.dollar;
-    if (updatedBalance > 15) {
-      setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญแล้ว!');
-      setAlertColor('#FF0000'); // สีแดงสำหรับแจ้งเตือน
-      return; // ไม่เพิ่มเหรียญ
+    if (currentWeekCoins === null) {
+      console.error('CurrentWeekCoins is not initialized yet.');
+      return;
     }
-    setBalance(updatedBalance);
-    setAlertMessage('');
+
+    const updatedBalance = balance + item.dollar;
+
+    setCurrentWeekCoins((prevCoins) => {
+      const updatedWeekCoins = prevCoins + item.dollar;
+
+      if (prevCoins + item.dollar <= 15) {
+        console.log(`currentWeekCoins + item.dollar <= 15 : ${prevCoins} +  ${item.dollar} <= 15 `);
+        setBalance(updatedBalance);
+        setAlertMessage('');
+      }
+
+      if (updatedWeekCoins > 15) {
+        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+        return prevCoins; // คืนค่าเดิมแทน undefined
+      }
+
+      setTimeout(() => {
+        console.log('✅ API Update:', { balance: updatedBalance, currentWeekCoins: updatedWeekCoins });
+        updateUserBalance(updatedBalance, updatedWeekCoins);
+      }, 0);
+
+      return updatedWeekCoins;
+
+    });
 
     try {
       await AsyncStorage.setItem('balance', updatedBalance.toString());
-      await updateUserBalance(updatedBalance); // อัปเดต balance ไปยัง Backend
     } catch (error) {
       console.error('Error saving balance:', error);
     }
   };
 
-  const updateUserBalance = async (newBalance) => {
+  const updateUserBalance = async (newBalance, newWeekCoins) => {
     try {
       const token = await AsyncStorage.getItem('jwt');  // รับ JWT token
       const userId = await AsyncStorage.getItem('userId');  // รับ userId ของผู้ใช้
@@ -88,6 +128,7 @@ const Muscles_relax = () => {
         },
         body: JSON.stringify({
           balance: newBalance,
+          currentWeekCoins: newWeekCoins,
         }),
       });
 
@@ -160,7 +201,7 @@ const Muscles_relax = () => {
         </View>
       </View>
       {alertMessage && (
-        <Text style={[styles.alertMessage, { color: alertColor }]}>
+        <Text style={[styles.alertMessage]}>
           {alertMessage}
         </Text>
       )}
@@ -277,6 +318,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   alertMessage: {
+    color: 'red',
     fontSize: 16,
     marginTop: 10,
     fontFamily: 'appfont_01',

@@ -34,49 +34,66 @@ const Muscles_finish = () => {
   const { item, items, currentIndex, musclesId } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
   const [alertColor, setAlertColor] = useState('#FF0000');
-
-  if (!item) {
-    console.error("Item is undefined");
-    return (
-      <View style={styles.container}>
-        <Text>Loading item...</Text>
-      </View>
-    );
-  }
-
-  if (!item.trophy) {
-    console.error("Trophy is undefined in item");
-    return (
-      <View style={styles.container}>
-        <Text>Loading trophy...</Text>
-      </View>
-    );
-  }
+  const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
 
   useEffect(() => {
-    const updateBalanceOnce = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const updatedBalance = balance + item.trophy;
-      if (updatedBalance > 15) {
-        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญแล้ว!');
-        setAlertColor('#FF0000');
-        return;
-      }
-      setBalance(updatedBalance);
-      setAlertMessage('');
-
-      try {
-        await AsyncStorage.setItem('balance', updatedBalance.toString());
-        await updateUserBalance(updatedBalance);
-      } catch (error) {
-        console.error('Error saving balance:', error);
-      }
-    };
-
-    updateBalanceOnce();
+    fetchCurrentWeekCoins();
   }, []);
 
-  const updateUserBalance = async (newBalance) => {
+  useEffect(() => {
+    if (currentWeekCoins !== 0) {
+      updateBalanceOnce();
+    }
+  }, [currentWeekCoins]);
+
+  const updateBalanceOnce = async () => {
+    try {
+      const updatedWeekCoins = currentWeekCoins + item.trophy;
+      const updatedBalance = balance + item.trophy;
+
+      console.log(`🔍 ตรวจสอบค่า: currentWeekCoins = ${currentWeekCoins}, item.trophy = ${item.trophy}, updatedWeekCoins = ${updatedWeekCoins}`);
+
+      if (currentWeekCoins > 15) {
+        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+        setAlertColor('red');
+        return;
+      }
+
+      setBalance(updatedBalance);
+      setCurrentWeekCoins(updatedWeekCoins);
+      setAlertMessage('');
+
+      await AsyncStorage.setItem('balance', updatedBalance.toString());
+      await AsyncStorage.setItem('currentWeekCoins', updatedWeekCoins.toString());
+      await updateUserBalance(updatedBalance, updatedWeekCoins);
+
+    } catch (error) {
+      console.error('❌ Error saving balance:', error);
+    }
+  };
+
+  const fetchCurrentWeekCoins = async () => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch user data');
+
+      const userData = await response.json();
+      setCurrentWeekCoins(userData.currentWeekCoins || 0);
+      console.log(`📥 ดึงข้อมูลเหรียญจาก API: ${userData.currentWeekCoins || 0}`);
+    } catch (error) {
+      console.error('❌ Error fetching currentWeekCoins:', error);
+    }
+  };
+
+  const updateUserBalance = async (newBalance, newWeekCoins) => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
@@ -87,7 +104,10 @@ const Muscles_finish = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ balance: newBalance }),
+        body: JSON.stringify({
+          balance: newBalance,
+          currentWeekCoins: newWeekCoins,
+        }),
       });
 
       if (!response.ok) {
@@ -154,14 +174,10 @@ const Muscles_finish = () => {
         return false;
       }
 
-      // ตรวจสอบว่าข้อมูล exercise_levels มีอยู่หรือไม่
       const existingExerciseLevels = userData?.data?.exercise_levels?.map((level) => level.id) || [];
-      // console.log('Existing exercise levels:', existingExerciseLevels);
 
-      // เพิ่ม ID ใหม่เข้าไปใน `exercise_levels`
-      const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; // ใช้ Set เพื่อป้องกันการซ้ำกัน
+      const updatedExerciseLevels = [...new Set([...existingExerciseLevels, musclesId])]; 
 
-      // 3. อัปเดตผู้ใช้ด้วย `exercise_levels` ที่อัปเดตแล้ว
       const userUpdateResponse = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: {
@@ -169,7 +185,7 @@ const Muscles_finish = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          exercise_levels: updatedExerciseLevels, // ต้องส่งเป็น array ของ ID
+          exercise_levels: updatedExerciseLevels, 
         }),
       });
 
