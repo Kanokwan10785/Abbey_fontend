@@ -325,8 +325,133 @@ const Homeexercise = () => {
     return endDate;
   };
 
-
-
+  const clearOldExerciseMuscles = async () => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+  
+      // 🔍 ดึงข้อมูล user_exercise_muscles ที่มีอยู่
+      const userResponse = await fetch(
+        `${API_BASE_URL}/api/users/${userId}?populate=user_exercise_muscles`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      if (!userResponse.ok) throw new Error('❌ Failed to fetch user exercise muscles');
+  
+      const userData = await userResponse.json();
+      const today = new Date().toISOString().split("T")[0]; // วันที่วันนี้ (YYYY-MM-DD)
+  
+      // 🔍 ตรวจสอบวันที่ใน user_exercise_muscles
+      const muscleRecords = userData.user_exercise_muscles || [];
+      const oldMuscleRecords = muscleRecords.filter(muscle => muscle.timestamp !== today);
+  
+      console.log("📌 วันที่ที่จะลบใน user_exercise_muscles:", oldMuscleRecords);
+  
+      // 🧹 ลบข้อมูลที่ไม่ใช่ของวันนี้
+      for (const muscle of oldMuscleRecords) {
+        const deleteResponse = await fetch(`${API_BASE_URL}/api/user-exercise-muscles/${muscle.id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        if (!deleteResponse.ok) {
+          const errorData = await deleteResponse.json();
+          console.error(`❌ Failed to delete user exercise muscle with ID ${muscle.id}:`, errorData);
+          continue; // ข้ามไปยังข้อมูลถัดไป
+        }
+  
+        console.log(`✅ ลบข้อมูลสำเร็จสำหรับ ID ${muscle.id}`);
+      }
+    } catch (error) {
+      console.error("❌ Error clearing old user exercise muscles:", error);
+    }
+  };
+  
+  const updateUserExerciseMuscle = async () => {
+    try {
+      const token = await AsyncStorage.getItem('jwt');
+      const userId = await AsyncStorage.getItem('userId');
+  
+      // 🔍 ดึงข้อมูลผู้ใช้ พร้อม workout_records + user_exercise_muscles
+      const userResponse = await fetch(`${API_BASE_URL}/api/users/${userId}?populate=workout_records.exercise_levels,user_exercise_muscles`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!userResponse.ok) throw new Error('❌ Failed to fetch user data');
+  
+      const userData = await userResponse.json();
+      const today = new Date().toISOString().split("T")[0]; // 📅 หาวันที่ปัจจุบัน YYYY-MM-DD
+  
+      // 🔍 **ดึงรายการที่มีอยู่แล้วใน `user_exercise_muscles`**
+      const existingExercises = new Set(userData.user_exercise_muscles?.map(item => item.exercise_levels) || []);
+      console.log("📌 Exercise levels ที่มีอยู่แล้ว:", existingExercises);
+  
+      // 🏋️‍♂️ **ดึง workout_records ที่มีค่า exercise_levels และตรงกับวันนี้**
+      const todayExercises = userData.workout_records
+        .filter(record => record.timestamp === today && record.exercise_levels !== null)
+        .map(record => record.exercise_levels);
+  
+      console.log("📌 Exercise levels ของวันนี้:", todayExercises);
+  
+      // 🔥 **เช็คว่ามีรายการไหนที่ยังไม่อยู่ใน existingExercises**
+      const newExercises = todayExercises.filter(exercise => !existingExercises.has(exercise));
+  
+      if (newExercises.length === 0) {
+        console.log("✅ ไม่มี exercise ใหม่ที่ต้องเพิ่ม!");
+        return;
+      }
+  
+      console.log("📤 กำลังเพิ่ม exercise ใหม่:", newExercises);
+  
+      // 🛠 **เพิ่มเฉพาะ exercise ที่ยังไม่มีใน `user_exercise_muscles`**
+      for (const exercise of newExercises) {
+        const response = await fetch(`${API_BASE_URL}/api/user-exercise-muscles`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            data: {
+              exercise_levels: exercise, // ✅ ใช้ exercise_levels ที่ต้องการเพิ่ม
+              timestamp: today, // ✅ ใช้ timestamp ของวันนี้
+              users: [userId], // ✅ เชื่อมโยงกับ user
+            },
+          }),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('❌ Failed to save exercise muscle data:', errorData);
+          continue; // 🚫 ข้ามไปยังข้อมูลถัดไป
+        }
+  
+        const result = await response.json();
+        console.log("✅ Successfully saved:", result);
+      }
+    } catch (error) {
+      console.error("❌ Error updating user exercise muscle:", error);
+    }
+  };
+  
+  // ✅ **เรียกใช้เมื่อ Component โหลด**
+  useEffect(() => {
+    const processExerciseMuscle = async () => {
+      await clearOldExerciseMuscles();
+      await updateUserExerciseMuscle(); 
+    };
+  
+    processExerciseMuscle();
+  }, []);
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
