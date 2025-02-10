@@ -90,8 +90,9 @@ const BmiRecords = () => {
   const updateBmiStatus = (weight, heightCm) => {
     const height = heightCm / 100;
     const bmiValue = (weight / (height * height)).toFixed(2);
-    // setBmi(bmiValue);
-
+  
+    console.log('Weight:', weight, 'HeightCm:', heightCm, 'BMI Value:', bmiValue);
+  
     if (bmiValue < 18.60) {
       setBmiStatus('ผอมเกินไป');
     } else if (bmiValue >= 18.60 && bmiValue < 24.99) {
@@ -101,7 +102,7 @@ const BmiRecords = () => {
     } else {
       setBmiStatus('อ้วนมาก');
     }
-  };
+  };  
 
   const handleSave = async () => {
     const weightValue = parseFloat(weight);
@@ -184,6 +185,21 @@ const BmiRecords = () => {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (bmi) {
+      console.log('Updated BMI:', bmi);
+      if (bmi < 18.60) {
+        setBmiStatus('ผอมเกินไป');
+      } else if (bmi >= 18.60 && bmi < 24.99) {
+        setBmiStatus('น้ำหนักปกติ');
+      } else if (bmi >= 25.00 && bmi < 29.99) {
+        setBmiStatus('น้ำหนักเริ่มมาก');
+      } else {
+        setBmiStatus('อ้วนมาก');
+      }
+    }
+  }, [bmi]); 
 
   return (
     <View style={styles.container}>
