@@ -77,7 +77,7 @@ const FoodScreen = ({ navigation }) => {
       const token = await AsyncStorage.getItem('jwt');
       
       const userData = await fetchUserProfileWithClothing(userId, token);
-      const fetchedClothingLabel = userData.clothing_pet?.label || 'S00P00K00';
+      const fetchedClothingLabel = userData.clothing_pet?.label || 'BMI00S00P00K00';
       const bmi = userData.BMI || '0';
       const modifiedLabel = fetchedClothingLabel.slice(5); // ตัด 5 ตัวหน้าออก
       const bmiPrefix = getBmiPrefix(bmi);
