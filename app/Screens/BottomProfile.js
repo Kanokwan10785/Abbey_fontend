@@ -197,6 +197,18 @@ const ProfileButton = () => {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('bmiUpdated', async () => {
+      console.log("BMI Updated, fetching new data...");
+      await loadUserProfileFromAPI(); // โหลดข้อมูลใหม่จาก API
+    });
+  
+    return () => {
+      subscription.remove(); // ลบ Listener เมื่อ Component ถูก Unmount
+    };
+  }, []);
+  
   
   const transformGenderToThai = (gender) => {
     switch(gender) {

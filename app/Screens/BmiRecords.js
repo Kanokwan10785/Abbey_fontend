@@ -176,6 +176,8 @@ const BmiRecords = () => {
 
     // ฟังเหตุการณ์
     const subscription = DeviceEventEmitter.addListener('weightUpdated', handleWeightUpdate);
+    DeviceEventEmitter.emit('bmiUpdated');
+    // alert('บันทึกข้อมูลสำเร็จ');
   
     return () => {
       // ลบ Listener เมื่อ Component ถูกลบ
