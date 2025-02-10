@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   editButtonText: { color: '#F6A444', fontSize: 16, fontFamily: 'appfont_02' },
   bmiContainer: { flexDirection: 'row', backgroundColor: '#FFECB3', height: 280 },
   petSection: {top: "15%", left: 20},
-  heightText: { position: 'absolute', top: 20, left: 15, transform: [{ translateX: 50 }], fontSize: 20, color: '#FFF', fontFamily: 'appfont_02', backgroundColor: 'rgba(0, 0, 0, 0.5)', paddingHorizontal: 10, borderRadius: 5 },
+  heightText: { position: 'absolute', top: 20, left: 5, transform: [{ translateX: 50 }], fontSize: 20, color: '#FFF', fontFamily: 'appfont_02', backgroundColor: 'rgba(0, 0, 0, 0.5)', paddingHorizontal: 10, borderRadius: 5 },
   petImages: { width: 198, height: 180 },
   petImage: { width: '90%', height: '90%',top: '35%',left: 20 },
   bmiInfo: { flexDirection: "row", alignItems: "center", marginTop: -35,},
