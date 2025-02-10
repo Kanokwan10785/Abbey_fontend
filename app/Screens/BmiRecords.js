@@ -33,10 +33,24 @@ const BmiRecords = () => {
   
           const userWeight = userData.weight || 0;
           const userHeight = userData.height || 0;
+          let userBmi = userData.BMI || null; // ดึงค่า BMI จากโปรไฟล์ผู้ใช้
   
           setWeight(userWeight);
           setHeightCm(userHeight);
-          calculateBmi(userWeight, userHeight);
+  
+          if (userHeight > 0 && userWeight > 0) {
+            const heightInMeters = userHeight / 100;
+            const calculatedBmi = (userWeight / (heightInMeters * heightInMeters)).toFixed(2);
+  
+            if (userBmi === null || isNaN(userBmi)) {
+              // ถ้าค่า BMI เป็น null ให้อัปเดตไปยังเซิร์ฟเวอร์
+              await saveHeightUesr(userHeight, calculatedBmi, userId);
+              userBmi = calculatedBmi; // อัปเดตค่าท้องถิ่นด้วย
+            }
+  
+            setBmi(userBmi);
+            updateBmiStatus(userBmi);
+          }
         } catch (error) {
           console.error('Error fetching data:', error);
         }
@@ -45,7 +59,7 @@ const BmiRecords = () => {
       fetchData();
     }, [])
   );
-
+  
   useEffect(() => {
     const fetchPetImage = async () => {
       try {
@@ -73,10 +87,10 @@ const BmiRecords = () => {
     }
   }, [bmi]); // เพิ่ม bmi เป็น Dependency  
 
-  const calculateBmi = (weight, heightCm) => {
+  const updateBmiStatus = (weight, heightCm) => {
     const height = heightCm / 100;
     const bmiValue = (weight / (height * height)).toFixed(2);
-    setBmi(bmiValue);
+    // setBmi(bmiValue);
 
     if (bmiValue < 18.60) {
       setBmiStatus('ผอมเกินไป');
@@ -143,7 +157,6 @@ const BmiRecords = () => {
         // อัปเดตน้ำหนักและส่วนสูงใน State
         setWeight(userWeight);
         setHeightCm(userHeight);
-        calculateBmi(userWeight, userHeight);
 
         // คำนวณค่า BMI ใหม่
         if (userHeight > 0) {
@@ -152,7 +165,8 @@ const BmiRecords = () => {
 
           // ส่งค่า BMI ใหม่ไปยังเซิร์ฟเวอร์
           await saveHeightUesr(userHeight, newBmi, userId);
-
+          setBmi(newBmi);
+          updateBmiStatus(newBmi);
           console.log('Updated BMI:', newBmi);
         }
       } catch (error) {
