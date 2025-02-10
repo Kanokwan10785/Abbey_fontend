@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { API_BASE_URL } from './../apiConfig.js';
 
 const Musclesexercies = ({route}) => {
-    const { musclesId } = route.params;
+    const { musclesId,musclesName } = route.params;
     const [exercises, setExercises] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalTime, setTotalTime] = useState(0);
@@ -17,7 +17,9 @@ const Musclesexercies = ({route}) => {
 
     useEffect(() => {
         fetchexercises();
-      }, [musclesId]);    
+      }, [musclesId,musclesName]);  
+      console.log('musclesName',musclesName)
+
       const fetchexercises = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/exercise-levels/${musclesId}?populate=image,all_exercises.animation,all_exercises.muscle`
@@ -116,7 +118,7 @@ const Musclesexercies = ({route}) => {
             <TouchableOpacity
               style={styles.startButton}
               onPress={() =>
-                navigation.navigate('Muscles_startc', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false ,musclesId})
+                navigation.navigate('Muscles_startc', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false ,musclesId,musclesName})
               }
             >
               <Text style={styles.startButtonText}>เริ่ม</Text>
@@ -124,7 +126,7 @@ const Musclesexercies = ({route}) => {
             <FlatList
               data={exercises}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.exerciseItem} onPress={() => navigation.navigate('Couse_des', { item, items: exercises ,musclesId})}>
+                <TouchableOpacity style={styles.exerciseItem} onPress={() => navigation.navigate('Couse_des', { item, items: exercises ,musclesId,musclesName})}>
                   <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
                   <View style={styles.exerciseDetails}>
                     <Text style={styles.exerciseName}>{item.name}</Text>

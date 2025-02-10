@@ -13,10 +13,11 @@ const Couse_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const { item, items, currentIndex, courseId } = route.params || {};
+  const { item, items, currentIndex, courseId, courseName } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
   const [alertColor, setAlertColor] = useState('#FF0000');
   const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
+  // console.log('courseName in finish:', courseName);
 
   useEffect(() => {
     fetchCurrentWeekCoins();
@@ -105,26 +106,11 @@ const Couse_finish = () => {
     }
   };
 
-  const exerciseMapping = {
-    "1": "neck pain",
-    "2": "back pain",
-  }
-
-  const mapExerciseLevel = (courseId) => exerciseMapping[courseId] || "unknown";
-
   const updateWorkoutRecord = async () => {
     try {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
       const timestamp = new Date().toISOString();
-
-      const mappedExerciseLevel = mapExerciseLevel(courseId);
-      // console.log('mappedExerciseLevel', mappedExerciseLevel);
-
-      if (mappedExerciseLevel === "unknown") {
-        // console.error("Invalid mapping for courseId:", courseId);
-        return false;
-      }
 
       const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
         method: 'POST',
@@ -136,7 +122,7 @@ const Couse_finish = () => {
           data: {
             users_permissions_user: userId,
             add_course: courseId, 
-            add_courses: mappedExerciseLevel,
+            add_courses: courseName,
             timestamp, 
           },
         }),
@@ -201,7 +187,7 @@ const Couse_finish = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton}
-          onPress={() => navigation.navigate('Couseexercies', { courseId })}>
+          onPress={() => navigation.navigate('Couseexercies', { courseId,courseName })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -225,7 +211,7 @@ const Couse_finish = () => {
         style={styles.finishButton}
         onPress={() => {
           updateWorkoutRecord().then(() => {
-          navigation.navigate('Couseexercies', { item, items, currentIndex, courseId });
+          navigation.navigate('Couseexercies', { item, items, currentIndex, courseId,courseName });
         });
         }}
       >

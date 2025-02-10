@@ -14,12 +14,12 @@ const Muscles_relax = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
   const route = useRoute();
-  const { item, items, currentIndex, musclesId } = route.params || {};
+  const { item, items, currentIndex, musclesId,musclesName } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
   const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
   const [intervalId, setIntervalId] = useState(null);
 
-  // console.log('musclesId in couse relax:', musclesId);
+  console.log('musclesName in couse relax:', musclesName);
 
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -63,9 +63,9 @@ const Muscles_relax = () => {
         } else {
           clearInterval(id);
           if (currentIndex < items.length - 1) {
-            navigation.navigate('Muscles_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, musclesId });
+            navigation.navigate('Muscles_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, musclesId,musclesName });
           } else {
-            navigation.navigate('Muscles_finish', { item, items, currentIndex, musclesId });
+            navigation.navigate('Muscles_finish', { item, items, currentIndex, musclesId,musclesName });
           }
           return 0;
         }
@@ -149,9 +149,9 @@ const Muscles_relax = () => {
       clearInterval(intervalId);
     }
     if (currentIndex < items.length) {
-      navigation.navigate('Muscles_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, musclesId });
+      navigation.navigate('Muscles_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, musclesId,musclesName });
     } else {
-      navigation.navigate('Muscles_finish', { item, items, currentIndex, musclesId });
+      navigation.navigate('Muscles_finish', { item, items, currentIndex, musclesId,musclesName });
     }
   };
 
@@ -160,9 +160,9 @@ const Muscles_relax = () => {
       clearInterval(intervalId);
     }
     if (currentIndex > 0) {
-      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, musclesId });
+      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, musclesId,musclesName });
     } else {
-      navigation.navigate('Muscles_start', { item: items[0], items, currentIndex: 0, musclesId });
+      navigation.navigate('Muscles_start', { item: items[0], items, currentIndex: 0, musclesId,musclesName });
     }
   };
 
@@ -175,7 +175,7 @@ const Muscles_relax = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies', { musclesId })}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies', { musclesId,musclesName })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>

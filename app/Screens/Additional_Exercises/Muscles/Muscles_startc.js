@@ -8,8 +8,8 @@ import { Image } from 'expo-image';
 const Muscles_startc = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items,musclesId } = route.params || {};
-  // console.log('musclesId in couse :', musclesId);
+  const { items,musclesId,musclesName } = route.params || {};
+  console.log('musclesName in couse :', musclesName);
 
   const item = items ? items[0] : null;
 
@@ -35,7 +35,7 @@ const Muscles_startc = () => {
           } else {
             clearInterval(id);  // ให้แน่ใจว่า interval ถูกล้างเมื่อเวลาหมด
             setIsRunning(false);
-            navigation.navigate('Muscles_start', { items, currentIndex: 0,musclesId });
+            navigation.navigate('Muscles_start', { items, currentIndex: 0,musclesId,musclesName });
             return 0;
           }
         });
@@ -57,14 +57,14 @@ const Muscles_startc = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Muscles_start', { items, currentIndex: 0,musclesId });
+    navigation.navigate('Muscles_start', { items, currentIndex: 0,musclesId,musclesName });
   };
 
   const handlePrevious = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Musclesexercies',{musclesId});
+    navigation.navigate('Musclesexercies',{musclesId,musclesName});
   };
 
   const formatTime = (seconds) => {
@@ -75,7 +75,7 @@ const Muscles_startc = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies',{musclesId})}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies',{musclesId,musclesName})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

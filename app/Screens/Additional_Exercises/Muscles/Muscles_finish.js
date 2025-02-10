@@ -31,10 +31,11 @@ const Muscles_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
   const route = useRoute();
-  const { item, items, currentIndex, musclesId } = route.params || {};
+  const { item, items, currentIndex, musclesId,musclesName } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
   const [alertColor, setAlertColor] = useState('#FF0000');
   const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
+  console.log('musclesName in couse finish:', musclesName);
 
   useEffect(() => {
     fetchCurrentWeekCoins();
@@ -145,7 +146,7 @@ const Muscles_finish = () => {
           data: {
             users_permissions_user: userId,
             exercise_level: musclesId, // ID จริง
-            exercise_levels: mappedExerciseLevel, // คีย์ที่สัมพันธ์
+            exercise_levels: musclesName, // คีย์ที่สัมพันธ์
             timestamp, // บันทึกเวลาการออกกำลังกาย
           },
         }),
@@ -208,7 +209,7 @@ const Muscles_finish = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies', { musclesId })}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies', { musclesId,musclesName })}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>
@@ -232,7 +233,7 @@ const Muscles_finish = () => {
         style={styles.finishButton}
         onPress={() => {
           updateWorkoutRecord().then(() => {
-            navigation.navigate('Musclesexercies', { item, items, currentIndex, musclesId });
+            navigation.navigate('Musclesexercies', { item, items, currentIndex, musclesId,musclesName });
           });
         }}
       >

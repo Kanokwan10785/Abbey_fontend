@@ -14,12 +14,12 @@ const Couse_relax = () => {
   const { balance, setBalance } = useContext(BalanceContext);
   const [currentWeekCoins, setCurrentWeekCoins] = useState(0);
   const route = useRoute();
-  const { item, items, currentIndex, courseId } = route.params || {};
+  const { item, items, currentIndex, courseId, courseName } = route.params || {};
   const [alertMessage, setAlertMessage] = useState('');
   const [time, setTime] = useState(3); // นับถอยหลัง 3 วินาทีสำหรับการพักผ่อน
   const [intervalId, setIntervalId] = useState(null);
 
-  // console.log('courseId in couse relax:', courseId);
+  // console.log('courseId in couse relax:', courseName);
 
   if (!item || !items) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -63,9 +63,9 @@ const Couse_relax = () => {
         } else {
           clearInterval(id);
           if (currentIndex < items.length - 1) {
-            navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, courseId });
+            navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, courseId, courseName });
           } else {
-            navigation.navigate('Couse_finish', { item, items, currentIndex, courseId });
+            navigation.navigate('Couse_finish', { item, items, currentIndex, courseId , courseName});
           }
           return 0;
         }
@@ -155,9 +155,9 @@ const Couse_relax = () => {
       clearInterval(intervalId);
     }
     if (currentIndex < items.length) {
-      navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, courseId });
+      navigation.navigate('Couse_start', { item: items[currentIndex + 1], items, currentIndex: currentIndex + 1, courseId, courseName });
     } else {
-      navigation.navigate('Couse_finish', { item, items, currentIndex, courseId });
+      navigation.navigate('Couse_finish', { item, items, currentIndex, courseId, courseName });
     }
   };
 
@@ -166,9 +166,9 @@ const Couse_relax = () => {
       clearInterval(intervalId);
     }
     if (currentIndex > 0) {
-      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, courseId });
+      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, courseId , courseName});
     } else {
-      navigation.navigate('Couse_start', { item: items[0], items, currentIndex: 0, courseId });
+      navigation.navigate('Couse_start', { item: items[0], items, currentIndex: 0, courseId, courseName });
     }
   };
 
@@ -181,7 +181,7 @@ const Couse_relax = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies', { courseId })}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies', { courseId , courseName})}>
           <Image source={cancel} style={styles.close} />
         </TouchableOpacity>
         <View style={styles.coinsContainer}>

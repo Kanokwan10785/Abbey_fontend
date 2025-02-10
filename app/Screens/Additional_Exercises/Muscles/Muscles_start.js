@@ -8,11 +8,11 @@ import { Image } from 'expo-image';
 const Muscles_start = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items, currentIndex,musclesId } = route.params || {};
+  const { items, currentIndex,musclesId,musclesName } = route.params || {};
 
   useEffect(() => {
     // console.log('Received currentIndex in couse :', currentIndex);
-    // console.log('musclesId in couse start :', musclesId);
+    console.log('musclesName in couse start :', musclesName);
   }, [currentIndex]);
 
   if (!items || currentIndex === undefined) {
@@ -82,17 +82,17 @@ const Muscles_start = () => {
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Muscles_relax', { item: items[currentIndex + 1], items, currentIndex,musclesId });
+      navigation.navigate('Muscles_relax', { item: items[currentIndex + 1], items, currentIndex,musclesId,musclesName });
     } else {
-      navigation.navigate('Muscles_finish', { item, items, currentIndex,musclesId });
+      navigation.navigate('Muscles_finish', { item, items, currentIndex,musclesId,musclesName });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,musclesId });
+      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,musclesId,musclesName });
     } else {
-      navigation.navigate('Musclesexercies',{musclesId});
+      navigation.navigate('Musclesexercies',{musclesId,musclesName});
     }
   };
 
@@ -104,7 +104,7 @@ const Muscles_start = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies',{musclesId})}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies',{musclesId,musclesName})}>
       <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

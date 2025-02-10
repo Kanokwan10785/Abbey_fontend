@@ -71,6 +71,7 @@ const Addexercises = () => {
         return {
           id: course.id,
           name: courseAttributes.name,
+          Coursename: courseAttributes.Coursename,
           trophy: courseAttributes.trophy || 0,
           imageUrl: courseImageUrl,
           totalExercises: exerciseData.length,
@@ -108,7 +109,7 @@ const Addexercises = () => {
 
   const renderItem = ({ item }) => (
     <View>
-      <TouchableOpacity style={styles.course} onPress={() => navigation.navigate('Couseexercies', { courseId: item.id })}>
+      <TouchableOpacity style={styles.course} onPress={() => navigation.navigate('Couseexercies', { courseId: item.id,courseName: item.Coursename })}>
         <Image source={{ uri: item.imageUrl }} style={styles.courseImage} />
         <View style={styles.courseInfo}>
           <Text style={styles.courseText}>{item.name}</Text>

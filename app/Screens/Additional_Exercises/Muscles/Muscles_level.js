@@ -10,7 +10,8 @@ const MusclesLevel = ({route}) => {
   const navigation = useNavigation();
   const [levels, setLevels] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { musclesId } = route.params;
+  const { musclesId,musclesName } = route.params;
+  // console.log('vmusclesName',musclesName)
 
   useEffect(() => {
     fetchCourses();
@@ -60,6 +61,7 @@ const MusclesLevel = ({route}) => {
               return {
                 id: level.id,
                 name: level.attributes.name,
+                label: level.attributes.label,
                 title: level.attributes.title,
                 imageUrl: level.attributes.image?.data?.[0]?.attributes?.formats?.small?.url || null, // Small image
                 duration: totalDuration,
@@ -85,7 +87,7 @@ const MusclesLevel = ({route}) => {
           <View >
           <Text style={styles.headerTitle}>{item.title}</Text>
           <View style={styles.heading}>
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Musclesexercies', { musclesId: item.id})}>
+            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Musclesexercies', { musclesId: item.id,musclesName: item.label})}>
               <Image source={{ uri: item.imageUrl }} style={styles.image} />
               <View style={styles.info}>
                 <Text style={styles.titleName}>{item.name}</Text>

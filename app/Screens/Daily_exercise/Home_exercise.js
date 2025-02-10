@@ -327,51 +327,58 @@ const Homeexercise = () => {
 
   const clearOldExerciseMuscles = async () => {
     try {
-      const token = await AsyncStorage.getItem('jwt');
-      const userId = await AsyncStorage.getItem('userId');
-  
-      // 🔍 ดึงข้อมูล user_exercise_muscles ที่มีอยู่
-      const userResponse = await fetch(
-        `${API_BASE_URL}/api/users/${userId}?populate=user_exercise_muscles`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      if (!userResponse.ok) throw new Error('❌ Failed to fetch user exercise muscles');
-  
-      const userData = await userResponse.json();
-      const today = new Date().toISOString().split("T")[0]; // วันที่วันนี้ (YYYY-MM-DD)
-  
-      // 🔍 ตรวจสอบวันที่ใน user_exercise_muscles
-      const muscleRecords = userData.user_exercise_muscles || [];
-      const oldMuscleRecords = muscleRecords.filter(muscle => muscle.timestamp !== today);
-  
-      console.log("📌 วันที่ที่จะลบใน user_exercise_muscles:", oldMuscleRecords);
-  
-      // 🧹 ลบข้อมูลที่ไม่ใช่ของวันนี้
-      for (const muscle of oldMuscleRecords) {
-        const deleteResponse = await fetch(`${API_BASE_URL}/api/user-exercise-muscles/${muscle.id}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const token = await AsyncStorage.getItem('jwt');
+        const userId = await AsyncStorage.getItem('userId');
+    
+        // 🔍 ดึงข้อมูล user_exercise_muscles
+        const userResponse = await fetch(
+            `${API_BASE_URL}/api/users/${userId}?populate=user_exercise_muscles`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!userResponse.ok) throw new Error('❌ Failed to fetch user exercise muscles');
+        
+        const userData = await userResponse.json();
+        console.log("📌 Response จาก API:", userData);
+
+        // ✅ เข้าถึง user_exercise_muscles จาก API Response
+        const muscleRecords = userData.user_exercise_muscles || [];
+        const today = new Date().toISOString().split("T")[0]; // วันที่วันนี้ (YYYY-MM-DD)
+        console.log("📌 วันนี้คือ:", today);
+
+        // 🔍 คัดกรองข้อมูลที่ไม่ใช่ของวันนี้
+        const oldMuscleRecords = muscleRecords.filter(muscle => {
+            console.log(`🔍 ตรวจสอบ timestamp: ${muscle.timestamp} เทียบกับ ${today}`);
+            return muscle.timestamp && muscle.timestamp !== today;
         });
-  
-        if (!deleteResponse.ok) {
-          const errorData = await deleteResponse.json();
-          console.error(`❌ Failed to delete user exercise muscle with ID ${muscle.id}:`, errorData);
-          continue; // ข้ามไปยังข้อมูลถัดไป
+
+        console.log("📌 วันที่ที่จะลบใน user_exercise_muscles:", oldMuscleRecords);
+
+        // 🧹 ลบข้อมูลที่ไม่ใช่ของวันนี้
+        for (const muscle of oldMuscleRecords) {            
+            const deleteResponse = await fetch(`${API_BASE_URL}/api/user-exercise-muscles/${muscle.id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!deleteResponse.ok) {
+                const errorData = await deleteResponse.json();
+                console.error(`❌ ลบไม่สำเร็จ ID ${muscle.id}:`, errorData);
+                continue;
+            }
+
+            console.log(`✅ ลบสำเร็จ ID ${muscle.id}`);
         }
-  
-        console.log(`✅ ลบข้อมูลสำเร็จสำหรับ ID ${muscle.id}`);
-      }
     } catch (error) {
-      console.error("❌ Error clearing old user exercise muscles:", error);
+        console.error("❌ Error clearing old user exercise muscles:", error);
     }
-  };
+};
   
   const updateUserExerciseMuscle = async () => {
     try {

@@ -8,11 +8,11 @@ import { Image } from 'expo-image';
 const Couse_start = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items, currentIndex,courseId } = route.params || {};
+  const { items, currentIndex,courseId, courseName } = route.params || {};
 
   useEffect(() => {
     // console.log('Received currentIndex in couse :', currentIndex);
-    // console.log('courseId in couse start :', courseId);
+    // console.log('courseName in couse start :', courseName);
   }, [currentIndex]);
 
   if (!items || currentIndex === undefined) {
@@ -49,9 +49,9 @@ const Couse_start = () => {
             clearInterval(id);
             setIsRunning(false);
             if (currentIndex < items.length - 1) {
-              navigation.navigate('Couse_relax', { item, items, currentIndex,courseId });
+              navigation.navigate('Couse_relax', { item, items, currentIndex,courseId, courseName });
             } else {
-              navigation.navigate('Couse_finish', { item, items, currentIndex,courseId });
+              navigation.navigate('Couse_finish', { item, items, currentIndex,courseId , courseName});
             }
             return 0;
           }
@@ -84,17 +84,17 @@ const Couse_start = () => {
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Couse_relax', { item: items[currentIndex + 1], items, currentIndex,courseId });
+      navigation.navigate('Couse_relax', { item: items[currentIndex + 1], items, currentIndex,courseId, courseName });
     } else {
-      navigation.navigate('Couse_finish', { item, items, currentIndex,courseId });
+      navigation.navigate('Couse_finish', { item, items, currentIndex,courseId, courseName });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,courseId });
+      navigation.navigate('Couse_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,courseId, courseName });
     } else {
-      navigation.navigate('Couseexercies',{courseId});
+      navigation.navigate('Couseexercies',{courseId, courseName});
     }
   };
 
@@ -106,7 +106,7 @@ const Couse_start = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies',{courseId})}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies',{courseId, courseName})}>
       <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>

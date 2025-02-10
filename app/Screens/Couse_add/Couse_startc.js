@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 const Couse_startc = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items,courseId } = route.params || {};
+  const { items,courseId, courseName } = route.params || {};
   // console.log('courseId in couse :', courseId);
 
   const item = items ? items[0] : null;
@@ -35,7 +35,7 @@ const Couse_startc = () => {
           } else {
             clearInterval(id);  // ให้แน่ใจว่า interval ถูกล้างเมื่อเวลาหมด
             setIsRunning(false);
-            navigation.navigate('Couse_start', { items, currentIndex: 0,courseId });
+            navigation.navigate('Couse_start', { items, currentIndex: 0,courseId, courseName });
             return 0;
           }
         });
@@ -57,14 +57,14 @@ const Couse_startc = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Couse_start', { items, currentIndex: 0,courseId });
+    navigation.navigate('Couse_start', { items, currentIndex: 0,courseId, courseName });
   };
 
   const handlePrevious = () => {
     if (intervalId) {
       clearInterval(intervalId);
     }
-    navigation.navigate('Couseexercies',{courseId});
+    navigation.navigate('Couseexercies',{courseId, courseName});
   };
 
   const formatTime = (seconds) => {
@@ -75,7 +75,7 @@ const Couse_startc = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies',{courseId})}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Couseexercies',{courseId, courseName})}>
         <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
