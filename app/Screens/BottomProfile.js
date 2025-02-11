@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, DeviceEventE
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { fetchUserProfile, updateUserProfile, uploadFile } from './api';
+import { fetchUserProfile, updateUserProfile, uploadFile, fetchUserExpLevel, updateUserExpLevel } from './api';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
@@ -84,7 +84,8 @@ const ProfileButton = () => {
   const [birthday, setBirthday] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [level, setLevel] = useState("");
+  const [exp, setExp] = useState(0); // เก็บค่า EXP ของผู้เล่น
+  const [level, setLevel] = useState(1); // เก็บค่า Level ของผู้เล่น
   const [isImageUpdated, setIsImageUpdated] = useState(false); // สถานะใหม่สำหรับการอัปเดตรูปภาพ
   const [originalProfileImage, setOriginalProfileImage] = useState(profileImage);
   const [originalData, setOriginalData] = useState({});
@@ -93,6 +94,49 @@ const ProfileButton = () => {
   const [isSaveAlertVisible, setSaveAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertsaveProfile
 
   const navigation = useNavigation();
+
+  // ฟังก์ชันคำนวณ EXP ที่ต้องใช้ในการเลื่อนระดับ
+  const calculateExpToLevelUp = (level) => {
+    return 100 + (level * 50);
+  };
+
+  // ฟังก์ชันตรวจสอบเลเวลจาก EXP สะสม
+  const updateLevelBasedOnExp = async (currentExp) => {
+    let newLevel = 1;
+    let expThreshold = calculateExpToLevelUp(newLevel);
+
+    // ตรวจสอบว่า EXP สะสมเกินระดับที่ต้องใช้หรือไม่
+    while (currentExp >= expThreshold) {
+      newLevel += 1;
+      expThreshold = calculateExpToLevelUp(newLevel);
+    }
+
+    console.log(`📊 อัปเดตเลเวล: EXP สะสม ${currentExp} → Level ${newLevel}`);
+    setLevel(newLevel);
+
+    // ดึง userId จาก AsyncStorage
+    const userId = await AsyncStorage.getItem('userId');
+
+    // อัปเดตข้อมูลไปยังฐานข้อมูล
+    await updateUserExpLevel(userId, currentExp, newLevel);
+  };
+
+  // โหลด EXP และ Level จากฐานข้อมูลเมื่อ Component ถูกโหลด
+  useEffect(() => {
+    const loadExpAndLevel = async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      const { exp, level } = await fetchUserExpLevel(userId);
+      console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
+
+      setExp(exp);
+      setLevel(level);
+
+      // ตรวจสอบเลเวลอัปโดยใช้ EXP ที่โหลดมา
+      updateLevelBasedOnExp(exp);
+    };
+
+    loadExpAndLevel();
+  }, []);
 
   // ฟังก์ชันโหลดข้อมูลจาก AsyncStorage ก่อน
   const loadUserProfileFromStorage = async () => {

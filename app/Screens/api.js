@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// const API_URL = 'http://192.168.1.199:1337'; 
-const API_URL = 'http://172.30.81.159:1337'; 
+const API_URL = 'http://192.168.1.159:1337'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -677,3 +676,38 @@ export const beginnerClothingItem = async (userId, shopItemId, clothingLabel) =>
   }
 };
 
+// ฟังก์ชันอัปเดต EXP และ Level ของผู้ใช้
+export const updateUserExpLevel = async (userId, newExp, newLevel) => {
+  try {
+    // console.log(`🟢 อัปเดตข้อมูล: User ID: ${userId}, EXP สะสม: ${newExp}, Level ใหม่: ${newLevel}`);
+
+    const response = await api.put(`/api/users/${userId}`, {
+      EXP: newExp, // คงค่า EXP ไว้เป็นสะสม
+      level: newLevel,
+    });
+
+    // console.log(response.data);
+    return response.data; 
+  } catch (error) {
+    console.error("❌ Error updating EXP and Level:", error);
+    throw error;
+  }
+};
+
+// ฟังก์ชันดึงข้อมูล EXP และ Level ของผู้ใช้
+export const fetchUserExpLevel = async (userId) => {
+  try {
+    const response = await api.get(`/api/users/${userId}`);
+    const userData = response.data;
+
+    // console.log(`📥 โหลดข้อมูล: User ID: ${userId}, EXP สะสม: ${userData.EXP}, Level ปัจจุบัน: ${userData.level}`);
+
+    return {
+      exp: userData.EXP || 0,
+      level: userData.level || 1,
+    };
+  } catch (error) {
+    console.error("❌ Error fetching EXP and Level:", error);
+    return { exp: 0, level: 1 };
+  }
+};
