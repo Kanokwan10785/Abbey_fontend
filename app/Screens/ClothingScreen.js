@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Image, ImageBackground } from 'expo-image';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { ClothingContext } from './ClothingContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserClothingData, fetchClothingPets, fetchUserProfile, fetchAndUpdateClothingPets } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
@@ -16,8 +15,16 @@ import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 
-export default function ClothingScreen({ navigation, route }) {
-  const {selectedItems, setSelectedItems } = useContext(ClothingContext);
+export default function ClothingScreen({ route }) {
+  const [selectedItems, setSelectedItems] = useState({
+    shirt: null,
+    pant: null,
+    skin: { 
+      label: 'K00', 
+      image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
+      name: 'ลายทางสีเทา' 
+    }, 
+  });  
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
   const [petImageUrl, setPetImageUrl] = useState(null);
@@ -249,6 +256,15 @@ export default function ClothingScreen({ navigation, route }) {
       [category]: { image, label, name },
     };
 
+    // ถ้าหมวด skin ถูกถอดออก ให้คืนค่า K00
+    if (category === 'skin' && !label) {
+        updatedItems.skin = { 
+            label: 'K00', 
+            image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
+            name: 'ลายทางสีเทา' 
+        };
+    }
+
     setSelectedItems(updatedItems); // อัปเดตข้อมูลการสวมใส่ใน state
     await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems)); // เก็บข้อมูลใหม่ใน AsyncStorage
   };
@@ -258,10 +274,17 @@ export default function ClothingScreen({ navigation, route }) {
     const userId = await getUserId();
     if (!userId) return;
 
-    const updatedItems = {
-      ...selectedItems,
-      [category]: null,
-    };
+    let updatedItems = { ...selectedItems };
+
+    if (category === 'skin') {
+        updatedItems.skin = { 
+            label: 'K00', 
+            image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
+            name: 'ลายทางสีเทา' 
+        };
+    } else {
+        updatedItems[category] = null;
+    }
 
     setSelectedItems(updatedItems); // อัปเดตข้อมูลการถอดเสื้อผ้าใน state
     await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems)); // จัดเก็บการอัปเดตลงใน AsyncStorage
