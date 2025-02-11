@@ -7,6 +7,8 @@ import grass from '../../assets/image/Background-Theme/gym-03.gif';
 import { login } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { fetchUserProfile } from './api';
+import { saveHeightUesr, getUserId } from './apiExercise';
 
 export default function Loginpage() {
     const navigation = useNavigation();
@@ -27,6 +29,22 @@ export default function Loginpage() {
             console.log('Login successful', response);
             await AsyncStorage.setItem('jwt', response.jwt); // เก็บข้อมูล
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
+
+            // ตรวจสอบค่า BMI
+            const userData = await fetchUserProfile(userId);
+            let userBmi = userData.BMI || null;
+            const userWeight = userData.weight || 0;
+            const userHeight = userData.height || 0;
+
+            if (userBmi === null && userHeight > 0 && userWeight > 0) {
+                // คำนวณ BMI ใหม่
+                const heightInMeters = userHeight / 100;
+                const calculatedBmi = (userWeight / (heightInMeters * heightInMeters)).toFixed(2);
+
+                // บันทึกค่า BMI บนเซิร์ฟเวอร์
+                await saveHeightUesr(userHeight, calculatedBmi, userId);
+                console.log('Updated BMI on login:', calculatedBmi);
+            }
 
             // แสดงหน้ารอดาวน์โหลดข้อมูล
             setTimeout(() => {
