@@ -6,7 +6,6 @@ import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import { buyFoodItem, fetchPurchasedItems, fetchUserClothingData, fetchUserProfile, fetchItemsData, buyClothingItem, beginnerClothingItem } from './api'; // นำเข้า beginnerClothingItem
-import { ClothingContext } from './ClothingContext';
 import { BalanceContext } from './BalanceContext'; // Import BalanceContext
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -16,7 +15,7 @@ import foodIcon from '../../assets/image/food-01.png';
 import dollar from '../../assets/image/dollar-01.png';
 
 export default function ShopScreen() {
-  const { selectedItems, setSelectedItems } = useContext(ClothingContext);
+  const [selectedItems, setSelectedItems] = useState(null);
   const { balance, setBalance } = useContext(BalanceContext); // ใช้ BalanceContext เพื่อจัดการยอดเงิน
   const [userLevel, setUserLevel] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('ShirtItem');

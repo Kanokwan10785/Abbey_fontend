@@ -20,7 +20,6 @@ import Loginpage from './app/Screens/Loginpage.js';
 import Register from './app/Screens/Register.js';
 import Addexercises from './app/Screens/Additional_Exercises/Addexercises.js';
 import FoodScreen from './app/Screens/FoodScreen.js';
-import { ClothingProvider } from './app/Screens/ClothingContext';
 import { BalanceProvider } from './app/Screens//BalanceContext';
 import Couseexercies from './app/Screens/Couse_add/Couseexercies.js';
 import Couse_start from './app/Screens/Couse_add/Couse_start.js';
@@ -42,7 +41,6 @@ const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => (
   <BalanceProvider>
-  <ClothingProvider>
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {/* ใส่หน้าจอ Login และหน้าจออื่น ๆ */}
       <Stack.Screen name="Login" component={Login} />
@@ -77,7 +75,6 @@ const AppNavigator = () => (
       <Stack.Screen name="Dayexercise" component={Dayexercise} />
       <Stack.Screen name="Muscleslevel" component={Muscleslevel} />
     </Stack.Navigator>
-  </ClothingProvider>
   </BalanceProvider>
 );
 

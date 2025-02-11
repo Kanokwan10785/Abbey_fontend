@@ -5,14 +5,13 @@ import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ClothingContext } from './ClothingContext';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import fruit from '../../assets/image/fruit-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import { updateFoodQuantity, fetchUserFoodData, fetchUserProfileWithClothing, fetchFoodPetUrlByLabel } from './api'; // Import ฟังก์ชันจาก api.js
 
 const FoodScreen = ({ navigation }) => {
-  const { selectedItems } = useContext(ClothingContext);
+  const { selectedItems } = useState(null);
   const [foodData, setFoodData] = useState([]);
   const [currentPetImage, setCurrentPetImage] = useState(null);
   const [isEating, setIsEating] = useState(false);
