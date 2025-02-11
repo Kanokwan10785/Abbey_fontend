@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback  } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Image } from 'expo-image';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform, DeviceEventEmitter, TextInput, Alert, LogBox } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
@@ -86,12 +86,15 @@ const ProfileButton = () => {
   const [gender, setGender] = useState("");
   const [exp, setExp] = useState(0); // เก็บค่า EXP ของผู้เล่น
   const [level, setLevel] = useState(1); // เก็บค่า Level ของผู้เล่น
+  const [newLevel, setNewLevel] = useState(level);
+  const levelUpTriggered = useRef(false);
   const [isImageUpdated, setIsImageUpdated] = useState(false); // สถานะใหม่สำหรับการอัปเดตรูปภาพ
   const [originalProfileImage, setOriginalProfileImage] = useState(profileImage);
   const [originalData, setOriginalData] = useState({});
   const [isAlertVisible, setAlertVisible] = useState(false); // สถานะสำหรับ Custom Alert
   const [isDataAlertVisible, setDataAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertdata
   const [isSaveAlertVisible, setSaveAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertsaveProfile
+  const [isLevelUpAlertVisible, setLevelUpAlertVisible] = useState(false);
 
   const navigation = useNavigation();
 
@@ -102,41 +105,49 @@ const ProfileButton = () => {
 
   // ฟังก์ชันตรวจสอบเลเวลจาก EXP สะสม
   const updateLevelBasedOnExp = async (currentExp) => {
-    let newLevel = 1;
+    let newLevel = level;
     let expThreshold = calculateExpToLevelUp(newLevel);
-
-    // ตรวจสอบว่า EXP สะสมเกินระดับที่ต้องใช้หรือไม่
+  
     while (currentExp >= expThreshold) {
       newLevel += 1;
       expThreshold = calculateExpToLevelUp(newLevel);
     }
-
+  
+    // ตรวจสอบว่าเลเวลเปลี่ยนแปลงจริง ๆ และไม่เคยแสดงป๊อปอัปไปแล้ว
+    const lastLevel = await AsyncStorage.getItem("lastLevelUp");
+  
+    if (newLevel !== level && lastLevel !== String(newLevel)) {
+      setNewLevel(newLevel);
+      setLevelUpAlertVisible(true);
+      await AsyncStorage.setItem("lastLevelUp", String(newLevel)); // บันทึกเลเวลล่าสุดที่แจ้งเตือนแล้ว
+    }
+  
     console.log(`📊 อัปเดตเลเวล: EXP สะสม ${currentExp} → Level ${newLevel}`);
     setLevel(newLevel);
-
-    // ดึง userId จาก AsyncStorage
-    const userId = await AsyncStorage.getItem('userId');
-
-    // อัปเดตข้อมูลไปยังฐานข้อมูล
+  
+    const userId = await AsyncStorage.getItem("userId");
     await updateUserExpLevel(userId, currentExp, newLevel);
-  };
 
+    // 📌 เพิ่มการโหลดข้อมูลโปรไฟล์ใหม่หลังจากอัปเดตเลเวล
+    await loadUserProfileFromAPI();
+  };  
+  
   // โหลด EXP และ Level จากฐานข้อมูลเมื่อ Component ถูกโหลด
   useEffect(() => {
     const loadExpAndLevel = async () => {
-      const userId = await AsyncStorage.getItem('userId');
+      const userId = await AsyncStorage.getItem("userId");
       const { exp, level } = await fetchUserExpLevel(userId);
       console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
-
+  
       setExp(exp);
       setLevel(level);
-
-      // ตรวจสอบเลเวลอัปโดยใช้ EXP ที่โหลดมา
+  
+      // อย่าตั้งค่า levelUpTriggered.current = false ทุกครั้ง
       updateLevelBasedOnExp(exp);
     };
-
+  
     loadExpAndLevel();
-  }, []);
+  }, []);   
 
   // ฟังก์ชันโหลดข้อมูลจาก AsyncStorage ก่อน
   const loadUserProfileFromStorage = async () => {
@@ -425,6 +436,24 @@ const ProfileButton = () => {
       // คุณสามารถแสดงข้อความแจ้งเตือนหรือจัดการข้อผิดพลาดได้ที่นี่
     }
   };  
+  const LevelUpAlert = ({ visible, onClose, newLevel }) => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.customAlertContainer}>
+        <View style={styles.customAlertBox}>
+          <Text style={styles.customAlertTitle}>🎉 เลเวลอัป!</Text>
+          <Text style={styles.customAlertMessage}>คุณได้เลเวลอัปเป็นระดับ {newLevel} แล้ว!</Text>
+          <TouchableOpacity style={styles.customAlertButton} onPress={onClose}>
+            <Text style={styles.customAlertButtonText}>ตกลง</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );  
 
   return (
     <View style={styles.profileContainer}>
@@ -555,11 +584,22 @@ const ProfileButton = () => {
           </View>
         </View>
       </Modal>
-      {/* Render the custom alerts */}
+
+      {/* แจ้งเตือน Level Up */}
+      <LevelUpAlert
+        visible={isLevelUpAlertVisible}
+        onClose={() => {
+          setLevelUpAlertVisible(false);
+          levelUpTriggered.current = false; // รีเซ็ตเฉพาะเมื่อปิดแจ้งเตือน
+        }}
+        newLevel={newLevel}
+      />
+      {/* แจ้งเตือนอื่น ๆ */}
       <CustomAlertimage visible={isAlertVisible} onClose={() => setAlertVisible(false)} />
       <CustomAlertdata visible={isDataAlertVisible} onConfirm={confirmModalClose} onCancel={() => setDataAlertVisible(false)}/>
       <CustomAlertsaveProfile visible={isSaveAlertVisible} onClose={() => setSaveAlertVisible(false)} />
     </View>
+    
   );
 };
 
@@ -606,3 +646,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileButton;
+
