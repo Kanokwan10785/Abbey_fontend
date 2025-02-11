@@ -54,8 +54,8 @@ const Muscles_finish = () => {
 
       console.log(`🔍 ตรวจสอบค่า: currentWeekCoins = ${currentWeekCoins}, item.trophy = ${item.trophy}, updatedWeekCoins = ${updatedWeekCoins}`);
 
-      if (currentWeekCoins > 15) {
-        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+      if (currentWeekCoins > 150) {
+        setAlertMessage('สะสมเหรียญครบ 150 เหรียญในสัปดาห์นี้');
         setAlertColor('red');
         return;
       }

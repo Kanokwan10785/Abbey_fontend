@@ -74,7 +74,7 @@ const Exercise4 = () => {
 
       // ✅ ตรวจสอบ EXP สะสมในสัปดาห์
       if (currentWeekExp > 15) {
-        bonusMessages.push('คุณสะสม EXP ครบ 15 ในสัปดาห์นี้!');
+        bonusMessages.push('สะสม EXP ครบ 400 ในสัปดาห์นี้');
       } else {
         currentWeekExp += rewardExp;
         EXP += rewardExp;
@@ -82,8 +82,8 @@ const Exercise4 = () => {
 
       // ✅ ตรวจสอบเหรียญสะสมในสัปดาห์
       let updatedBalance = localBalance;
-      if (currentWeekCoins > 15) {
-        bonusMessages.push('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+      if (currentWeekCoins > 150) {
+        bonusMessages.push('สะสมเหรียญครบ 150 เหรียญในสัปดาห์นี้');
       } else {
         currentWeekCoins += rewardCoins;
         updatedBalance += rewardCoins;
@@ -94,7 +94,7 @@ const Exercise4 = () => {
       if (isContinuous && currentWeekCoins + 2 <= 15) {
         updatedBalance += 2;
         currentWeekCoins += 2;
-        bonusMessages.push('คุณได้รับโบนัส 2 เหรียญจากการออกกำลังกายต่อเนื่อง!');
+        bonusMessages.push('ได้รับโบนัส 2 เหรียญจากการออกกำลังกายต่อเนื่อง');
       }
 
       // ✅ อัปเดตค่าในแอป

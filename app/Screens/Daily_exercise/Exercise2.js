@@ -30,7 +30,7 @@ const Exercise2 = () => {
         const token = await AsyncStorage.getItem('jwt');
         const userId = await AsyncStorage.getItem('userId');
 
-        const response = await fetch(`http://192.168.1.125:1337/api/users/${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -99,8 +99,8 @@ const Exercise2 = () => {
       }
 
       // ✅ หยุดการทำงานหากเกินขีดจำกัด
-      if (updatedWeekCoins > 15) {
-        setAlertMessage('คุณสะสมเหรียญครบ 15 เหรียญในสัปดาห์นี้!');
+      if (updatedWeekCoins > 150) {
+        setAlertMessage('สะสมเหรียญครบ 150 เหรียญในสัปดาห์นี้');
         return prevCoins; // คืนค่าเดิมแทน undefined
       }
       
