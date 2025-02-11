@@ -7,8 +7,8 @@ import grass from '../../assets/image/Background-Theme/gym-03.gif';
 import { login } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { fetchUserProfile } from './api';
-import { saveHeightUesr, getUserId } from './apiExercise';
+import { fetchUserProfile, beginnerClothingItem } from './api';
+import { saveHeightUesr } from './apiExercise';
 
 export default function Loginpage() {
     const navigation = useNavigation();
@@ -44,6 +44,17 @@ export default function Loginpage() {
                 // บันทึกค่า BMI บนเซิร์ฟเวอร์
                 await saveHeightUesr(userHeight, calculatedBmi, userId);
                 console.log('Updated BMI on login:', calculatedBmi);
+            }
+
+            // เพิ่มไอเท็มเริ่มต้นให้กับผู้ใช้
+            console.log("Adding beginner clothing items...");
+            const beginnerItems = [
+                { id: 5, label: 'K00' } // ไอเท็มเริ่มต้นที่ต้องให้ผู้ใช้
+            ];
+
+            for (const item of beginnerItems) {
+                const result = await beginnerClothingItem(userId, item.id, item.label);
+                console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
             }
 
             // แสดงหน้ารอดาวน์โหลดข้อมูล
