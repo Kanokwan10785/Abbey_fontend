@@ -24,10 +24,8 @@ const Couse_finish = () => {
   }, []);
 
   useEffect(() => {
-    if (currentWeekCoins !== 0) {
       updateBalanceOnce();
-    }
-  }, [currentWeekCoins]);
+  }, []);
 
   const fetchCurrentWeekCoins = async () => {
     try {

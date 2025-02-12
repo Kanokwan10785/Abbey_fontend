@@ -9,24 +9,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { API_BASE_URL } from './../apiConfig.js';
 
-// Mapping for exercise level names
-const exerciseMapping = {
-  "6": "legs_advanced",
-  "5": "legs_intermediate",
-  "4": "legs_beginner",
-  "3": "arms_advanced",
-  "2": "arms_intermediate",
-  "1": "arms_beginner",
-  "12": "back_advanced",
-  "11": "back_intermediate",
-  "10": "back_beginner",
-  "9": "chest_advanced",
-  "8": "chest_intermediate",
-  "7": "chest_beginner",
-};
-
-const mapExerciseLevel = (musclesId) => exerciseMapping[musclesId] || "unknown";
-
 const Muscles_finish = () => {
   const navigation = useNavigation();
   const { balance, setBalance } = useContext(BalanceContext);
@@ -42,10 +24,8 @@ const Muscles_finish = () => {
   }, []);
 
   useEffect(() => {
-    if (currentWeekCoins !== 0) {
       updateBalanceOnce();
-    }
-  }, [currentWeekCoins]);
+  }, []);
 
   const updateBalanceOnce = async () => {
     try {
@@ -125,15 +105,6 @@ const Muscles_finish = () => {
       const token = await AsyncStorage.getItem('jwt');
       const userId = await AsyncStorage.getItem('userId');
       const timestamp = new Date().toISOString();
-
-      // Map musclesId to exercise level and workout records
-      const mappedExerciseLevel = mapExerciseLevel(musclesId);
-
-      // Validate mappings
-      if (mappedExerciseLevel === "unknown") {
-        console.error("Invalid mapping for musclesId:", musclesId);
-        return false;
-      }
 
       // 1. สร้าง workout record ใหม่
       const workoutRecordResponse = await fetch(`${API_BASE_URL}/api/workout-records`, {
