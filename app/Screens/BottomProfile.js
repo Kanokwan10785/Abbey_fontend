@@ -119,6 +119,17 @@ const ProfileButton = () => {
     loadExpAndLevel();
   }, []);  
 
+  useEffect(() => {
+    const loadLevelFromStorage = async () => {
+      const storedLevel = await AsyncStorage.getItem('level');
+      if (storedLevel !== null) {
+        setLevel(JSON.parse(storedLevel)); // แปลงจาก string เป็น number
+      }
+    };
+  
+    loadLevelFromStorage();
+  }, []);  
+
   // ฟังก์ชันโหลดข้อมูลจาก AsyncStorage ก่อน
   const loadUserProfileFromStorage = async () => {
     try {
@@ -235,15 +246,18 @@ const ProfileButton = () => {
   }, []);
 
   useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener('levelUp', ({ newLevel }) => {
-      console.log(`📢 ได้รับ Event "levelUp"! เลเวลใหม่: ${newLevel}`);
-      setLevel(newLevel);
-      setNewLevel(newLevel);
-      setLevelUpAlertVisible(true);
+    const subscription = DeviceEventEmitter.addListener('levelUp', async ({ newLevel }) => {
+      console.log(`📢 ได้รับ Event "levelUp"! อัปเดต Level ใหม่: ${newLevel}`);
+      
+      setLevel(newLevel); // อัปเดต State
+      await AsyncStorage.setItem('level', JSON.stringify(newLevel)); // อัปเดต AsyncStorage
+  
+      // หากดึง Level จาก API ต้องเรียกใหม่
+      await loadUserProfileFromAPI(); 
     });
   
     return () => {
-      subscription.remove(); // ลบ Listener เมื่อ Component ถูก Unmount
+      subscription.remove(); // ลบ Event Listener เมื่อ Component Unmount
     };
   }, []);  
   

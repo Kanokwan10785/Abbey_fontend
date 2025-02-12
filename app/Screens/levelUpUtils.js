@@ -11,28 +11,27 @@ export const calculateExpToLevelUp = (level) => {
 export const updateLevelBasedOnExp = async (currentExp, currentLevel, onLevelUp) => {
     let newLevel = currentLevel;
     let expThreshold = calculateExpToLevelUp(newLevel);
+    let remainingExp = currentExp; // เก็บค่า EXP ที่เหลือ
   
     console.log(`🔍 ตรวจสอบการเลเวลอัป: EXP ปัจจุบัน ${currentExp}, Level ปัจจุบัน ${newLevel}, ต้องใช้ EXP ${expThreshold}`);
   
-    while (currentExp >= expThreshold) {
+    while (remainingExp >= expThreshold) {
+      remainingExp -= expThreshold; // ใช้ EXP เพื่ออัปเลเวล
       newLevel += 1;
       expThreshold = calculateExpToLevelUp(newLevel);
-      console.log(`⬆️ เลเวลอัป! Level ใหม่: ${newLevel}, ต้องใช้ EXP ถัดไป: ${expThreshold}`);
+      console.log(`⬆️ เลเวลอัป! Level ใหม่: ${newLevel}, EXP คงเหลือ: ${remainingExp}, ต้องใช้ EXP ถัดไป: ${expThreshold}`);
     }
   
     if (newLevel !== currentLevel) {
-      console.log(`🎉 เรียกใช้งาน onLevelUp! เลเวลใหม่: ${newLevel}`);
+      console.log(`🎉 เลเวลอัป! เรียก onLevelUp ใหม่: Level ${newLevel}`);
       onLevelUp(newLevel);
-
-      // 📢 แจ้งเตือนว่าเลเวลอัปโดยใช้ DeviceEventEmitter
       DeviceEventEmitter.emit('levelUp', { newLevel });
-      console.log(`🚀 DeviceEventEmitter: ส่ง event "levelUp" ด้วยค่า: Level ${newLevel}`);
     } else {
       console.log(`✅ ไม่มีการเปลี่ยนแปลง Level`);
     }
   
     const userId = await AsyncStorage.getItem('userId');
-    await updateUserExpLevel(userId, currentExp, newLevel);
+    await updateUserExpLevel(userId, remainingExp, newLevel);
   
     return newLevel;
 };
