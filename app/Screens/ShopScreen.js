@@ -383,7 +383,7 @@ useEffect(() => {
 const renderItems = () => {
   return sortedItems.map((item, index) => {
     const isHidden = item.label === 'Z00' || item.label === 'S00' || item.label === 'P00';
-    const alreadyOwned = purchasedItems[item.label] === true;
+    const alreadyOwned = purchasedItems[item.label] === true || purchasedItems[item.label] === "true";
 
     // ตรวจสอบเลเวลผู้ใช้
     const canPurchase = userLevel >= item.level;
@@ -402,17 +402,15 @@ const renderItems = () => {
               <Text style={styles.itemPrice}>{item.price}</Text>
               <Image source={dollar} style={styles.currencyIcon} />
             </View>
-            {canPurchase ? (
-            <TouchableOpacity
-              style={[styles.itemButton,]}
-              onPress={() => handleBuy(item)}
-              disabled={alreadyOwned}
-            >
-              <Text style={styles.itemButtonText}>
-                {alreadyOwned ? 'มีแล้ว' : 'ซื้อ'}
-              </Text>
-            </TouchableOpacity>
-          ) : (
+            {alreadyOwned ? (
+              <TouchableOpacity style={[styles.itemButton]} disabled={true}>
+                <Text style={styles.itemButtonText}>มีแล้ว</Text>
+              </TouchableOpacity>
+            ) : canPurchase ? (
+              <TouchableOpacity style={[styles.itemButton]} onPress={() => handleBuy(item)}>
+                <Text style={styles.itemButtonText}>ซื้อ</Text>
+              </TouchableOpacity>
+            ) : (
               <View style={styles.lockedButton}>
                 <Text style={styles.lockedButtonText}>ปลดล็อก Lv. {item.level}</Text>
               </View>
