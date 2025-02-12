@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Image, ImageBackground } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
@@ -113,6 +113,17 @@ export default function ClothingScreen({ route }) {
 
     loadUserClothingData();
   }, [setSelectedItems]);
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('clothingUpdated', async () => {
+        console.log("Clothing Updated, fetching new data...");
+        await loadUserClothingData(); // โหลดข้อมูลเสื้อผ้าใหม่
+    });
+
+    return () => {
+        subscription.remove(); // ลบ Listener เมื่อ Component ถูก Unmount
+    };
+  }, []);
 
   // จัดหมวดหมู่เสื้อผ้าผู้ใช้
   const organizeClothingData = (data) => {

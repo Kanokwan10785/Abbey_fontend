@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Image, ImageBackground } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
@@ -279,10 +279,14 @@ export default function ShopScreen() {
             const newBalance = balance - itemPrice;
             setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
 
-            setSelectedItems(prevState => ({
-                ...prevState,
-                [selectedCategory]: item,
+            // อัปเดตรายการสินค้าว่ามีอยู่แล้ว
+            setPurchasedItems(prevState => ({
+              ...prevState,
+              [clothingLabel]: true
             }));
+            
+           // แจ้ง ClothingScreen ให้โหลดข้อมูลใหม่
+           DeviceEventEmitter.emit('clothingUpdated');
 
             console.log("Purchase successful. New balance:", newBalance);
         } else {
@@ -382,45 +386,42 @@ useEffect(() => {
 // การแสดงรายการสินค้า
 const renderItems = () => {
   return sortedItems.map((item, index) => {
-    const isHidden = item.label === 'Z00' || item.label === 'S00' || item.label === 'P00';
-    const alreadyOwned = purchasedItems[item.label] === true || purchasedItems[item.label] === "true";
+      const isHidden = item.label === 'Z00' || item.label === 'S00' || item.label === 'P00';
+      const alreadyOwned = purchasedItems[item.label] === true || purchasedItems[item.label] === "true";
 
-    // ตรวจสอบเลเวลผู้ใช้
-    const canPurchase = userLevel >= item.level;
+      const canPurchase = userLevel >= item.level;
 
-    return (
-      <View key={index} style={[ styles.item, !canPurchase && { backgroundColor: "#FAA828" }
-      ]}
-    >
-        <View style={styles.insideitemImage}>
-          <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-        </View>
-        {!isHidden && (
-          <>
-            <Text style={styles.itemText}>{item.name}</Text>
-            <View style={styles.currencyPrice}>
-              <Text style={styles.itemPrice}>{item.price}</Text>
-              <Image source={dollar} style={styles.currencyIcon} />
-            </View>
-            {alreadyOwned ? (
-              <TouchableOpacity style={[styles.itemButton]} disabled={true}>
-                <Text style={styles.itemButtonText}>มีแล้ว</Text>
-              </TouchableOpacity>
-            ) : canPurchase ? (
-              <TouchableOpacity style={[styles.itemButton]} onPress={() => handleBuy(item)}>
-                <Text style={styles.itemButtonText}>ซื้อ</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.lockedButton}>
-                <Text style={styles.lockedButtonText}>ปลดล็อก Lv. {item.level}</Text>
+      return (
+          <View key={index} style={[styles.item, !canPurchase && { backgroundColor: "#FAA828" }]}>
+              <View style={styles.insideitemImage}>
+                  <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
               </View>
-            )}
-          </>
-        )}
-      </View>
-    );
+              {!isHidden && (
+                  <>
+                      <Text style={styles.itemText}>{item.name}</Text>
+                      <View style={styles.currencyPrice}>
+                          <Text style={styles.itemPrice}>{item.price}</Text>
+                          <Image source={dollar} style={styles.currencyIcon} />
+                      </View>
+                      {alreadyOwned ? (
+                          <TouchableOpacity style={[styles.itemButton]} disabled={true}>
+                              <Text style={styles.itemButtonText}>มีแล้ว</Text>
+                          </TouchableOpacity>
+                      ) : canPurchase ? (
+                          <TouchableOpacity style={[styles.itemButton]} onPress={() => handleBuy(item)}>
+                              <Text style={styles.itemButtonText}>ซื้อ</Text>
+                          </TouchableOpacity>
+                      ) : (
+                          <View style={styles.lockedButton}>
+                              <Text style={styles.lockedButtonText}>ปลดล็อก Lv. {item.level}</Text>
+                          </View>
+                      )}
+                  </>
+              )}
+          </View>
+      );
   });
-};  
+};
 
   return (
     <View style={styles.container}>
