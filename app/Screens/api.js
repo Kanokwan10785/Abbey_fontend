@@ -274,24 +274,35 @@ export const fetchHomePetUrlByLabel = async (label, userId, bmiLabel) => {
   try {
     console.log("Fetching home pet URL for label:", label, "and userId:", userId);
 
-    const userResponse = await api.get(`/api/users/${userId}?populate[exercise_levels][fields][1]=label`);
+    // เรียก API เพื่อดึงข้อมูลผู้ใช้
+    const userResponse = await api.get(`/api/users/${userId}?populate[user_exercise_muscles][fields][1]=exercise_levels`);
     const userData = userResponse.data;
-    console.log("User exercise levels:", userData.exercise_levels);
+    console.log("User exercise levels:", userData.user_exercise_muscles);
 
-    let conditions = ['EX00'];
-    if (userData.exercise_levels && Array.isArray(userData.exercise_levels)) {
-      userData.exercise_levels.forEach((level) => {
-        if (level.label.includes('chest') && !conditions.includes('EX01')) {
-          conditions.push('EX01');
-        } else if (level.label.includes('arms') && !conditions.includes('EX02')) {
-          conditions.push('EX02');
-        } else if (level.label.includes('legs') && !conditions.includes('EX03')) {
-          conditions.push('EX03');
+    // ตรวจสอบว่าข้อมูลถูกต้อง
+    let conditions = ['EX00']; // ค่าเริ่มต้น
+    if (userData.user_exercise_muscles && Array.isArray(userData.user_exercise_muscles)) {
+      userData.user_exercise_muscles.forEach((muscle) => {
+        const exerciseLevel = muscle.exercise_levels; // ดึงค่า exercise_levels
+
+        if (typeof exerciseLevel === 'string') { // ตรวจสอบว่าเป็น string
+          if (exerciseLevel.includes('chest') && !conditions.includes('EX01')) {
+            conditions.push('EX01');
+          }
+          if (exerciseLevel.includes('arms') && !conditions.includes('EX02')) {
+            conditions.push('EX02');
+          }
+          if (exerciseLevel.includes('legs') && !conditions.includes('EX03')) {
+            conditions.push('EX03');
+          }
+        } else {
+          console.warn("Invalid exercise level format:", exerciseLevel);
         }
       });
     }
     console.log("Search conditions:", conditions);
 
+    // ดึงข้อมูล home_pet ที่ตรงกับ label
     const response = await api.get(`/api/clothing-pets?populate[home_pet][fields][0]=url&populate[home_pet][fields][1]=name&fields[0]=label&filters[bmi_type][$eq]=${bmiLabel}&pagination[limit]=100`);
     const data = response.data;
 
@@ -301,6 +312,7 @@ export const fetchHomePetUrlByLabel = async (label, userId, bmiLabel) => {
       return null;
     }
 
+    // หา URL ที่ตรงกับเงื่อนไข
     const urls = conditions.map(condition => {
       const nameToMatch = `${label}${condition}`;
       const homePet = matchingPet.attributes.home_pet.data.find(homePet => homePet.attributes.name === nameToMatch);
@@ -319,7 +331,6 @@ export const fetchHomePetUrlByLabel = async (label, userId, bmiLabel) => {
     throw error;
   }
 };
-
 
 export const fetchFoodPetUrlByLabel = async (label, foodLabel = 'F00') => {
   try {
