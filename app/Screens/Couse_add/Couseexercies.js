@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomBar from '../BottomBar';
-import exercise from '../../../assets/image/exercise.png';
+import exercise from '../../../assets/image/exercise.jpg';
 import previous from '../../../assets/image/previous.png';
 import { useNavigation } from '@react-navigation/native';
 import { Image } from 'expo-image';

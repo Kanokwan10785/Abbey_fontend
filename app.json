@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "Abbey_app",
+    "name": "abbey_apps",
     "slug": "abbeyapp",
     "version": "1.0.0",
+    "scheme": "abbey_app",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +12,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/assets_image_exercise.png"
+    ],
     "ios": {
       "supportsTablet": true
     },
