@@ -54,8 +54,33 @@ export default function ClothingScreen({ route }) {
 
   // ฟังก์ชันสำหรับเรียกข้อมูลเสื้อผ้า
   const loadUserClothingData = async () => {
-    // Logic การโหลดเสื้อผ้า (โค้ดเดิม)
-  };
+    try {
+      const userId = await getUserId();
+      if (!userId) return;
+  
+      // ดึงข้อมูลจาก AsyncStorage หากมี
+      const savedOutfits = await AsyncStorage.getItem(`userOutfit-${userId}`);
+      const cachedClothingData = await AsyncStorage.getItem(`clothingData-${userId}`);
+  
+      if (savedOutfits) {
+        setSelectedItems(JSON.parse(savedOutfits)); // อัปเดต state ด้วยข้อมูลที่ดึงจาก AsyncStorage
+      }
+  
+      if (cachedClothingData) {
+        organizeClothingData(JSON.parse(cachedClothingData));
+      }
+  
+      // ดึงข้อมูลจาก API และอัปเดต AsyncStorage
+      const data = await fetchUserClothingData(userId);
+      if (data && data.length > 0) {
+        console.log('Fetched clothing data from API:', data);
+        organizeClothingData(data);
+        await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data)); // จัดเก็บข้อมูลใหม่ใน AsyncStorage
+      }
+    } catch (error) {
+      console.error('Error loading user clothing data:', error.message);
+    }
+  };  
 
   useFocusEffect(
     React.useCallback(() => {
