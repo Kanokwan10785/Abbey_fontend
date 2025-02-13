@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import BottomBar from '../BottomBar';
-import exercise from '../../../assets/image/exercise.png';
+import exercise from '../../../assets/image/exercise.jpg';
 import { useMemo } from 'react'
 import { Image } from 'expo-image';
 import { API_BASE_URL } from './apiConfig.js';

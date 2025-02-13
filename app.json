@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "Abbey_app",
-    "slug": "Abbey_app",
+    "name": "abbey_apps",
+    "slug": "abbeyapp",
     "version": "1.0.0",
+    "scheme": "abbey_app",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,6 +12,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/assets_image_exercise.png"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -18,13 +23,19 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.kanokwan004.abbeyapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3c1a88dc-a2f4-4478-92d7-7c2ec6ad81b7"
+      }
+    }
   }
 }

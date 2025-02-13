@@ -24,13 +24,34 @@ const AnalysisScreen = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-    const fetchWorkoutRecords = async () => {
+    const fetchWorkoutRecords = async (page = 1, limit = 20) => {
       try {
         const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+          console.error("User ID is not found in AsyncStorage");
+          return;
+        }
         console.log("userId", userId);
         const response = await axios.get(
-          `http://172.30.81.159:1337/api/users/${userId}?populate=workout_records,workout_records.exercise_level,workout_records.exercise_level.image,workout_records.add_course,workout_records.week,workout_records.day,workout_records.add_course.image,workout_records.add_course.all_exercises,workout_records.day.all_exercises,workout_records.exercise_level.all_exercises,workout_records.day.image&pagination[limit]=100`
-        );
+          //  `https://abbey-backend.onrender.com/api/users/${userId}?populate=workout_records.week,workout_records.day.image,workout_records.day.all_exercises,workout_records.exercise_level.image,workout_records.exercise_level.all_exercises,workout_records.add_course.image,workout_records.add_course.all_exercises&pagination[page]=${page}&pagination[limit]=${limit}`
+          `https://abbey-backend.onrender.com/api/users/${userId}?` +
+          `populate[workout_records][populate][day][populate][image][fields]=url&` +
+          `populate[workout_records][populate][day][populate][all_exercises][fields]=duration,reps&` +
+          `populate[workout_records][fields]=exercise_levels,add_courses,timestamp&` +
+          `populate[workout_records][populate][week][fields]=name&` +
+          `populate[workout_records][populate][exercise_level][fields]=name&` +
+          `populate[workout_records][populate][exercise_level][populate][image][fields]=url&` +
+          `populate[workout_records][populate][exercise_level][populate][all_exercises][fields]=duration,reps&` +
+          `populate[workout_records][populate][add_course][fields]=name&` +
+          `populate[workout_records][populate][add_course][populate][image][fields]=url&` +
+          `populate[workout_records][populate][add_course][populate][all_exercises][fields]=duration,reps&` +
+          `pagination[limit]=100`,
+          { timeout: 10000 } 
+          );
+
+        if (!response.data) {
+          throw new Error("No data found");
+        }    
 
         const workoutRecords = response.data?.workout_records || [];
         const updatedDates = {};
@@ -156,7 +177,7 @@ const AnalysisScreen = () => {
         setWeeklySummary(formatSummary(groupedData));
         setMarkedDates(updatedDates);
       } catch (error) {
-        console.error("Error fetching workout records:", error);
+        console.error("Error fetching workout records:", error.message);
       } finally {
         setLoading(false);
       }
@@ -262,7 +283,9 @@ const AnalysisScreen = () => {
     );
   };
 
-  return (
+  return loading ? (
+  <ActivityIndicator size="large" color="#F6A444" />
+) : (
     <View style={styles.container}>
       <FlatList
         ListHeaderComponent={
