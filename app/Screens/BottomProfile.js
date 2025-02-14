@@ -417,21 +417,15 @@ const ProfileButton = () => {
   
   const logout = async () => {
     try {
-      // ลบ token ออกจาก AsyncStorage
-      await AsyncStorage.removeItem('token');
-      
-      // ปิดโมดอล (ถ้ามี)
-      setModalVisible(false);
-  
-      // เปลี่ยนหน้าไปยังหน้า Login
-      navigation.navigate('Login');
-  
-      console.log('User logged out');
+      await AsyncStorage.removeItem('jwt');
+      await AsyncStorage.removeItem('userId');
+      navigation.navigate('Login');  
+      console.log('User logged out manually');
     } catch (error) {
       console.error('Error during logout:', error);
-      // คุณสามารถแสดงข้อความแจ้งเตือนหรือจัดการข้อผิดพลาดได้ที่นี่
     }
-  };  
+  };
+  
   const LevelUpAlert = ({ visible, onClose, newLevel }) => (
     <Modal
       animationType="fade"

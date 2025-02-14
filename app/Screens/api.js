@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.159:1337'; 
+const API_URL = 'http://192.168.56.38:1337'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -398,10 +398,19 @@ export const fetchFoodPetUrlByLabel = async (label, foodLabel = 'F00') => {
 // ฟังก์ชันการดึงข้อมูลโปรไฟล์ผู้ใช้ โดยรับ token ใน headers
 export const fetchUserProfile = async (userId, config = {}) => {
   try {
+    if (!userId) {
+      throw new Error('User ID is missing, cannot fetch profile.');
+    }
+
     const response = await api.get(`/api/users/${userId}?populate=*`, config);
     return response.data;
   } catch (error) {
-    console.error('Error fetching user profile', error);
+    console.error('Error fetching user profile:', error);
+
+    if (error.response && error.response.status === 401) {
+      console.warn('Unauthorized access, but not logging out automatically.');
+    }
+
     throw error;
   }
 };

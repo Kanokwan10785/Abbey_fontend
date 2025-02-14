@@ -88,12 +88,21 @@ const App = () => {
 
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const token = await AsyncStorage.getItem('jwt');
-      setIsLoggedIn(!!token);
+      try {
+        const token = await AsyncStorage.getItem('jwt');
+        if (token) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+        setIsLoggedIn(false);  // ให้สถานะเป็น false แต่ไม่ต้องลบ token
+      }
     };
-
+  
     checkLoginStatus();
-  }, []);
+  }, []);  
 
   if (!loaded) {
     return null;

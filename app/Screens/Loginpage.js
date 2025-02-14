@@ -30,6 +30,14 @@ export default function Loginpage() {
             await AsyncStorage.setItem('jwt', response.jwt); // เก็บข้อมูล
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
 
+                // ตรวจสอบว่าดึงข้อมูลโปรไฟล์สำเร็จหรือไม่
+            try {
+                const userData = await fetchUserProfile(userId);
+                // console.log('User data loaded:', userData);
+            } catch (profileError) {
+                console.warn('Failed to fetch user profile, but continuing login:', profileError);
+            }
+
             // ตรวจสอบค่า BMI
             const userData = await fetchUserProfile(userId);
             let userBmi = userData.BMI || null;
