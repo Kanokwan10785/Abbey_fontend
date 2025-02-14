@@ -213,44 +213,40 @@ export default function ClothingScreen({ route }) {
     }
   };
 
-  // อัปเดตภาพสัตว์เลี้ยงเมื่อเสื้อผ้าเปลี่ยนแปลง
+  // ฟังก์ชันสำหรับอัปเดตเสื้อผ้าสัตว์เลี้ยง
   const updatePetImage = async () => {
     const shirtLabel = selectedItems.shirt?.label || 'S00';
     const pantLabel = selectedItems.pant?.label || 'P00';
     const skinLabel = selectedItems.skin?.label || 'K00';
-  
+
     // คำนวณ BMI Category
     const userId = await getUserId();
-    const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`); // ดึง BMI จาก AsyncStorage
+    const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`);
     const bmiCategory = getBMICategory(parseFloat(storedBmi)); // คำนวณระดับ BMI
-  
+
     const combinedLabel = `${bmiCategory}${shirtLabel}${pantLabel}${skinLabel}`;
-  
+
+    // เช็คว่า combinedLabel เปลี่ยนแปลงจากที่เก็บไว้ก่อนหน้านี้หรือไม่
     if (combinedLabel !== previousCombinedLabelRef.current) {
-      previousCombinedLabelRef.current = combinedLabel;
-      console.log('Generated Pet Clothes label:', combinedLabel);
-  
+      previousCombinedLabelRef.current = combinedLabel; // อัปเดตค่าที่เก็บไว้
+
       try {
         const clothingPetsData = await fetchAndCacheClothingPets();
         const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
-  
+
         if (matchingPet) {
-          console.log('Matching Pet Found:', matchingPet);
           setPetImageUrl(matchingPet.url || null);
           const userId = await getUserId();
           if (!userId) return;
-  
-          // บันทึกเฉพาะกรณีที่ URL มีค่า
+
           if (matchingPet.url) {
             setPetImageUrl(matchingPet.url);
-            await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url || ''); // บันทึก URL ที่ถูกต้อง
+            await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url || '');
           } else {
-            setPetImageUrl(null); // ตั้งค่าใน state เป็น null
-            await AsyncStorage.removeItem(`petImageUrl-${userId}`); // ลบค่า URL ที่ไม่ถูกต้องออกจาก AsyncStorage
-            console.log('No matching pet found for label:', combinedLabel);
+            setPetImageUrl(null);
+            await AsyncStorage.removeItem(`petImageUrl-${userId}`);
           }
-  
-          // อัปเดตข้อมูลสัตว์เลี้ยงในเซิร์ฟเวอร์
+
           await fetchAndUpdateClothingPets(combinedLabel, userId);
         } else {
           setPetImageUrl(null);
@@ -258,8 +254,10 @@ export default function ClothingScreen({ route }) {
       } catch (error) {
         console.error('Error fetching and updating pet image:', error);
       }
+    } else {
+      console.log('No change in clothing label, skipping PUT.');
     }
-  };  
+  };
 
   useEffect(() => {
     // ตรวจสอบว่ามีการเปลี่ยนแปลงจริง ๆ หรือไม่
