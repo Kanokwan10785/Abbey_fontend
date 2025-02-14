@@ -30,27 +30,20 @@ export default function ClothingScreen({ route }) {
   const [petImageUrl, setPetImageUrl] = useState(null);
   const previousCombinedLabelRef = useRef(null);
   const [bmi, setBmi] = useState(null);
+  const previousSelectedItemsRef = useRef(null);
+  const previousBmiRef = useRef(null);
 
-  // ใช้เพื่อเก็บข้อมูล cache สำหรับ clothing pets
   const cachedClothingPetsData = useRef(null);
 
   // ฟังก์ชันโหลดข้อมูลเมื่อมีการรีเฟรช
   const refreshData = async () => {
-    // console.log('Refreshing ClothingScreen...');
     try {
-      await fetchAndStoreBMI(); // โหลดข้อมูล BMI ใหม่
-      await loadUserClothingData(); // โหลดข้อมูลเสื้อผ้าใหม่
-  
-      // ตรวจสอบว่าข้อมูลใหม่ถูกโหลดสำเร็จ
-      const updatedUserId = await getUserId();
-      const updatedOutfit = await AsyncStorage.getItem(`userOutfit-${updatedUserId}`);
-      // console.log('Updated Outfit:', updatedOutfit);
-      // console.log('Updated BMI:', bmi);
-  
+      await fetchAndStoreBMI();
+      await loadUserClothingData();
     } catch (error) {
       console.error('Error refreshing ClothingScreen:', error);
     }
-  };  
+  }; 
 
   // ฟังก์ชันสำหรับเรียกข้อมูลเสื้อผ้า
   const loadUserClothingData = async () => {
@@ -73,7 +66,7 @@ export default function ClothingScreen({ route }) {
       // ดึงข้อมูลจาก API และอัปเดต AsyncStorage
       const data = await fetchUserClothingData(userId);
       if (data && data.length > 0) {
-        console.log('Fetched clothing data from API:', data);
+        // console.log('Fetched clothing data from API:', data);
         organizeClothingData(data);
         await AsyncStorage.setItem(`clothingData-${userId}`, JSON.stringify(data)); // จัดเก็บข้อมูลใหม่ใน AsyncStorage
       }
@@ -81,17 +74,6 @@ export default function ClothingScreen({ route }) {
       console.error('Error loading user clothing data:', error.message);
     }
   };  
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if (route.params?.refresh) {
-        console.log('Triggered refresh from route params');
-        refreshData();
-      } else {
-        console.log('No refresh triggered');
-      }
-    }, [route.params?.refresh]) // ติดตามค่า refresh จาก route.params
-  );  
 
   // ฟังก์ชัน helper เพื่อดึง userId จาก AsyncStorage
   const getUserId = async () => {
@@ -104,6 +86,10 @@ export default function ClothingScreen({ route }) {
       return null;
     }
   };
+
+  useEffect(() => {
+    loadUserClothingData();
+  }, [setSelectedItems]);
 
   // โหลดข้อมูลเสื้อผ้าผู้ใช้จาก AsyncStorage และ API
   useEffect(() => {
@@ -228,55 +214,65 @@ export default function ClothingScreen({ route }) {
   };
 
   // อัปเดตภาพสัตว์เลี้ยงเมื่อเสื้อผ้าเปลี่ยนแปลง
-  useEffect(() => {
-    const updatePetImage = async () => {
-      const shirtLabel = selectedItems.shirt?.label || 'S00';
-      const pantLabel = selectedItems.pant?.label || 'P00';
-      const skinLabel = selectedItems.skin?.label || 'K00';
-
-      // คำนวณ BMI Category
-      const userId = await getUserId();
-      const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`); // ดึง BMI จาก AsyncStorage
-      const bmiCategory = getBMICategory(parseFloat(storedBmi)); // คำนวณระดับ BMI
-
-      const combinedLabel = `${bmiCategory}${shirtLabel}${pantLabel}${skinLabel}`;
-
-      if (combinedLabel !== previousCombinedLabelRef.current) {
-        previousCombinedLabelRef.current = combinedLabel;
-        console.log('Generated Pet Clothes label:', combinedLabel);
-
-        try {
-          const clothingPetsData = await fetchAndCacheClothingPets();
-          const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
-
-          if (matchingPet) {
-            console.log('Matching Pet Found:', matchingPet);
-            setPetImageUrl(matchingPet.url || null);
-            const userId = await getUserId();
-            if (!userId) return;
-
-             // บันทึกเฉพาะกรณีที่ URL มีค่า
-            if (matchingPet.url) {
-              setPetImageUrl(matchingPet.url);
-              await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url || ''); // บันทึก URL ที่ถูกต้อง
-            } else {
-              setPetImageUrl(null); // ตั้งค่าใน state เป็น null
-              await AsyncStorage.removeItem(`petImageUrl-${userId}`); // ลบค่า URL ที่ไม่ถูกต้องออกจาก AsyncStorage
-              console.log('No matching pet found for label:', combinedLabel);
-            }
-            
-            // อัปเดตข้อมูลสัตว์เลี้ยงในเซิร์ฟเวอร์
-            await fetchAndUpdateClothingPets(combinedLabel, userId);
+  const updatePetImage = async () => {
+    const shirtLabel = selectedItems.shirt?.label || 'S00';
+    const pantLabel = selectedItems.pant?.label || 'P00';
+    const skinLabel = selectedItems.skin?.label || 'K00';
+  
+    // คำนวณ BMI Category
+    const userId = await getUserId();
+    const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`); // ดึง BMI จาก AsyncStorage
+    const bmiCategory = getBMICategory(parseFloat(storedBmi)); // คำนวณระดับ BMI
+  
+    const combinedLabel = `${bmiCategory}${shirtLabel}${pantLabel}${skinLabel}`;
+  
+    if (combinedLabel !== previousCombinedLabelRef.current) {
+      previousCombinedLabelRef.current = combinedLabel;
+      console.log('Generated Pet Clothes label:', combinedLabel);
+  
+      try {
+        const clothingPetsData = await fetchAndCacheClothingPets();
+        const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
+  
+        if (matchingPet) {
+          console.log('Matching Pet Found:', matchingPet);
+          setPetImageUrl(matchingPet.url || null);
+          const userId = await getUserId();
+          if (!userId) return;
+  
+          // บันทึกเฉพาะกรณีที่ URL มีค่า
+          if (matchingPet.url) {
+            setPetImageUrl(matchingPet.url);
+            await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url || ''); // บันทึก URL ที่ถูกต้อง
           } else {
-            setPetImageUrl(null);
+            setPetImageUrl(null); // ตั้งค่าใน state เป็น null
+            await AsyncStorage.removeItem(`petImageUrl-${userId}`); // ลบค่า URL ที่ไม่ถูกต้องออกจาก AsyncStorage
+            console.log('No matching pet found for label:', combinedLabel);
           }
-        } catch (error) {
-          console.error('Error fetching and updating pet image:', error);
+  
+          // อัปเดตข้อมูลสัตว์เลี้ยงในเซิร์ฟเวอร์
+          await fetchAndUpdateClothingPets(combinedLabel, userId);
+        } else {
+          setPetImageUrl(null);
         }
+      } catch (error) {
+        console.error('Error fetching and updating pet image:', error);
       }
-    };
+    }
+  };  
 
-    updatePetImage();
+  useEffect(() => {
+    // ตรวจสอบว่ามีการเปลี่ยนแปลงจริง ๆ หรือไม่
+    const isItemsChanged = JSON.stringify(selectedItems) !== JSON.stringify(previousSelectedItemsRef.current);
+    const isBmiChanged = bmi !== previousBmiRef.current;
+  
+    if (isItemsChanged || isBmiChanged) {
+      updatePetImage(); // เรียก updatePetImage เมื่อมีการเปลี่ยนแปลง
+    }
+  
+    // อัปเดตค่าปัจจุบัน
+    previousSelectedItemsRef.current = selectedItems;
+    previousBmiRef.current = bmi;
   }, [selectedItems, bmi]);
 
   // console.log('Current BMI:', bmi);
@@ -286,44 +282,39 @@ export default function ClothingScreen({ route }) {
   const handleWear = async (category, image, name, label) => {
     const userId = await getUserId();
     if (!userId) return;
-
+  
     const updatedItems = {
       ...selectedItems,
       [category]: { image, label, name },
     };
-
-    // ถ้าหมวด skin ถูกถอดออก ให้คืนค่า K00
-    if (category === 'skin' && !label) {
-        updatedItems.skin = { 
-            label: 'K00', 
-            image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
-            name: 'ลายทางสีเทา' 
-        };
+  
+    if (JSON.stringify(updatedItems) !== JSON.stringify(selectedItems)) {
+      setSelectedItems(updatedItems);
+      await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
     }
-
-    setSelectedItems(updatedItems); // อัปเดตข้อมูลการสวมใส่ใน state
-    await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems)); // เก็บข้อมูลใหม่ใน AsyncStorage
   };
-
+  
   // ฟังก์ชันการถอดเสื้อผ้า
   const handleRemove = async (category) => {
     const userId = await getUserId();
     if (!userId) return;
-
+  
     let updatedItems = { ...selectedItems };
-
+  
     if (category === 'skin') {
-        updatedItems.skin = { 
-            label: 'K00', 
-            image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
-            name: 'ลายทางสีเทา' 
-        };
+      updatedItems.skin = { 
+          label: 'K00', 
+          image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
+          name: 'ลายทางสีเทา' 
+      };
     } else {
-        updatedItems[category] = null;
+      updatedItems[category] = null;
     }
-
-    setSelectedItems(updatedItems); // อัปเดตข้อมูลการถอดเสื้อผ้าใน state
-    await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems)); // จัดเก็บการอัปเดตลงใน AsyncStorage
+  
+    if (JSON.stringify(updatedItems) !== JSON.stringify(selectedItems)) {
+      setSelectedItems(updatedItems);
+      await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+    }
   };
 
     // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
