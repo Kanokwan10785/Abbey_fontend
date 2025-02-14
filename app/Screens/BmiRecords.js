@@ -14,6 +14,7 @@ const BmiRecords = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [petImageUrl, setPetImageUrl] = useState(null);
   const [originalHeightCm, setOriginalHeightCm] = useState(0);
+  const [isSaveAlertVisible, setSaveAlertVisible] = useState(false);
 
   // ฟังก์ชันกำหนด BMI prefix ตามค่า BMI
   const getBmiPrefix = (bmi) => {
@@ -130,7 +131,7 @@ const BmiRecords = () => {
         const userId = await getUserId(); // ดึง userId
         await saveHeightUesr(heightCmValue, newBmi, userId); // ส่งส่วนสูงและ BMI ใหม่
         DeviceEventEmitter.emit('bmiUpdated'); // ส่ง Event แจ้งเตือนให้หน้า BottomProfile.js โหลดข้อมูลใหม่
-        alert('บันทึกข้อมูลสำเร็จ');
+        setSaveAlertVisible(true);
         setIsModalVisible(false); // ปิด Modal หลังบันทึกสำเร็จ
       } catch (error) {
         console.error('Error updating height and BMI:', error);
@@ -201,6 +202,25 @@ const BmiRecords = () => {
     }
   }, [bmi]); 
 
+  const CustomAlertSaveBmi = ({ visible, onClose }) => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.customAlertContainer}>
+        <View style={styles.customAlertBox}>
+          <Text style={styles.customAlertTitle}>บันทึกข้อมูลสำเร็จ!</Text>
+          <Text style={styles.customAlertMessage}>ข้อมูล BMI ของคุณถูกบันทึกแล้ว</Text>
+          <TouchableOpacity style={styles.customAlertButton} onPress={onClose}>
+            <Text style={styles.customAlertButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.bmiHeader}>
@@ -258,6 +278,10 @@ const BmiRecords = () => {
           </View>
         </View>
       </Modal>
+      <CustomAlertSaveBmi 
+        visible={isSaveAlertVisible} 
+        onClose={() => setSaveAlertVisible(false)} 
+      />
     </View>
   );
 };
@@ -285,6 +309,12 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: '#F6A444', padding: 10, paddingHorizontal: 25, borderRadius: 5 },
   cancelButton: { backgroundColor: '#F6A444', padding: 10, paddingHorizontal: 25, borderRadius: 5 },
   buttonText: { color: '#FFF', fontFamily: 'appfont_02' },
+  customAlertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" },
+  customAlertBox: { width: 320, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
+  customAlertTitle: { fontSize: 20, fontFamily: "appfont_02", marginBottom: 3 },
+  customAlertMessage: { fontSize: 16, fontFamily: "appfont_01", marginBottom: 10 },
+  customAlertButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
+  customAlertButton: { backgroundColor: "#e59400", color: "white", borderRadius: 10, padding: 2, alignItems: "center", width: "25%" },
 });
 
 export default BmiRecords;
