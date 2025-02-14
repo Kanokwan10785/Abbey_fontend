@@ -15,15 +15,11 @@ import skinIcon from '../../assets/image/Clothing-Icon/Skin/skin-icon-02.png';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 
-export default function ClothingScreen({ route }) {
+export default function ClothingScreen({}) {
   const [selectedItems, setSelectedItems] = useState({
     shirt: null,
     pant: null,
-    skin: { 
-      label: 'K00', 
-      image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
-      name: 'ลายทางสีเทา' 
-    }, 
+    skin: null,
   });  
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
@@ -215,9 +211,9 @@ export default function ClothingScreen({ route }) {
 
   // ฟังก์ชันสำหรับอัปเดตเสื้อผ้าสัตว์เลี้ยง
   const updatePetImage = async () => {
-    const shirtLabel = selectedItems.shirt?.label || 'S00';
-    const pantLabel = selectedItems.pant?.label || 'P00';
-    const skinLabel = selectedItems.skin?.label || 'K00';
+    const shirtLabel = selectedItems.shirt?.label;
+    const pantLabel = selectedItems.pant?.label;
+    const skinLabel = selectedItems.skin?.label;
 
     // คำนวณ BMI Category
     const userId = await getUserId();
@@ -248,6 +244,7 @@ export default function ClothingScreen({ route }) {
           }
 
           await fetchAndUpdateClothingPets(combinedLabel, userId);
+          console.log('Update clothing label', combinedLabel);
         } else {
           setPetImageUrl(null);
         }
