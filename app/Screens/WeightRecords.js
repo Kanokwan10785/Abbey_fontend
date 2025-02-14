@@ -9,6 +9,7 @@ const WeightRecords = () => {
   const [dateLabels, setDateLabels] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newWeight, setNewWeight] = useState('');
+  const [isSaveAlertVisible, setSaveAlertVisible] = useState(false);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -85,9 +86,9 @@ const WeightRecords = () => {
             DeviceEventEmitter.emit('bmiUpdated');
         }, 1000); // รอ 1 วินาที
 
-        alert('บันทึกข้อมูลสำเร็จ!');
         setNewWeight('');
         setIsModalVisible(false);
+        setSaveAlertVisible(true); // แสดง alert เมื่อบันทึกสำเร็จ
         fetchData(); // อัปเดตข้อมูลใหม่
       } catch (error) {
         console.error('Error saving weight data:', error);
@@ -98,11 +99,29 @@ const WeightRecords = () => {
     }
   };
 
+  const CustomAlertSaveWeight = ({ visible, onClose }) => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.customAlertContainer}>
+        <View style={styles.customAlertBox}>
+          <Text style={styles.customAlertTitle}>บันทึกข้อมูลสำเร็จ!</Text>
+          <Text style={styles.customAlertMessage}>ข้อมูลน้ำหนักของคุณถูกบันทึกแล้ว</Text>
+          <TouchableOpacity style={styles.customAlertButton} onPress={onClose}>
+            <Text style={styles.customAlertButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   useEffect(() => {
     fetchData();
   }, []);
 
-  // ฟังก์ชันยกเลิก
   const handleCancel = () => {
     setNewWeight('');
     setIsModalVisible(false);
@@ -207,6 +226,8 @@ const WeightRecords = () => {
           </View>
         </View>
       </Modal>
+
+      <CustomAlertSaveWeight visible={isSaveAlertVisible} onClose={() => setSaveAlertVisible(false)} />
     </View>
   );
 };
@@ -228,6 +249,12 @@ const styles = StyleSheet.create({
   modalButtonText: { color: '#FFF', fontFamily: 'appfont_02' },
   backButtonText: { color: '#FFF', fontFamily: 'appfont_02' },
   noDataText: { textAlign: "center", marginTop: 20, fontSize: 16, color: "#888" },
+  customAlertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" },
+  customAlertBox: { width: 320, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
+  customAlertTitle: { fontSize: 20, fontFamily: "appfont_02", marginBottom: 3 },
+  customAlertMessage: { fontSize: 16, fontFamily: "appfont_01", marginBottom: 10 },
+  customAlertButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
+  customAlertButton: { backgroundColor: "#e59400", color: "white", borderRadius: 10, padding: 2, alignItems: "center", width: "25%" },
 });
 
 export default WeightRecords;
