@@ -104,12 +104,12 @@ const ProfileButton = () => {
     const loadExpAndLevel = async () => {
       const userId = await AsyncStorage.getItem("userId");
       const { exp, level } = await fetchUserExpLevel(userId);
-      console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
+      // console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
   
       setExp(exp);
   
       await updateLevelBasedOnExp(exp, level, (newLevel) => {
-        console.log(`🎉 แจ้งเตือนเลเวลอัป! Level ใหม่: ${newLevel}`);
+        // console.log(`🎉 แจ้งเตือนเลเวลอัป! Level ใหม่: ${newLevel}`);
         setLevel(newLevel);
         setNewLevel(newLevel);
         setLevelUpAlertVisible(true); // ตั้งค่าแจ้งเตือน

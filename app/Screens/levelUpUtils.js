@@ -13,7 +13,7 @@ export const updateLevelBasedOnExp = async (currentExp, currentLevel, onLevelUp)
     let expThreshold = calculateExpToLevelUp(newLevel);
     let remainingExp = currentExp; // เก็บค่า EXP ที่เหลือ
   
-    console.log(`🔍 ตรวจสอบการเลเวลอัป: EXP ปัจจุบัน ${currentExp}, Level ปัจจุบัน ${newLevel}, ต้องใช้ EXP ${expThreshold}`);
+    // console.log(`🔍 ตรวจสอบการเลเวลอัป: EXP ปัจจุบัน ${currentExp}, Level ปัจจุบัน ${newLevel}, ต้องใช้ EXP ${expThreshold}`);
   
     while (remainingExp >= expThreshold) {
       remainingExp -= expThreshold; // ใช้ EXP เพื่ออัปเลเวล
@@ -27,7 +27,7 @@ export const updateLevelBasedOnExp = async (currentExp, currentLevel, onLevelUp)
       onLevelUp(newLevel);
       DeviceEventEmitter.emit('levelUp', { newLevel });
     } else {
-      console.log(`✅ ไม่มีการเปลี่ยนแปลง Level`);
+      // console.log(`✅ ไม่มีการเปลี่ยนแปลง Level`);
     }
   
     const userId = await AsyncStorage.getItem('userId');
