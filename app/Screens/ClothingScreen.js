@@ -217,50 +217,50 @@ export default function ClothingScreen({}) {
     const shirtLabel = selectedItems.shirt?.label || 'S00';
     const pantLabel = selectedItems.pant?.label || 'P00';
     const skinLabel = selectedItems.skin?.label || 'K00';
-  
-    console.log("🔄 Forcing update of pet image.");
+
+    console.log("🔄 Checking if pet image update is needed...");
 
     // คำนวณ BMI Category
     const userId = await getUserId();
     const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`);
-    const bmiCategory = getBMICategory(parseFloat(storedBmi)); // คำนวณระดับ BMI
+    const bmiCategory = getBMICategory(parseFloat(storedBmi));
 
     const combinedLabel = `${bmiCategory}${shirtLabel}${pantLabel}${skinLabel}`;
 
-    // เช็คว่า combinedLabel เปลี่ยนแปลงจากที่เก็บไว้ก่อนหน้านี้หรือไม่
-    if (combinedLabel !== previousCombinedLabelRef.current) {
-      previousCombinedLabelRef.current = combinedLabel; // อัปเดตค่าที่เก็บไว้
+    // ถ้าไม่มีการเปลี่ยนแปลงของป้ายเสื้อผ้า → ไม่ต้องทำ PUT
+    if (combinedLabel === previousCombinedLabelRef.current) {
+        console.log('✅ No change in clothing label, skipping PUT.');
 
-      try {
+        // โหลดรูปภาพจาก AsyncStorage เพื่อแสดงรูปเดิม
+        const savedPetImageUrl = await AsyncStorage.getItem(`petImageUrl-${userId}`);
+        if (savedPetImageUrl) {
+            setPetImageUrl(savedPetImageUrl);
+        }
+        return;
+    }
+
+    // อัปเดตค่าเก็บไว้
+    previousCombinedLabelRef.current = combinedLabel;
+
+    try {
         const clothingPetsData = await fetchAndCacheClothingPets();
         const matchingPet = clothingPetsData.find(item => item.label === combinedLabel);
 
         if (matchingPet) {
-          setPetImageUrl(matchingPet.url || null);
-          const userId = await getUserId();
-          if (!userId) return;
-
-          if (matchingPet.url) {
-            setPetImageUrl(matchingPet.url);
+            setPetImageUrl(matchingPet.url || null);
             await AsyncStorage.setItem(`petImageUrl-${userId}`, matchingPet.url || '');
-          } else {
-            setPetImageUrl(null);
-            await AsyncStorage.removeItem(`petImageUrl-${userId}`);
-          }
 
-          await fetchAndUpdateClothingPets(combinedLabel, userId);
-          console.log('Update clothing label', combinedLabel);
-          console.log("🛠 Matched Pet URL:", matchingPet ? matchingPet.url : "No match");
+            // ทำการ PUT ไปที่ API
+            await fetchAndUpdateClothingPets(combinedLabel, userId);
+            console.log('✅ Clothing label updated:', combinedLabel);
+            console.log("🛠 Matched Pet URL:", matchingPet ? matchingPet.url : "No match");
         } else {
-          setPetImageUrl(null);
+            setPetImageUrl(null);
         }
-      } catch (error) {
-        console.error('Error fetching and updating pet image:', error);
-      }
-    } else {
-      console.log('No change in clothing label, skipping PUT.');
+    } catch (error) {
+        console.error('❌ Error fetching and updating pet image:', error);
     }
-  };
+};
 
   useEffect(() => {
     // ตรวจสอบว่ามีการเปลี่ยนแปลงจริง ๆ หรือไม่
