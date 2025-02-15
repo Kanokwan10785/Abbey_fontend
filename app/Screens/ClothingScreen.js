@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { fetchUserClothingData, fetchClothingPets, fetchUserProfile, fetchAndUpdateClothingPets } from './api.js';
+import { fetchUserClothingData, fetchClothingPets, fetchUserProfile, fetchAndUpdateClothingPets, saveUserOutfitToServer } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -282,39 +282,56 @@ export default function ClothingScreen({}) {
   // ฟังก์ชันการสวมใส่เสื้อผ้า
   const handleWear = async (category, image, name, label) => {
     const userId = await getUserId();
-    if (!userId) return;
-  
+    const token = await AsyncStorage.getItem('jwt');
+    if (!userId || !token) return;
+
     const updatedItems = {
-      ...selectedItems,
-      [category]: { image, label, name },
+        ...selectedItems,
+        [category]: { image, label, name },
     };
-  
+
     if (JSON.stringify(updatedItems) !== JSON.stringify(selectedItems)) {
-      setSelectedItems(updatedItems);
-      await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+        setSelectedItems(updatedItems);
+        await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+
+        try {
+            await saveUserOutfitToServer(userId, updatedItems, token);
+            console.log('✅ Outfit updated on server');
+        } catch (error) {
+            console.error('❌ Failed to update outfit on server:', error);
+        }
     }
   };
   
   // ฟังก์ชันการถอดเสื้อผ้า
   const handleRemove = async (category) => {
     const userId = await getUserId();
-    if (!userId) return;
-  
+    const token = await AsyncStorage.getItem('jwt'); // ดึง Token
+    if (!userId || !token) return;
+
     let updatedItems = { ...selectedItems };
-  
+
     if (category === 'skin') {
-      updatedItems.skin = { 
-          label: 'K00', 
-          image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
-          name: 'ลายทางสีเทา' 
-      };
+        updatedItems.skin = { 
+            label: 'K00', 
+            image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
+            name: 'ลายทางสีเทา'
+        };
     } else {
-      updatedItems[category] = null;
+        updatedItems[category] = null;
     }
-  
+
     if (JSON.stringify(updatedItems) !== JSON.stringify(selectedItems)) {
-      setSelectedItems(updatedItems);
-      await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+        setSelectedItems(updatedItems);
+        await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(updatedItems));
+
+        // **อัปเดตข้อมูลไปยังเซิร์ฟเวอร์**
+        try {
+            await saveUserOutfitToServer(userId, updatedItems, token);
+            console.log(`✅ Removed ${category} and updated on server`);
+        } catch (error) {
+            console.error(`❌ Failed to update server after removing ${category}:`, error);
+        }
     }
   };
 

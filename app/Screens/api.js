@@ -731,3 +731,32 @@ export const fetchUserExpLevel = async (userId) => {
     return { exp: 0, level: 1 };
   }
 };
+
+export const saveUserOutfitToServer = async (userId, outfit) => {
+  try {
+    const jwt = await AsyncStorage.getItem('jwt');
+
+    const response = await api.put(`/api/users/${userId}`, 
+      { outfit }, 
+      { headers: { Authorization: `Bearer ${jwt}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saving user outfit:", error);
+    throw error;
+  }
+};
+
+export const fetchUserOutfit = async (userId, jwt) => {
+  try {
+    const response = await api.get(`/api/users/${userId}`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+
+    return response.data.outfit || null; // คืนค่า outfit หรือ null ถ้าไม่มี
+  } catch (error) {
+    console.error("Error fetching user outfit:", error);
+    return null;
+  }
+};
+

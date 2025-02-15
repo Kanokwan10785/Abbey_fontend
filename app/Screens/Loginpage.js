@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native'; // เพิ่ม ActivityIndicator
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native'; // เพิ่ม ActivityIndicator
 import { Image, ImageBackground } from 'expo-image';
 import React, { useState } from 'react';
 import Colors from '../Shared/Colors';
@@ -7,7 +7,7 @@ import grass from '../../assets/image/Background-Theme/gym-03.gif';
 import { login } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { fetchUserProfile, beginnerClothingItem } from './api';
+import { fetchUserProfile, beginnerClothingItem, fetchUserOutfit } from './api';
 import { saveHeightUesr } from './apiExercise';
 
 export default function Loginpage() {
@@ -26,8 +26,9 @@ export default function Loginpage() {
             setLoading(true);  // เริ่มการโหลดข้อมูล
             const response = await login(username, password);
             const userId = response.user.id; 
-            console.log('Login successful', response);
-            await AsyncStorage.setItem('jwt', response.jwt); // เก็บข้อมูล
+            const jwt = response.jwt;
+            console.log('✅ Login successful:', response);
+            await AsyncStorage.setItem('jwt', jwt); // เก็บข้อมูล
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
 
                 // ตรวจสอบว่าดึงข้อมูลโปรไฟล์สำเร็จหรือไม่
@@ -52,6 +53,13 @@ export default function Loginpage() {
                 // บันทึกค่า BMI บนเซิร์ฟเวอร์
                 await saveHeightUesr(userHeight, calculatedBmi, userId);
                 console.log('Updated BMI on login:', calculatedBmi);
+            }
+
+            // ดึงข้อมูลเสื้อผ้าของผู้ใช้จากเซิร์ฟเวอร์
+            const savedOutfit = await fetchUserOutfit(userId, jwt);
+            if (savedOutfit) {
+                await AsyncStorage.setItem(`userOutfit-${userId}`, JSON.stringify(savedOutfit));
+                console.log('✅ Loaded outfit from server:', savedOutfit);
             }
 
             // เพิ่มไอเท็มเริ่มต้นให้กับผู้ใช้
