@@ -737,7 +737,11 @@ export const saveUserOutfitToServer = async (userId, outfit, jwt) => {
     // ฟิลเตอร์เฉพาะ pant, skin, shirt เท่านั้น
     const filteredOutfit = {
       pant: outfit.pant || null,
-      skin: outfit.skin || null,
+      skin: outfit.skin || {
+        label: "K00",
+        image: "https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png",
+        name: "ลายทางสีเทา"
+    },
       shirt: outfit.shirt || null,
     };
 

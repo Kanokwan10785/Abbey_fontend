@@ -296,9 +296,9 @@ export default function ClothingScreen({}) {
 
         try {
             await saveUserOutfitToServer(userId, updatedItems, token);
-            console.log('✅ Outfit updated on server');
+            console.log(`✅ ${category} updated on server`);
         } catch (error) {
-            console.error('❌ Failed to update outfit on server:', error);
+            console.error(`❌ Failed to update ${category} on server:`, error);
         }
     }
   };
