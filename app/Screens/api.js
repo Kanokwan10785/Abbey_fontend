@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.56.38:1337'; 
+const API_URL = 'http://192.168.1.175:1337'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -221,7 +221,7 @@ export const fetchAndUpdateClothingPets = async (combinedLabel, userId) => {
     });
 
     console.log(`PUT Successfully linked user ${userId} to clothing pet ${clothingPetId}`);
-    console.log(`Returning URL after PUT: ${matchedItem.url}`); // Log URL after linking
+    // console.log(`Returning URL after PUT: ${matchedItem.url}`); // Log URL after linking
     return matchedItem.url;
   } catch (error) {
     console.error('Error processing clothing pets:', error.response ? error.response.data : error.message);

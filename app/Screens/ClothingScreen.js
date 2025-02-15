@@ -18,7 +18,11 @@ export default function ClothingScreen({}) {
   const [selectedItems, setSelectedItems] = useState({
     shirt: null,
     pant: null,
-    skin: null,
+    skin: { 
+      label: 'K00', 
+      image: 'https://res.cloudinary.com/durwrb53f/image/upload/v1723148270/K00_636d3caec1.png', 
+      name: 'ลายทางสีเทา' 
+    }, 
   });  
   const [selectedCategory, setSelectedCategory] = useState("shirt");
   const [itemsData, setItemsData] = useState({ shirt: [], pant: [], skin: [] });
@@ -214,22 +218,8 @@ export default function ClothingScreen({}) {
     const pantLabel = selectedItems.pant?.label || 'P00';
     const skinLabel = selectedItems.skin?.label || 'K00';
   
-    // เช็คการเปลี่ยนแปลงจากค่าที่เก็บไว้ก่อนหน้านี้
-    const previousShirtLabel = previousSelectedItemsRef.current?.shirt?.label || 'S00';
-    const previousPantLabel = previousSelectedItemsRef.current?.pant?.label || 'P00';
-    const previousSkinLabel = previousSelectedItemsRef.current?.skin?.label || 'K00';
-  
-    // เช็คว่ามีการเปลี่ยนแปลงจริงๆ หรือไม่
-    const isShirtChanged = shirtLabel !== previousShirtLabel;
-    const isPantChanged = pantLabel !== previousPantLabel;
-    const isSkinChanged = skinLabel !== previousSkinLabel;
-  
-    // ถ้าไม่มีการเปลี่ยนแปลง ไม่ต้องทำอะไร
-    if (!isShirtChanged && !isPantChanged && !isSkinChanged) {
-      console.log('No change in selected items, skipping update.');
-      return;
-    }
-    
+    console.log("🔄 Forcing update of pet image.");
+
     // คำนวณ BMI Category
     const userId = await getUserId();
     const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`);
@@ -260,6 +250,7 @@ export default function ClothingScreen({}) {
 
           await fetchAndUpdateClothingPets(combinedLabel, userId);
           console.log('Update clothing label', combinedLabel);
+          console.log("🛠 Matched Pet URL:", matchingPet ? matchingPet.url : "No match");
         } else {
           setPetImageUrl(null);
         }
