@@ -734,8 +734,15 @@ export const fetchUserExpLevel = async (userId) => {
 
 export const saveUserOutfitToServer = async (userId, outfit, jwt) => {
   try {
+    // ฟิลเตอร์เฉพาะ pant, skin, shirt เท่านั้น
+    const filteredOutfit = {
+      pant: outfit.pant || null,
+      skin: outfit.skin || null,
+      shirt: outfit.shirt || null,
+    };
+
     const response = await api.put(`/api/users/${userId}`, 
-      { outfit }, 
+      { outfit: filteredOutfit }, 
       { headers: { Authorization: `Bearer ${jwt}` } }
     );
     return response.data;
