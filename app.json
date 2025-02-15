@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.kanokwan004.abbeyapp"
+      "package": "com.kanokwan10785.abbeyapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,8 +34,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "3c1a88dc-a2f4-4478-92d7-7c2ec6ad81b7"
+        "projectId": "dda89afe-3952-4717-b3b0-069b60f8b4c8"
       }
-    }
+    },
+    "owner": "kanokwan10785"
   }
 }

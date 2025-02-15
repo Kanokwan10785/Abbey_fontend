@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.1.175:1337'; 
+const API_URL = 'https://abbey-backend.onrender.com'; 
 
 const api = axios.create({
   baseURL: API_URL,

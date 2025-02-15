@@ -24,7 +24,7 @@ const AnalysisScreen = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-    const fetchWorkoutRecords = async (page = 1, limit = 20) => {
+    const fetchWorkoutRecords = async () => {
       try {
         const userId = await AsyncStorage.getItem("userId");
         if (!userId) {
@@ -46,7 +46,6 @@ const AnalysisScreen = () => {
           `populate[workout_records][populate][add_course][populate][image][fields]=url&` +
           `populate[workout_records][populate][add_course][populate][all_exercises][fields]=duration,reps&` +
           `pagination[limit]=100`,
-          { timeout: 10000 } 
           );
 
         if (!response.data) {
