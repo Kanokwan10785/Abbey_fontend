@@ -55,14 +55,14 @@ export default function Loginpage() {
             }
 
             // เพิ่มไอเท็มเริ่มต้นให้กับผู้ใช้
-            console.log("Adding beginner clothing items...");
+            // console.log("Adding beginner clothing items...");
             const beginnerItems = [
                 { id: 5, label: 'K00' } // ไอเท็มเริ่มต้นที่ต้องให้ผู้ใช้
             ];
 
             for (const item of beginnerItems) {
                 const result = await beginnerClothingItem(userId, item.id, item.label);
-                console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
+                // console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
             }
 
             // แสดงหน้ารอดาวน์โหลดข้อมูล
