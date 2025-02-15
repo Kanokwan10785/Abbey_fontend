@@ -732,10 +732,8 @@ export const fetchUserExpLevel = async (userId) => {
   }
 };
 
-export const saveUserOutfitToServer = async (userId, outfit) => {
+export const saveUserOutfitToServer = async (userId, outfit, jwt) => {
   try {
-    const jwt = await AsyncStorage.getItem('jwt');
-
     const response = await api.put(`/api/users/${userId}`, 
       { outfit }, 
       { headers: { Authorization: `Bearer ${jwt}` } }
