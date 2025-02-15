@@ -37,12 +37,18 @@ export default function ClothingScreen({}) {
   // ฟังก์ชันโหลดข้อมูลเมื่อมีการรีเฟรช
   const refreshData = async () => {
     try {
-      await fetchAndStoreBMI();
-      await loadUserClothingData();
+        console.log('🔄 Refreshing ClothingScreen...');
+        const userId = await getUserId();
+        const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`);
+        setBmi(storedBmi); // อัปเดตค่า BMI ใหม่
+
+        await loadUserClothingData(); // โหลดข้อมูลเสื้อผ้าใหม่
+
+        console.log('Updated BMI in ClothingScreen:', storedBmi);
     } catch (error) {
-      console.error('Error refreshing ClothingScreen:', error);
+        console.error('Error refreshing ClothingScreen:', error);
     }
-  }; 
+  };
 
   // ฟังก์ชันสำหรับเรียกข้อมูลเสื้อผ้า
   const loadUserClothingData = async () => {
@@ -278,6 +284,22 @@ export default function ClothingScreen({}) {
 
   // console.log('Current BMI:', bmi);
   // console.log('Selected Items:', selectedItems);
+
+  useEffect(() => {
+    const handleBmiUpdate = async ({ newBmi }) => {
+        console.log('🔄 BMI updated from another screen:', newBmi);
+        setBmi(newBmi);
+        await AsyncStorage.setItem(`bmi-${await getUserId()}`, newBmi); // อัปเดต BMI ใน AsyncStorage
+        refreshData(); // โหลดข้อมูลเสื้อผ้าใหม่
+    };
+
+    // ฟังเหตุการณ์
+    const subscription = DeviceEventEmitter.addListener('bmiUpdatedClothingScreen', handleBmiUpdate);
+
+    return () => {
+        subscription.remove(); // ลบ Event เมื่อออกจากหน้าจอ
+    };
+  }, []);
 
   // ฟังก์ชันการสวมใส่เสื้อผ้า
   const handleWear = async (category, image, name, label) => {

@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchPetImageByLabel, getUserId, saveHeightUesr } from './apiExercise';
 import { fetchUserProfile } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import empty from '../../assets/image/Clothing-Icon/empty-icon-01.png';
 
 const BmiRecords = () => {
@@ -130,7 +131,9 @@ const BmiRecords = () => {
       try {
         const userId = await getUserId(); // ดึง userId
         await saveHeightUesr(heightCmValue, newBmi, userId); // ส่งส่วนสูงและ BMI ใหม่
+        await AsyncStorage.setItem(`bmi-${userId}`, newBmi); // บันทึก BMI ใน AsyncStorage
         DeviceEventEmitter.emit('bmiUpdated'); // ส่ง Event แจ้งเตือนให้หน้า BottomProfile.js โหลดข้อมูลใหม่
+        DeviceEventEmitter.emit('bmiUpdatedClothingScreen'); // ส่ง Event แจ้งเตือนให้หน้า ClothingScreen.js โหลดข้อมูลใหม่
         setSaveAlertVisible(true);
         setIsModalVisible(false); // ปิด Modal หลังบันทึกสำเร็จ
       } catch (error) {

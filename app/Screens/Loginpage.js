@@ -27,8 +27,10 @@ export default function Loginpage() {
             const response = await login(username, password);
             const userId = response.user.id; 
             const jwt = response.jwt;
+            const bmi = response.user.BMI;
             console.log('✅ Login successful:', response);
             await AsyncStorage.setItem('jwt', jwt); // เก็บข้อมูล
+            await AsyncStorage.setItem(`bmi-${userId}`, bmi.toString());
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
 
                 // ตรวจสอบว่าดึงข้อมูลโปรไฟล์สำเร็จหรือไม่

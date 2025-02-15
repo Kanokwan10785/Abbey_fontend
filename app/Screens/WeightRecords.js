@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, DeviceEventEmitter, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchWeightRecords, findRecordByDate, saveWeightRecord, getUserId, saveWeightUesr, updateWeightRecord } from './apiExercise';
 import { fetchUserProfile } from './api';
 
@@ -79,9 +80,12 @@ const WeightRecords = () => {
         const height = userData.height;
         const newBmi = (weightValue / ((height / 100) ** 2)).toFixed(2);
         
+        await AsyncStorage.setItem(`bmi-${userId}`, newBmi); // บันทึก BMI ใน AsyncStorage
+
         // แจ้งเตือนการอัปเดต
         DeviceEventEmitter.emit('weightUpdated'); // ส่งเหตุการณ์ว่าข้อมูลเปลี่ยนแปลง WeightRecords
         DeviceEventEmitter.emit('WeightRecordsUpdated', { bmi: newBmi }); // แจ้งเตือนให้ BottomProfile โหลดข้อมูลใหม่
+        DeviceEventEmitter.emit('bmiUpdatedClothingScreen'); // ส่ง Event แจ้งเตือนให้หน้า ClothingScreen.js โหลดข้อมูลใหม่
         setTimeout(() => {                        
             DeviceEventEmitter.emit('bmiUpdated');
         }, 1000); // รอ 1 วินาที
