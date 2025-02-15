@@ -115,11 +115,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, resizeMode: 'cover', },
+  background: { flex: 1, contentFit: 'cover', },
   header: { flexDirection: 'row', justifyContent: 'space-between', margin: 20, },
   screenpetImages: { flex: 1, flexDirection: 'column', },
   sectionpetImages: { flex: 1, justifyContent: 'center', alignItems: 'center', },
   foodButton: { position: 'absolute', right: 10, top: 100, width: 70, height: 85, borderRadius: 15, backgroundColor: '#FFAF32', justifyContent: 'center', alignItems: 'center', borderColor: '#F9E79F', borderWidth: 8, },
   foodIcon: { width: 50, height: 50, },
-  petImages: { width: '250%', height: '250%', resizeMode: 'contain', },
+  petImages: { width: '250%', height: '250%', contentFit: 'contain', },
 });

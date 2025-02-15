@@ -271,11 +271,11 @@ const FoodScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   gymBackgroundContainer: { flex: 1 },
-  gymBackground: { flex: 1, resizeMode: "cover" },
+  gymBackground: { flex: 1, contentFit: "cover" },
   orangeBackground: { flex: 1, backgroundColor: "#FFAF32" },
   header: { flexDirection: "row", justifyContent: "space-between", padding: 20 },
   petDisplay: { flex: 2, alignItems: "center" },
-  petImage: { width: "110%", height: "110%", resizeMode: "contain" },
+  petImage: { width: "110%", height: "110%", contentFit: "contain" },
   wardrobeIcon: { width: 50, height: 50, marginVertical: 10, alignSelf: "center" },
   wardrobeText: { fontSize: 32, color: "#FFF", fontFamily: "appfont_02", marginLeft: 15 },
   wardrobeMenu: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
