@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserClothingData, fetchClothingPets, fetchUserProfile, fetchAndUpdateClothingPets } from './api.js';
 import wardrobe from '../../assets/image/bar-02.png';
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
@@ -211,10 +210,26 @@ export default function ClothingScreen({}) {
 
   // ฟังก์ชันสำหรับอัปเดตเสื้อผ้าสัตว์เลี้ยง
   const updatePetImage = async () => {
-    const shirtLabel = selectedItems.shirt?.label;
-    const pantLabel = selectedItems.pant?.label;
-    const skinLabel = selectedItems.skin?.label;
-
+    const shirtLabel = selectedItems.shirt?.label || 'S00';
+    const pantLabel = selectedItems.pant?.label || 'P00';
+    const skinLabel = selectedItems.skin?.label || 'K00';
+  
+    // เช็คการเปลี่ยนแปลงจากค่าที่เก็บไว้ก่อนหน้านี้
+    const previousShirtLabel = previousSelectedItemsRef.current?.shirt?.label || 'S00';
+    const previousPantLabel = previousSelectedItemsRef.current?.pant?.label || 'P00';
+    const previousSkinLabel = previousSelectedItemsRef.current?.skin?.label || 'K00';
+  
+    // เช็คว่ามีการเปลี่ยนแปลงจริงๆ หรือไม่
+    const isShirtChanged = shirtLabel !== previousShirtLabel;
+    const isPantChanged = pantLabel !== previousPantLabel;
+    const isSkinChanged = skinLabel !== previousSkinLabel;
+  
+    // ถ้าไม่มีการเปลี่ยนแปลง ไม่ต้องทำอะไร
+    if (!isShirtChanged && !isPantChanged && !isSkinChanged) {
+      console.log('No change in selected items, skipping update.');
+      return;
+    }
+    
     // คำนวณ BMI Category
     const userId = await getUserId();
     const storedBmi = await AsyncStorage.getItem(`bmi-${userId}`);
