@@ -152,6 +152,25 @@ const WeightRecords = () => {
       </View>
 
       <View style={styles.graphContainer}>
+          {/* 🔹 น้ำหนักปัจจุบัน / สูงสุด / ต่ำสุด */}
+      {weightData.length > 0 && (
+          <View style={styles.weightSummaryContainer}>
+            {/* น้ำหนักปัจจุบัน */}
+            <View style={styles.currentWeightContainer}>
+              <Text style={styles.weightLabel}>ปัจจุบัน</Text>
+              <View style={styles.weightValueContainer}>
+                <Text style={styles.currentWeight}>{weightData[weightData.length - 1]}</Text>
+                <Text style={styles.weightUnit}>kg</Text>
+              </View>
+            </View>
+
+            {/* น้ำหนักสูงสุด & ต่ำสุด */}
+            <View style={styles.weightStatsContainer}>
+              <Text style={styles.weightStatLabel}>หนักที่สุด: <Text style={styles.weightStatValue}>{Math.max(...weightData)}</Text></Text>
+              <Text style={styles.weightStatLabel}>เบาที่สุด: <Text style={styles.weightStatValue}>{Math.min(...weightData)}</Text></Text>
+            </View>
+          </View>
+        )}
         {weightData.length > 0 ? (
           <ScrollView horizontal>
           <LineChart
@@ -308,13 +327,22 @@ const styles = StyleSheet.create({
   customAlertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" },
   customAlertBox: { width: 320, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
   customAlertBoxGraph: { width: 280, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
-  weightDisplay: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10, },
+  weightDisplay: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10 },
   customAlertTitle: { fontSize: 20, fontFamily: "appfont_02", marginBottom: 3 },
   customAlertMessage: { fontSize: 16, fontFamily: "appfont_01", marginBottom: 10 },
   customAlertMessageText: { fontSize: 16, fontFamily: "appfont_01" },
   customAlertMessageGraph: { fontSize: 32, fontFamily: "appfont_01", marginRight: 8 },
   customAlertButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
   customAlertButton: { backgroundColor: "#e59400", color: "white", borderRadius: 10, padding: 2, alignItems: "center", width: "25%" },
+  weightSummaryContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20 },
+  currentWeightContainer: { alignItems: "flex-start" },
+  weightLabel: { fontSize: 16, color: "#444", fontFamily: "appfont_02" },
+  weightValueContainer: { flexDirection: "row", alignItems: "baseline" },
+  currentWeight: { fontSize: 32, fontWeight: "bold", color: "#222" },
+  weightUnit: { fontSize: 18, fontWeight: "bold", color: "#444", marginLeft: 5, fontFamily: "appfont_02" },
+  weightStatsContainer: { alignItems: "flex-end" },
+  weightStatLabel: { fontSize: 14, color: "#666", fontFamily: "appfont_02" },
+  weightStatValue: { fontSize: 16, fontWeight: "bold", color: "#222", fontFamily: "appfont_02" },
 });
 
 export default WeightRecords;
