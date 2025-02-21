@@ -21,9 +21,18 @@ export const updateLevelBasedOnExp = async (currentExp, currentLevel, onLevelUp)
 
   if (newLevel !== currentLevel) {
     console.log(`🎉 Level Up Triggered! Level: ${newLevel}`);
-    onLevelUp(newLevel);
-    DeviceEventEmitter.emit('levelUp', { newLevel });
-    DeviceEventEmitter.emit('expUpdated'); // แจ้งเตือนให้โหลด EXP ใหม่
+    // ตรวจสอบว่ามี Event ซ้ำหรือไม่
+    if (!global.isLevelUpTriggered) {
+      global.isLevelUpTriggered = true;
+
+      onLevelUp(newLevel);
+      DeviceEventEmitter.emit('levelUp', { newLevel });
+      DeviceEventEmitter.emit('expUpdated');
+
+      setTimeout(() => {
+          global.isLevelUpTriggered = false;
+      }, 2000);
+    }
   }
 
   const userId = await AsyncStorage.getItem('userId');

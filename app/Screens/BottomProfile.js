@@ -125,7 +125,9 @@ const ProfileButton = () => {
               setLevel(newLevel);
               setNewLevel(newLevel);
               setLevelUpAlertVisible(true);
-              levelUpTriggered.current = false; // รีเซ็ตให้ทำงานได้อีกครั้ง
+              setTimeout(() => {
+                levelUpTriggered.current = false; // รีเซ็ตหลังจาก 2 วินาที
+            }, 2000);
           });
         }
       } catch (error) {
@@ -315,11 +317,10 @@ const ProfileButton = () => {
       
       setLevel(newLevel);
       await AsyncStorage.setItem('level', JSON.stringify(newLevel));
-      await loadUserExp(); 
-      
-      setTimeout(() => {
-        levelUpTriggered.current = false; // รีเซ็ตค่าเมื่อผ่านไป 2 วินาที
-      }, 2000);
+      setTimeout(async () => {
+        await loadUserExp(); // โหลด EXP ใหม่หลังจากดีเลย์
+        levelUpTriggered.current = false;
+      }, 1000);
     });
   
     return () => {
