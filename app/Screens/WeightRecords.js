@@ -11,6 +11,9 @@ const WeightRecords = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newWeight, setNewWeight] = useState('');
   const [isSaveAlertVisible, setSaveAlertVisible] = useState(false);
+  const [isDataPointModalVisible, setDataPointModalVisible] = useState(false);
+  const [selectedWeight, setSelectedWeight] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -103,6 +106,12 @@ const WeightRecords = () => {
     }
   };
 
+  const handleDataPointClick = ({ value, index }) => {
+    setSelectedWeight(value);
+    setSelectedDate(dateLabels[index]);
+    setDataPointModalVisible(true);
+  };  
+
   const CustomAlertSaveWeight = ({ visible, onClose }) => (
     <Modal
       animationType="fade"
@@ -164,15 +173,15 @@ const WeightRecords = () => {
             verticalLabelRotation={0} //ปรับมุมของป้ายกำกับแกน x
             segments={7} // จำนวนเส้นสเกลแนวนอน
             chartConfig={{
-              backgroundColor: '#F6A444',
-              backgroundGradientFrom: '#fb8c00', // สีเริ่มต้นของพื้นหลังแบบ Gradient
-              backgroundGradientTo: '#414345', // สีสิ้นสุดของพื้นหลังแบบ Gradient
+              backgroundGradientFrom: "rgb(215, 143, 61)",
+              backgroundGradientTo: "rgb(228, 134, 26)",
               decimalPlaces: 2, //จำนวนทศนิยมที่แสดง
+              withInnerLines: false, // ปิดเส้นภายในเพื่อลดการรบกวนการแตะ
               color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               propsForDots: {
-                r: '6',
-                strokeWidth: '2',
+                r: '8',
+                strokeWidth: '3',
                 stroke: '#ffa726',
               },
               propsForBackgroundLines: {
@@ -185,16 +194,59 @@ const WeightRecords = () => {
               // borderWidth: 2,
               // borderColor: '#F6A444', // ขอบรอบกราฟ
             }}
-            onDataPointClick={(data) => {
-              // แสดงข้อมูลน้ำหนักในจุดที่แตะ
-              alert(`วันที่: ${dateLabels[data.index]} \nน้ำหนัก: ${data.value} kg`);
-            }}
-          />
+            onDataPointClick={handleDataPointClick}
+              renderDotContent={({ x, y, index }) => (
+                <View
+                  key={index}
+                  style={{
+                    position: 'absolute',
+                    left: x + 12,
+                    top: y - 260,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                    borderRadius: 5,
+                  }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>
+                    {weightData[index]} kg
+                  </Text>
+                </View>
+              )}
+            />
           </ScrollView>
         ) : (
           <Text style={styles.noDataText}>ไม่มีข้อมูลน้ำหนัก</Text>
         )}
       </View>
+
+      {/* Modal สำหรับแสดงข้อมูลน้ำหนักที่แตะ */}
+      <Modal
+        visible={isDataPointModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDataPointModalVisible(false)}
+      >
+        <View style={styles.customAlertContainer}>
+          <View style={styles.customAlertBoxGraph}>
+            <Text style={styles.customAlertTitle}>วันที่ {selectedDate} </Text>
+            <View style={styles.weightDisplay}>
+              <Text style={styles.customAlertMessageGraph}>
+                {selectedWeight}
+              </Text>
+              <Text style={styles.customAlertMessageText}>
+                kg
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.customAlertButton}
+              onPress={() => setDataPointModalVisible(false)}
+            >
+              <Text style={styles.customAlertButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal สำหรับการเพิ่มน้ำหนักและวันที่ */}
       <Modal
@@ -255,8 +307,12 @@ const styles = StyleSheet.create({
   noDataText: { textAlign: "center", marginTop: 20, fontSize: 16, color: "#888" },
   customAlertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" },
   customAlertBox: { width: 320, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
+  customAlertBoxGraph: { width: 280, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
+  weightDisplay: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10, },
   customAlertTitle: { fontSize: 20, fontFamily: "appfont_02", marginBottom: 3 },
   customAlertMessage: { fontSize: 16, fontFamily: "appfont_01", marginBottom: 10 },
+  customAlertMessageText: { fontSize: 16, fontFamily: "appfont_01" },
+  customAlertMessageGraph: { fontSize: 32, fontFamily: "appfont_01", marginRight: 8 },
   customAlertButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
   customAlertButton: { backgroundColor: "#e59400", color: "white", borderRadius: 10, padding: 2, alignItems: "center", width: "25%" },
 });
