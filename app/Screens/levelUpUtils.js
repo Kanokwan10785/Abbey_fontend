@@ -9,29 +9,25 @@ export const calculateExpToLevelUp = (level) => {
 
 // ฟังก์ชันตรวจสอบเลเวลจาก EXP สะสม และอัปเดตลงฐานข้อมูล
 export const updateLevelBasedOnExp = async (currentExp, currentLevel, onLevelUp) => {
-    let newLevel = currentLevel;
-    let expThreshold = calculateExpToLevelUp(newLevel);
-    let remainingExp = currentExp; // เก็บค่า EXP ที่เหลือ
-  
-    // console.log(`🔍 ตรวจสอบการเลเวลอัป: EXP ปัจจุบัน ${currentExp}, Level ปัจจุบัน ${newLevel}, ต้องใช้ EXP ${expThreshold}`);
-  
-    while (remainingExp >= expThreshold) {
-      remainingExp -= expThreshold; // ใช้ EXP เพื่ออัปเลเวล
-      newLevel += 1;
-      expThreshold = calculateExpToLevelUp(newLevel);
-      console.log(`⬆️ เลเวลอัป! Level ใหม่: ${newLevel}, EXP คงเหลือ: ${remainingExp}, ต้องใช้ EXP ถัดไป: ${expThreshold}`);
-    }
-  
-    if (newLevel !== currentLevel) {
-      console.log(`🎉 เลเวลอัป! เรียก onLevelUp ใหม่: Level ${newLevel}`);
-      onLevelUp(newLevel);
-      DeviceEventEmitter.emit('levelUp', { newLevel });
-    } else {
-      // console.log(`✅ ไม่มีการเปลี่ยนแปลง Level`);
-    }
-  
-    const userId = await AsyncStorage.getItem('userId');
-    await updateUserExpLevel(userId, remainingExp, newLevel);
-  
-    return newLevel;
+  let newLevel = currentLevel;
+  let expForNextLevel = calculateExpToLevelUp(newLevel);
+
+  while (currentExp >= expForNextLevel) {
+    currentExp -= expForNextLevel;
+    newLevel += 1;
+    expForNextLevel = calculateExpToLevelUp(newLevel);
+    console.log(`🔼 Level Up! New Level: ${newLevel}, Remaining EXP: ${currentExp}, Next Level EXP: ${expForNextLevel}`);
+  }
+
+  if (newLevel !== currentLevel) {
+    console.log(`🎉 Level Up Triggered! Level: ${newLevel}`);
+    onLevelUp(newLevel);
+    DeviceEventEmitter.emit('levelUp', { newLevel });
+    DeviceEventEmitter.emit('expUpdated'); // แจ้งเตือนให้โหลด EXP ใหม่
+  }
+
+  const userId = await AsyncStorage.getItem('userId');
+  await updateUserExpLevel(userId, currentExp, newLevel);
+
+  return { newLevel, currentExp, expForNextLevel };
 };

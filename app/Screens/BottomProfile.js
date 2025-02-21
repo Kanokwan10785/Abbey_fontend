@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { fetchUserProfile, updateUserProfile, uploadFile, fetchUserExpLevel } from './api';
-import { updateLevelBasedOnExp } from './levelUpUtils';
+import { updateLevelBasedOnExp, calculateExpToLevelUp } from './levelUpUtils';
 import cross from '../../assets/image/Clothing-Icon/cross-icon-01.png';
 import edit from '../../assets/image/Clothing-Icon/edit-icon-02.png';
 
@@ -86,13 +86,16 @@ const ProfileButton = () => {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [exp, setExp] = useState(0); // เก็บค่า EXP ของผู้เล่น
+  const [expCurrentLevel, setExpCurrentLevel] = useState(0); // EXP ที่อยู่ในระดับปัจจุบัน
+  const [expToNextLevel, setExpToNextLevel] = useState(100); // ค่า EXP ที่ต้องใช้เลื่อนระดับ
+  const [expProgress, setExpProgress] = useState(0); // เปอร์เซ็นต์ของ Progress Bar
   const [level, setLevel] = useState(1); // เก็บค่า Level ของผู้เล่น
   const [newLevel, setNewLevel] = useState(level);
   const levelUpTriggered = useRef(false);
   const [isImageUpdated, setIsImageUpdated] = useState(false); // สถานะใหม่สำหรับการอัปเดตรูปภาพ
   const [originalProfileImage, setOriginalProfileImage] = useState(profileImage);
   const [originalData, setOriginalData] = useState({});
-  const [isAlertVisible, setAlertVisible] = useState(false); // สถานะสำหรับ Custom Alert
+  const [isAlertVisible, setAlertVisible] = useState(false); // สถานะสำหรับ Custom Al ert
   const [isDataAlertVisible, setDataAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertdata
   const [isSaveAlertVisible, setSaveAlertVisible] = useState(false); // สถานะสำหรับ CustomAlertsaveProfile
   const [isLevelUpAlertVisible, setLevelUpAlertVisible] = useState(false);
@@ -103,22 +106,36 @@ const ProfileButton = () => {
   useEffect(() => {
     const loadExpAndLevel = async () => {
       const userId = await AsyncStorage.getItem("userId");
-      const { exp, level } = await fetchUserExpLevel(userId);
-      // console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
+      if (!userId) return;
   
-      setExp(exp);
+      try {
+        const { exp, level } = await fetchUserExpLevel(userId);
+        if (exp === undefined || level === undefined) {
+          console.error("❌ ERROR: EXP หรือ Level ไม่มีค่าจาก API");
+          return;
+        }
+        
+        console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
+        setExp(exp);
   
-      await updateLevelBasedOnExp(exp, level, (newLevel) => {
-        // console.log(`🎉 แจ้งเตือนเลเวลอัป! Level ใหม่: ${newLevel}`);
-        setLevel(newLevel);
-        setNewLevel(newLevel);
-        setLevelUpAlertVisible(true); // ตั้งค่าแจ้งเตือน
-      });
+        if (!levelUpTriggered.current) {
+          levelUpTriggered.current = true;
+          await updateLevelBasedOnExp(exp, level, (newLevel) => {
+              console.log(`🎉 แจ้งเตือนเลเวลอัป! Level ใหม่: ${newLevel}`);
+              setLevel(newLevel);
+              setNewLevel(newLevel);
+              setLevelUpAlertVisible(true);
+              levelUpTriggered.current = false; // รีเซ็ตให้ทำงานได้อีกครั้ง
+          });
+        }
+      } catch (error) {
+        console.error("❌ ERROR: โหลด EXP & Level ไม่สำเร็จ", error);
+      }
     };
   
     loadExpAndLevel();
-  }, []);  
-
+  }, []);
+  
   useEffect(() => {
     const loadLevelFromStorage = async () => {
       const storedLevel = await AsyncStorage.getItem('level');
@@ -144,6 +161,50 @@ const ProfileButton = () => {
       console.error("Failed to load user profile from storage", error);
     }
   };
+
+  // ฟังก์ชันโหลดข้อมูล EXP
+  const loadUserExp = async () => {
+    const token = await AsyncStorage.getItem('jwt');
+    const userId = await AsyncStorage.getItem('userId');
+    if (!token || !userId) return;
+
+    try {
+        const userData = await fetchUserProfile(userId, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const totalExp = userData.EXP || 0;
+        let currentLevel = userData.level || 1;
+
+        let expRequiredForPreviousLevel = 0;
+        for (let i = 1; i < currentLevel; i++) {
+            expRequiredForPreviousLevel += calculateExpToLevelUp(i);
+        }
+        let expRequiredForCurrentLevel = calculateExpToLevelUp(currentLevel);
+        let expInCurrentLevel = totalExp - expRequiredForPreviousLevel;
+
+        // ✅ ป้องกัน EXP In Level เป็น 0
+        if (expInCurrentLevel < 0) {
+            expInCurrentLevel = totalExp;
+        }
+
+        console.log(`🔄 Updated EXP Debug: TotalEXP=${totalExp}, CurrentLevel=${currentLevel}, EXP In Level=${expInCurrentLevel}, EXP Required=${expRequiredForCurrentLevel}`);
+
+        // ✅ อัปเดตค่าลงใน State
+        setExp(totalExp);
+        setLevel(currentLevel);
+        setExpToNextLevel(expRequiredForCurrentLevel);
+        setExpCurrentLevel(expInCurrentLevel > 0 ? expInCurrentLevel : 0);
+        setExpProgress(expInCurrentLevel > 0 ? (expInCurrentLevel / expRequiredForCurrentLevel) * 100 : 0);
+    } catch (error) {
+        console.error("Error loading EXP:", error);
+    }
+  };
+
+  // โหลด EXP เมื่อ Component โหลด หรือ EXP เปลี่ยน
+  useEffect(() => {
+    loadUserExp();
+  }, [level]);   
 
   // ฟังก์ชันโหลดข้อมูลจาก API
   const loadUserProfileFromAPI = async () => {
@@ -247,19 +308,40 @@ const ProfileButton = () => {
 
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener('levelUp', async ({ newLevel }) => {
+      if (levelUpTriggered.current) return; // ป้องกันการเรียกซ้ำ
+      levelUpTriggered.current = true;
+  
       console.log(`📢 ได้รับ Event "levelUp"! อัปเดต Level ใหม่: ${newLevel}`);
       
-      setLevel(newLevel); // อัปเดต State
-      await AsyncStorage.setItem('level', JSON.stringify(newLevel)); // อัปเดต AsyncStorage
-  
-      // หากดึง Level จาก API ต้องเรียกใหม่
-      await loadUserProfileFromAPI(); 
+      setLevel(newLevel);
+      await AsyncStorage.setItem('level', JSON.stringify(newLevel));
+      await loadUserExp(); 
+      
+      setTimeout(() => {
+        levelUpTriggered.current = false; // รีเซ็ตค่าเมื่อผ่านไป 2 วินาที
+      }, 2000);
     });
   
     return () => {
-      subscription.remove(); // ลบ Event Listener เมื่อ Component Unmount
+      subscription.remove();
     };
   }, []);  
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const subscription = DeviceEventEmitter.addListener('expUpdated', async () => {
+        if (isMounted) {
+            console.log("🔄 EXP updated, reloading user EXP...");
+            await loadUserExp();
+        }
+    });
+
+    return () => {
+        isMounted = false;
+        subscription.remove();
+    };
+  }, []);
   
   const transformGenderToThai = (gender) => {
     switch(gender) {
@@ -551,6 +633,13 @@ const ProfileButton = () => {
                   ) : (
                     <>
                       <Text style={styles.headText}>{username || "ไม่มีข้อมูล"}</Text>
+                        {/* 🔹 EXP Bar แสดงค่า EXP */}
+                      <View style={styles.expContainer}>
+                        <View style={styles.expBar}>
+                          <View style={[styles.expFill, { width: `${expProgress}%` }]} />
+                        </View>
+                        <Text style={styles.expText}>EXP {expCurrentLevel} / {expToNextLevel}</Text>
+                      </View>
                       <Text style={styles.detailText}>ส่วนสูง: {height || "ไม่มีข้อมูล"} เซนติเมตร</Text>
                       <Text style={styles.detailText}>น้ำหนัก: {weight || "ไม่มีข้อมูล"} กิโลกรัม</Text>
                       {/* <Text style={styles.detailText}>วันเกิด: {birthday || "ไม่มีข้อมูล"}</Text> */}
@@ -607,7 +696,7 @@ const styles = StyleSheet.create({
   insideProfile: { width: 86, height: 86, borderRadius: 2, justifyContent: "center", alignItems: "center", borderColor: "#9E640A", borderWidth: 6, marginRight: 20 },
   profileImage: { width: 76, height: 76 },
   profileText: { fontSize: 14, width: 35, color: "white", fontFamily: "appfont_02", backgroundColor: "rgba(0, 0, 0, 0.5)", top: 52, right: 1, position: "absolute", textAlign: "center" },
-  insidepersonalInformation: { width: "65%", height: 180, borderRadius: 8, backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 4, marginRight: 20 },
+  insidepersonalInformation: { width: "65%", height: 220, borderRadius: 8, backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 4, marginRight: 20 },
   editdepersonalInformation: { width: 45, height: 45, position: "absolute", justifyContent: "center", alignItems: "center", right: -2 },
   editIcon: { width: 20, height: 20 },
   profileDetails: { padding: 5 },
@@ -618,7 +707,7 @@ const styles = StyleSheet.create({
   detailText: { fontSize: 16, color: "#000", fontFamily: "appfont_02", marginBottom: 4 },
   editButton: { width: 80, height: 30, backgroundColor: "#E97424", borderRadius: 30, justifyContent: "center", alignItems: "center", position: "absolute", top: 90, left: 3 },
   editButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
-  buttonGroup: { flexDirection: "row", justifyContent: "space-between", width: "100%", top: 25 },
+  buttonGroup: { flexDirection: "row", justifyContent: "space-between", width: "100%", top: 65 },
   saveButton: { width: 95, height: 30, backgroundColor: "green", borderRadius: 30, justifyContent: "center", alignItems: "center" },
   saveButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
   backButton: { width: 95, height: 30, backgroundColor: "#e59400", borderRadius: 30, justifyContent: "center", alignItems: "center" },
@@ -632,6 +721,10 @@ const styles = StyleSheet.create({
   customAlertMessage: { fontSize: 16, fontFamily: "appfont_01", marginBottom: 10 },
   customAlertButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" },
   customAlertButton: { backgroundColor: "#e59400", color: "white", borderRadius: 10, padding: 2, alignItems: "center", width: "25%" },
+  expContainer: { alignItems: "center", marginTop: 5, },
+  expText: { fontSize: 14, fontFamily: "appfont_02", color: "#444", fontFamily: "appfont_01" },
+  expBar: { width: 150, height: 10, backgroundColor: "#fff", borderRadius: 5, overflow: "hidden", marginTop: 2, },
+  expFill: { height: "100%", backgroundColor: "#FFAF32", borderRadius: 5, },
 });
 
 export default ProfileButton;
