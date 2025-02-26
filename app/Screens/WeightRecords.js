@@ -235,7 +235,7 @@ const WeightRecords = () => {
             />
           </ScrollView>
         ) : (
-          <Text style={styles.noDataText}>ไม่มีข้อมูลน้ำหนัก</Text>
+          <Text style={styles.noDataText}></Text>
         )}
       </View>
 

@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 const Muscles_start = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { items, currentIndex,musclesId,musclesName } = route.params || {};
+  const { items, currentIndex, musclesId, musclesName } = route.params || {};
 
   useEffect(() => {
     // console.log('Received currentIndex in couse :', currentIndex);
@@ -28,14 +28,14 @@ const Muscles_start = () => {
   const [time, setTime] = useState(0);
 
   useEffect(() => {
-    const durationText = item.duration || '';
-    const durationInSeconds = parseDurationToSeconds(durationText);
+    const durationInSeconds = parseDurationToSeconds(item.duration);
 
-    if (durationInSeconds > 0) {
+    if (durationInSeconds !== null) {
       setTime(durationInSeconds);
       setIsRunning(true);
     } else {
       setTime(0);
+      setIsRunning(false);
     }
   }, [item]);
 
@@ -61,14 +61,22 @@ const Muscles_start = () => {
   }, [currentIndex, navigation, isRunning, time]);
 
   const parseDurationToSeconds = (durationText) => {
-    const match = durationText.match(/(\d+)\s*(วินาที|นาที|ครั้ง)/);
-    if (match) {
-      const value = parseInt(match[1], 10);
-      const unit = match[2];
-      if (unit === 'วินาที') return value;
-      if (unit === 'นาที') return value * 60;
-      if (unit === 'ครั้ง') return 30;
+    if (!durationText) return 30;
+
+    durationText = durationText.trim().replace(/\s+/g, '');
+
+    if (durationText.includes("ครั้ง")) {
+      return null;
     }
+
+    const timeMatch = durationText.match(/(\d{2}):(\d{2})น./);
+    if (timeMatch) {
+      const minutes = parseInt(timeMatch[1], 10);
+      const seconds = parseInt(timeMatch[2], 10);
+      console.log(`⏳ แปลงเวลา: ${minutes} นาที ${seconds} วินาที`);
+      return (minutes * 60) + seconds;
+    }
+
     return 30;
   };
 
@@ -82,17 +90,17 @@ const Muscles_start = () => {
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
-      navigation.navigate('Muscles_relax', { item: items[currentIndex + 1], items, currentIndex,musclesId,musclesName });
+      navigation.navigate('Muscles_relax', { item: items[currentIndex + 1], items, currentIndex, musclesId, musclesName });
     } else {
-      navigation.navigate('Muscles_finish', { item, items, currentIndex,musclesId,musclesName });
+      navigation.navigate('Muscles_finish', { item, items, currentIndex, musclesId, musclesName });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1,musclesId,musclesName });
+      navigation.navigate('Muscles_start', { item: items[currentIndex - 1], items, currentIndex: currentIndex - 1, musclesId, musclesName });
     } else {
-      navigation.navigate('Musclesexercies',{musclesId,musclesName});
+      navigation.navigate('Musclesexercies', { musclesId, musclesName });
     }
   };
 
@@ -104,21 +112,23 @@ const Muscles_start = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies',{musclesId,musclesName})}>
-      <Image source={cancel} style={styles.close} />
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Musclesexercies', { musclesId, musclesName })}>
+        <Image source={cancel} style={styles.close} />
       </TouchableOpacity>
       <View style={styles.exerciseContainer}>
         <View style={styles.exerciseImageContainer}>
           <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
         </View>
         <View style={styles.exerciseDetails}>
-        <Text style={styles.exerciseTitle}>{item.name}</Text>
-        <Text style={styles.exerciseCounter}>{currentIndex + 1}/{items.length}</Text>
+          <Text style={styles.exerciseTitle}>{item.name}</Text>
+          <Text style={styles.exerciseCounter}>{currentIndex + 1}/{items.length}</Text>
         </View>
       </View>
       <Text style={styles.timer}>
-        {item.duration.includes('ครั้ง') ? '15 ครั้ง' : formatTime(time)}
+        {item.duration.includes('ครั้ง') ? item.duration 
+          : formatTime(time)}
       </Text>
+
       <View style={styles.controlContainer}>
         {item.duration.includes('ครั้ง') ? (
           <TouchableOpacity style={styles.finButton} onPress={handleComplete}>
@@ -179,7 +189,7 @@ const styles = StyleSheet.create({
   },
   exerciseTitle: {
     fontSize: 22,
-    fontFamily: 'appfont_01', 
+    fontFamily: 'appfont_01',
     flex: 1,
 
   },
@@ -187,14 +197,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#808080',
     fontFamily: 'appfont_01',
-   
+
   },
   timer: {
     fontSize: 48,
     marginVertical: 20,
     fontFamily: 'appfont_01',
   },
-navigationContainer: {
+  navigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
@@ -210,13 +220,13 @@ navigationContainer: {
     marginTop: 20,
     marginBottom: 20,
   },
-  finButton : {
+  finButton: {
     backgroundColor: '#FFA500',
     width: 200,
     padding: 10,
     borderRadius: 20,
     marginHorizontal: 30,
-    marginBottom: 20,   
+    marginBottom: 20,
   },
   controlButton: {
     backgroundColor: '#FFA500',
@@ -234,4 +244,3 @@ navigationContainer: {
 });
 
 export default Muscles_start;
-  

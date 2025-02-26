@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   editButton: { backgroundColor: '#fff', padding: 5, borderRadius: 10, position: "absolute", top: "32%", right: 20, paddingHorizontal: 25 },
   editButtonText: { color: '#F6A444', fontSize: 16, fontFamily: 'appfont_02' },
   bmiContainer: { flexDirection: 'row', backgroundColor: '#FFECB3', height: 280 },
-  heightText: { position: 'absolute', top: 20, left: '15%', fontSize: 20, color: '#FFF', fontFamily: 'appfont_02', backgroundColor: 'rgba(0, 0, 0, 0.5)', paddingHorizontal: 10, borderRadius: 5 },
+  heightText: { position: 'absolute', top: 20, left: '15.5%', fontSize: 20, color: '#FFF', fontFamily: 'appfont_02', backgroundColor: 'rgba(0, 0, 0, 0.5)', paddingHorizontal: 10, borderRadius: 5 },
   petImages: { width: 198, height: 180 },
   petImage: { width: '90%', height: '90%',top: '35%',left: 20 },
   bmiInfo: { flexDirection: "row", alignItems: "center", marginTop: -35,},

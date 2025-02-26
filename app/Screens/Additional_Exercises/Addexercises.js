@@ -129,7 +129,7 @@ const Addexercises = () => {
     const iconUrl = item.attributes.icon?.data?.[0]?.attributes?.formats?.thumbnail?.url;
     return (
       <View style={styles.gridItem}>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Muscleslevel', { musclesId: item.id })}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Muscleslevel', { musclesId: item.id ,musclesName: item.attributes.Muscles_name})}>
           <Text style={styles.buttonText}>{item.attributes.Muscles_name}</Text>
           <Image
             source={{ uri: iconUrl}} // ตรวจสอบว่ามี URL หรือไม่

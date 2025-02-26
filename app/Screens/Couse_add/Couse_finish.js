@@ -55,8 +55,8 @@ const Couse_finish = () => {
 
       console.log(`🔍 ตรวจสอบค่า: currentWeekCoins = ${currentWeekCoins}, item.trophy = ${item.trophy}, updatedWeekCoins = ${updatedWeekCoins}`);
 
-      if (currentWeekCoins > 150) {
-        setAlertMessage('สะสมเหรียญครบ 150 เหรียญในสัปดาห์นี้');
+      if (currentWeekCoins > 100) {
+        setAlertMessage('สะสมเหรียญครบ 100 เหรียญในสัปดาห์นี้');
         setAlertColor('red');
         return; 
       }

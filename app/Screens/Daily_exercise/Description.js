@@ -53,14 +53,14 @@ const Description = ({ route, navigation }) => {
           </View>
         </View>
         <Text style={styles.description}>{currentItem.description}</Text>
-        <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
+        {currentItem.image ? (
+          <>
+            <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
+            <Image source={{ uri: currentItem.image }} style={styles.muscleImage} />
+          </>
+        ) : null}
       </ScrollView>
-  
-      <Image
-        source={{ uri: currentItem.image }}
-        style={styles.muscleImage}
-      />
-  
+    
       <View style={styles.navigation}>
         <View style={styles.buttonnav}>
           <TouchableOpacity style={styles.navButton} onPress={handlePrevious} disabled={currentIndex === 0}>

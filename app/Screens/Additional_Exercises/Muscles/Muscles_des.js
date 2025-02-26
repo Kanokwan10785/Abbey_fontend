@@ -44,23 +44,23 @@ const Muscles_des = ({ route, navigation }) => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <Image source={{ uri: currentItem.animation }} style={styles.exerciseImage} />
-  
+
         <View style={styles.header}>
-          <Text style={styles.title}>{currentItem.name}</Text>      
+          <Text style={styles.title}>{currentItem.name}</Text>
           <View style={styles.timerContainer}>
             <Icon name="timer" size={20} color="#FFA500" />
             <Text style={styles.timerText}>{currentItem.duration}</Text>
           </View>
         </View>
         <Text style={styles.description}>{currentItem.description}</Text>
-        <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
+        {currentItem.image ? (
+          <>
+            <Text style={styles.sectionTitle}>กล้ามเนื้อที่เน้น</Text>
+            <Image source={{ uri: currentItem.image }} style={styles.muscleImage} />
+          </>
+        ) : null}
       </ScrollView>
-  
-      <Image
-        source={{ uri: currentItem.image }}
-        style={styles.muscleImage}
-      />
-  
+
       <View style={styles.navigation}>
         <View style={styles.buttonnav}>
           <TouchableOpacity style={styles.navButton} onPress={handlePrevious} disabled={currentIndex === 0}>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   muscleImage: {
     borderRadius: 20,
     width: '95%',
-    height: 250,
+    height: 270,
     alignSelf: 'center',
     marginVertical: 20,
   },

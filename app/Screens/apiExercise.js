@@ -1,7 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'https://abbey-backend.onrender.com';
+// const API_URL = 'https://abbey-backend.onrender.com';
+const API_URL = 'http://192.168.1.139:1337'; 
 
 const api = axios.create({
   baseURL: API_URL,

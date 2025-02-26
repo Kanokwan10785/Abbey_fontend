@@ -86,21 +86,21 @@ const Exercise2 = () => {
       return;
     }
   
-    const updatedBalance = balance + item.dollar;
+    const updatedBalance = balance + item.coin;
   
     setCurrentWeekCoins((prevCoins) => {
-      const updatedWeekCoins = prevCoins + item.dollar;
-      console.log('CurrentWeekCoins + item.dollar:', prevCoins, '+', item.dollar, '=', updatedWeekCoins);
+      const updatedWeekCoins = prevCoins + item.coin;
+      console.log('CurrentWeekCoins + item.coin:', prevCoins, '+', item.coin, '=', updatedWeekCoins);
       
-      if (prevCoins + item.dollar <= 15) {
-        console.log(`currentWeekCoins + item.dollar <= 15 : ${prevCoins} +  ${item.dollar} <= 15 `);
+      if (prevCoins + item.coin <= 15) {
+        console.log(`currentWeekCoins + item.coin <= 15 : ${prevCoins} +  ${item.coin} <= 15 `);
         setBalance(updatedBalance);
         setAlertMessage('');
       }
 
       // ✅ หยุดการทำงานหากเกินขีดจำกัด
-      if (updatedWeekCoins > 150) {
-        setAlertMessage('สะสมเหรียญครบ 150 เหรียญในสัปดาห์นี้');
+      if (updatedWeekCoins > 100) {
+        setAlertMessage('สะสมเหรียญครบ 100 เหรียญในสัปดาห์นี้');
         return prevCoins; // คืนค่าเดิมแทน undefined
       }
       
@@ -213,7 +213,7 @@ return (
     <View style={styles.trophyContainer}>
       <View style={styles.coinRewardContainer}>
         <Image source={coin} style={styles.coin} />
-        <Text style={styles.coinRewardText}>{item.dollar}</Text>
+        <Text style={styles.coinRewardText}>{item.coin}</Text>
       </View>
     </View>
     {alertMessage !== '' && (

@@ -45,15 +45,15 @@ const Couseexercies = ({ route }) => {
 
       // Map through exercises and extract data
       const exerciseData = data.data?.attributes?.all_exercises?.data.map((exercise) => {
-        const imageUrl = exercise.attributes.muscle?.data?.[0]?.attributes?.formats?.thumbnail.url || null;
         const animationUrl = exercise.attributes.animation?.data?.[0]?.attributes?.url || null;
+        const imageUrl = exercise.attributes.muscle?.data?.[0]?.attributes?.url;
 
         let displayText = '';
 
         // If exercise has reps, assume 30 seconds per rep
         if (exercise.attributes.reps) {
           displayText = `${exercise.attributes.reps} ครั้ง`;
-          totalDuration += 30;
+          totalDuration += exercise.attributes.reps * 5;
         }
         // If exercise has duration, convert it to seconds and display
         else if (exercise.attributes.duration) {
@@ -63,9 +63,9 @@ const Couseexercies = ({ route }) => {
 
           displayText = minutes > 0
             ? seconds > 0
-              ? `${minutes} นาที ${seconds} วินาที`
-              : `${minutes} นาที`
-            : `${seconds} วินาที`;
+              ? `0${minutes} : ${seconds} น.`
+              : `0${minutes} : ${seconds}0 น.`
+            : `0${minutes} : ${seconds} น.`;
 
           totalDuration += durationInSeconds;
         }
@@ -77,7 +77,7 @@ const Couseexercies = ({ route }) => {
           duration: displayText,
           description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
           image: imageUrl,
-          dollar: exercise.attributes.dollar,
+          coin: exercise.attributes.coin,
           trophy: data.data.attributes.trophy || 0,
           exname: data.data.attributes.name,
         };
@@ -143,7 +143,10 @@ const Couseexercies = ({ route }) => {
             <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
             <View style={styles.exerciseDetails}>
               <Text style={styles.exerciseName}>{item.name}</Text>
-              <Text style={styles.exerciseInfo}>{item.duration}</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <Icon name="clock" size={20} color="#F6A444" />
+                <Text style={styles.exerciseInfo}>{item.duration}</Text>
+              </View>
             </View>
             <Icon name="menu" size={24} color="#000" />
           </TouchableOpacity>
@@ -248,13 +251,13 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 16,
-    fontWeight: 'bold',
     fontFamily: 'appfont_01',
   },
   exerciseInfo: {
     fontSize: 14,
     color: '#888',
     fontFamily: 'appfont_01',
+    marginLeft: 5
   },
   loadingText: {
     marginTop: 10,

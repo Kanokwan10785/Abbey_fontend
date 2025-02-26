@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native'; // เพิ่ม ActivityIndicator
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView,SafeAreaView } from 'react-native'; // เพิ่ม ActivityIndicator
 import { Image, ImageBackground } from 'expo-image';
 import React, { useState } from 'react';
 import Colors from '../Shared/Colors';
@@ -9,12 +9,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { fetchUserProfile, beginnerClothingItem, fetchUserOutfit } from './api';
 import { saveHeightUesr } from './apiExercise';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function Loginpage() {
     const navigation = useNavigation();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [secureTextEntry, setSecureTextEntry] = useState(true);
     const [loading, setLoading] = useState(false);  // สถานะสำหรับ Loading Screen
+
+    const togglePasswordVisibility = () => {
+        setSecureTextEntry(!secureTextEntry);
+    };
 
     const handleLogin = async () => {
         if (!username || !password) {
@@ -30,7 +36,7 @@ export default function Loginpage() {
             const bmi = response.user.BMI;
             console.log('✅ Login successful:', response);
             await AsyncStorage.setItem('jwt', jwt); // เก็บข้อมูล
-            await AsyncStorage.setItem(`bmi-${userId}`, bmi.toString());
+            await AsyncStorage.setItem(`bmi-${userId}`, bmi ? bmi.toString() : "N/A");
             await AsyncStorage.setItem('userId', userId.toString()); // เก็บ userId ใน AsyncStorage
 
                 // ตรวจสอบว่าดึงข้อมูลโปรไฟล์สำเร็จหรือไม่
@@ -71,7 +77,7 @@ export default function Loginpage() {
             ];
 
             for (const item of beginnerItems) {
-                const result = await beginnerClothingItem(userId, item.id, item.label);
+                await beginnerClothingItem(userId, item.id, item.label);
                 // console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
             }
 
@@ -105,7 +111,7 @@ export default function Loginpage() {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 <View style={styles.innerContainer}>
                     <Image source={loginImage} style={styles.image} />
@@ -116,13 +122,19 @@ export default function Loginpage() {
                         value={username}
                         onChangeText={setUsername}
                     />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="รหัสผ่าน"
-                        secureTextEntry
-                        value={password}
-                        onChangeText={setPassword}
-                    />
+                    <View style={styles.passwordContainer}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            placeholder="รหัสผ่าน"
+                            secureTextEntry={secureTextEntry}
+                            value={password}
+                            onChangeText={setPassword}
+                        />
+                        <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+                            <Icon name={secureTextEntry ? "eye-off" : "eye"} size={24} color="gray" />
+                        </TouchableOpacity>
+                    </View>
+                    
                     <TouchableOpacity style={styles.buttonlogin} onPress={handleLogin}>
                         <Text style={styles.buttonText}>เข้าสู่ระบบ</Text>
                     </TouchableOpacity>
@@ -134,7 +146,7 @@ export default function Loginpage() {
                     </View>
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -167,6 +179,33 @@ const styles = StyleSheet.create({
         color: Colors.yellow,
         fontFamily: 'appfont_02',
     },
+    input: {
+        width: '100%',
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 10,
+        marginBottom: 20,
+        fontFamily: 'appfont_01',
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 10,
+        paddingRight: 15,
+        marginBottom: 30,
+    },
+    passwordInput: {
+        flex: 1,
+        padding: 20,
+        fontFamily: 'appfont_01',
+    },
+    eyeIcon: {
+        padding: 10,
+    },
     buttonlogin: {
         backgroundColor: Colors.yellow,
         padding: 10,
@@ -180,15 +219,6 @@ const styles = StyleSheet.create({
         color: Colors.while,
         fontFamily: 'appfont_01',
     },
-    input: {
-        width: '100%',
-        padding: 20,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        marginBottom: 30,
-        fontFamily: 'appfont_01',
-    },
     footer: {
         flexDirection: 'row',
         marginTop: 20,
@@ -200,10 +230,5 @@ const styles = StyleSheet.create({
     registerText: {
         color: Colors.yellow,
         fontFamily: 'appfont_01',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
 });

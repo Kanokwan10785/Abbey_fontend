@@ -111,7 +111,7 @@ const MusclesLevel = ({route}) => {
           <Image source={previous} style={{ width: 30, height: 30 }} />
         </TouchableOpacity>
         <View style={styles.Title}>
-          <Text style={styles.headerTitle}>กล้ามแขน</Text>
+          <Text style={styles.headerTitle}>{musclesName}</Text>
         </View>
       </View>
         <FlatList

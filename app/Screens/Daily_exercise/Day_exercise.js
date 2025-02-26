@@ -12,7 +12,7 @@ import { API_BASE_URL } from './apiConfig.js';
 const Dayexercise = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { dayNumber, weekId, set , userId , isMissed,dayDate } = route.params || {}; // Extract dayNumber and weekId from route params
+  const { dayNumber, weekId, set, userId, isMissed, dayDate } = route.params || {}; // Extract dayNumber and weekId from route params
 
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,8 +30,8 @@ const Dayexercise = () => {
       console.error('Missing dayNumber or weekId');
       setLoading(false);
     }
-  }, [dayNumber, weekId, set, userId, isMissed,dayDate]);  
-  
+  }, [dayNumber, weekId, set, userId, isMissed, dayDate]);
+
 
   // console.log('Dayexercise: Received params:', { dayNumber, weekId, set, isMissed ,dayDate});
   // console.log('Dayexercise: Received params:', { dayDate});
@@ -50,7 +50,7 @@ const Dayexercise = () => {
       );
       const data = await response.json();
       // console.log('Fetched workout-records data:', data);
-  
+
       // กรองเฉพาะประวัติที่ตรงกับ week และ day ที่ต้องการ
       const matchingRecords = data.data.filter(
         (record) =>
@@ -58,82 +58,81 @@ const Dayexercise = () => {
           record.attributes.day?.data?.attributes?.dayNumber === day
       );
       // console.log('Matching records:', matchingRecords);
-  
+
       if (matchingRecords.length > 0) {
         const record = matchingRecords[0].attributes;
         return record.resetTimestamp
           ? new Date(record.resetTimestamp)
           : new Date(record.timestamp);
       }
-  
+
       console.warn(`No record found for Week ${week}, Day ${day}. Returning current date as fallback.`);
       return new Date();
-       // ไม่มีข้อมูลในประวัติ
+      // ไม่มีข้อมูลในประวัติ
     } catch (error) {
       console.error('Error fetching workout history:', error);
       return new Date();
     }
   };
-  
+
   const fetchExercises = async (day, week) => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/days?filters[dayNumber][$eq]=${day}&filters[week][id][$eq]=${week}&populate=all_exercises,all_exercises.animation,all_exercises.muscle&pagination[limit]=100`
       );
       const data = await response.json();
-  
+
       if (!data || !data.data || !data.data[0]?.attributes?.all_exercises?.data) {
         console.error("No data found for the specified day and week");
         setExercises([]);
         setLoading(false);
         return;
       }
-  
+
       // ดึง startDate ของ Week 1 Day 1
       const week1StartDate = await fetchStartDateFromHistory(1, 1) || new Date(); // fallback เป็นวันนี้
       console.log('Week 1 Start Date:', week1StartDate);
-  
+
       // กำหนดค่า baseStartDate
       const baseStartDate = new Date(week1StartDate);
       baseStartDate.setHours(0, 0, 0, 0);
       baseStartDate.setDate(baseStartDate.getDate() + (7 * (week - 1)) + (day - 1));
-  
+
       // เปรียบเทียบกับวันที่ปัจจุบัน
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-  
+
       if (today < baseStartDate) {
         setIsLocked(true);
         setUnlockDate(baseStartDate);
       } else {
         setIsLocked(false);
       }
-  
+
       // ประมวลผลข้อมูล exercise
       let totalDuration = 0;
       const exerciseData = data.data[0].attributes.all_exercises.data.map((exercise) => {
         const animationUrl = exercise.attributes.animation?.data?.[0]?.attributes?.url || null;
-        const imageData = exercise.attributes.muscle?.data?.[0]?.attributes?.formats?.thumbnail;
-        const imageUrl = imageData ? imageData.url : null;
-  
+        const imageUrl = exercise.attributes.muscle?.data?.[0]?.attributes?.url;
+
         let displayText = '';
         if (exercise.attributes.reps) {
           displayText = `${exercise.attributes.reps} ครั้ง`;
-          totalDuration += 30;
+          totalDuration += exercise.attributes.reps * 5;
         } else if (exercise.attributes.duration) {
           const durationInSeconds = Math.floor(exercise.attributes.duration * 60);
           const minutes = Math.floor(durationInSeconds / 60);
           const seconds = durationInSeconds % 60;
-  
+
           displayText = minutes > 0
             ? seconds > 0
-              ? `${minutes} นาที ${seconds} วินาที`
-              : `${minutes} นาที`
-            : `${seconds} วินาที`;
-  
+              ? `0${minutes} : ${seconds} น.`
+              : `0${minutes} : ${seconds}0 น.`
+            : `0${minutes} : ${seconds} น.`;
+
           totalDuration += durationInSeconds;
         }
-  
+
         return {
           id: exercise.id.toString(),
           animation: animationUrl,
@@ -141,12 +140,12 @@ const Dayexercise = () => {
           name: exercise.attributes.name,
           duration: displayText,
           description: exercise.attributes.description?.[0]?.children?.[0]?.text || 'ไม่มีคำอธิบาย',
-          dollar: exercise.attributes.dollar,
+          coin: exercise.attributes.coin,
           trophy: data.data[0]?.attributes?.trophy || 0,
           exp: data.data[0]?.attributes?.exp || 0,
         };
       });
-  
+
       setExercises(exerciseData);
       setTotalTime(totalDuration);
       setLoading(false);
@@ -155,7 +154,7 @@ const Dayexercise = () => {
       setLoading(false);
     }
   };
-  
+
 
   if (loading) {
     return (
@@ -166,12 +165,15 @@ const Dayexercise = () => {
   }
 
   const formattedUnlockDate = unlockDate
-  ? unlockDate.toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  : 'ไม่ทราบ';
+    ? (() => {
+      const d = new Date(unlockDate);
+      const year = d.getFullYear();
+      const yearthai = year < 2500 ? year + 543 : year;
+      const mouth = d.toLocaleString('th-TH', { month: 'long' });
+      const day = d.getDate();
+      return `${day} ${mouth} ${yearthai}`;
+    })()
+    : 'ไม่ทราบ';
 
 
 
@@ -202,15 +204,15 @@ const Dayexercise = () => {
       {isLocked ? (
         <View style={styles.lockButton}>
           <Text style={styles.startButtonText}>
-          วันปลดล็อค: {formattedUnlockDate || 'ไม่ทราบ'}
-        </Text>
+            วันปลดล็อค: {formattedUnlockDate}
+          </Text>
         </View>
-        
+
       ) : (
         <TouchableOpacity
           style={styles.startButton}
           onPress={() =>
-            navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false, dayNumber, weekId, set, isMissed,dayDate })
+            navigation.navigate('Startex', { item: exercises[0], items: exercises, currentIndex: 0, isRest: false, dayNumber, weekId, set, isMissed, dayDate })
           }
         >
           <Text style={styles.startButtonText}>เริ่ม</Text>
@@ -226,7 +228,10 @@ const Dayexercise = () => {
             <Image source={{ uri: item.animation }} style={styles.exerciseImage} />
             <View style={styles.exerciseDetails}>
               <Text style={styles.exerciseName}>{item.name}</Text>
-              <Text style={styles.exerciseInfo}>{item.duration}</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <Icon name="clock" size={20} color="#F6A444" />
+                <Text style={styles.exerciseInfo}>{item.duration}</Text>
+              </View>
             </View>
             <Icon name="menu" size={24} color="#000" />
           </TouchableOpacity>
@@ -328,20 +333,13 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 16,
-    fontWeight: 'bold',
     fontFamily: 'appfont_01',
   },
   exerciseInfo: {
     fontSize: 14,
     color: '#888',
     fontFamily: 'appfont_01',
-  },
-  lockedText: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#F00',
-    fontFamily: 'appfont_01',
-    marginBottom: 10,
+    marginLeft: 5
   },
 });
 
