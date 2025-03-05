@@ -553,9 +553,9 @@ const styles = StyleSheet.create({
   lockedButtonText: { color: '#FFF', fontSize: 14, fontFamily: 'appfont_01', textAlign: 'center' },
   alertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   alertBox: { width: 350, padding: 10, borderRadius: 10, backgroundColor: "#F9E79F", alignItems: "center", borderColor: "#E97400", borderWidth: 6, },
-  alertTitle: { fontSize: 20, marginBottom: 10, fontFamily: "appfont_02"  },
+  alertTitle: { fontSize: 26, marginBottom: 10, fontFamily: "appfont_02"  },
   alertMessage: { fontSize: 16, marginBottom: 20, textAlign: "center", fontFamily: "appfont_02"  },
-  alertButton: { backgroundColor: "#e59400", paddingVertical: 10, paddingHorizontal: 30, borderRadius: 5 },
+  alertButton: { backgroundColor: "#E97400", paddingVertical: 10, paddingHorizontal: 30, borderRadius: 10 },
   alertButtonText: { color: "#FFF", fontSize: 16, fontFamily: "appfont_02" },
   foodQuantityText: { fontSize: 14, bottom: 55, right: 14, textAlign: "center",  fontFamily: "appfont_02", position: 'absolute' },
   
