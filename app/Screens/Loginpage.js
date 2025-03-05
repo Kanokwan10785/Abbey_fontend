@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView,SafeAreaView } from 'react-native'; // เพิ่ม ActivityIndicator
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal, Alert, ScrollView,SafeAreaView } from 'react-native'; // เพิ่ม ActivityIndicator
 import { Image, ImageBackground } from 'expo-image';
 import React, { useState, useEffect } from 'react';
 import Colors from '../Shared/Colors';
@@ -17,6 +17,9 @@ export default function Loginpage() {
     const [password, setPassword] = useState('');
     const [secureTextEntry, setSecureTextEntry] = useState(true);
     const [loading, setLoading] = useState(false);  // สถานะสำหรับ Loading Screen
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
+
 
     const togglePasswordVisibility = () => {
         setSecureTextEntry(!secureTextEntry);
@@ -24,7 +27,8 @@ export default function Loginpage() {
 
     const handleLogin = async () => {
         if (!username || !password) {
-            Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+            setAlertMessage('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+            setAlertVisible(true);
             return;
         }
     
@@ -131,14 +135,40 @@ export default function Loginpage() {
             }, 100);  // จำลองการโหลด 8 วินาที
         } catch (error) {
             // แสดงข้อความที่ละเอียดมากขึ้น
-            if (error.response && error.response.data && error.response.data.error) {
-                const errorMessage = error.response.data.error.message;
-                Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', errorMessage);
+            if (error.response) {
+                const statusCode = error.response.status;
+                const errorData = error.response.data;
+            
+                // ตรวจสอบว่า API ตอบกลับข้อความผิดพลาดอะไร
+                let errorMessage = "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
+            
+                if (errorData && errorData.error) {
+                    const apiMessage = errorData.error.message;
+            
+                    // ตรวจสอบข้อความและแปลงเป็นภาษาไทย
+                    if (apiMessage.includes("Invalid identifier or password")) {
+                        errorMessage = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+                    } else if (apiMessage.includes("User not found")) {
+                        errorMessage = "ไม่พบบัญชีผู้ใช้นี้";
+                    } else if (apiMessage.includes("Your account has been blocked")) {
+                        errorMessage = "บัญชีของคุณถูกระงับ";
+                    } else {
+                        errorMessage = apiMessage; // ถ้าไม่มีเงื่อนไขตรง ใช้ข้อความจาก API ตรงๆ
+                    }
+                }
+            
+                setAlertMessage(`${errorMessage}`);
+                setAlertVisible(true);
+            } else if (error.request) {
+                setAlertMessage('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์');
+                setAlertVisible(true);
             } else {
-                Alert.alert('ลงชื่อเข้าใช้ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
-            }
+                setAlertMessage(`${error.message}`);
+                setAlertVisible(true);
+            }                     
     
             // หยุดการแสดง Loading เมื่อเกิดข้อผิดพลาด
+            setAlertVisible(true);
             setLoading(false);
             console.error('Login error details:', error.response ? error.response.data : error.message);
         }
@@ -152,6 +182,20 @@ export default function Loginpage() {
             </ImageBackground>
         );
     }
+
+    const CustomAlertModal = ({ visible, message, onClose }) => (
+        <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+            <View style={styles.customAlertContainer}>
+                <View style={styles.customAlertBox}>
+                    <Text style={styles.customAlertTitle}>ลงชื่อเข้าใช้ไม่สำเร็จ</Text>
+                    <Text style={styles.customAlertMessage}>{message}</Text>
+                    <TouchableOpacity style={styles.customAlertButton} onPress={onClose}>
+                        <Text style={styles.customAlertButtonText}>OK</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );    
 
     return (
         <SafeAreaView style={styles.container}>
@@ -189,89 +233,34 @@ export default function Loginpage() {
                     </View>
                 </View>
             </ScrollView>
+            <CustomAlertModal 
+        visible={alertVisible} 
+        message={alertMessage} 
+        onClose={() => setAlertVisible(false)} 
+        />
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.yellow,
-    },
-    scrollViewContent: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    innerContainer: {
-        backgroundColor: Colors.while,
-        padding: 40,
-        paddingTop: 60,
-        alignItems: 'center',
-        borderRadius: 40,
-        width: '90%',
-    },
-    image: {
-        width: 300,
-        height: 250,
-    },
-    header: {
-        fontSize: 30,
-        marginTop: 20,
-        marginBottom: 40,
-        color: Colors.yellow,
-        fontFamily: 'appfont_02',
-    },
-    input: {
-        width: '100%',
-        padding: 20,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        marginBottom: 20,
-        fontFamily: 'appfont_01',
-    },
-    passwordContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '100%',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        paddingRight: 15,
-        marginBottom: 30,
-    },
-    passwordInput: {
-        flex: 1,
-        padding: 20,
-        fontFamily: 'appfont_01',
-    },
-    eyeIcon: {
-        padding: 10,
-    },
-    buttonlogin: {
-        backgroundColor: Colors.yellow,
-        padding: 10,
-        borderRadius: 50,
-        width: '100%',
-        marginTop: 20,
-        alignItems: 'center',
-    },
-    buttonText: {
-        fontSize: 20,
-        color: Colors.while,
-        fontFamily: 'appfont_01',
-    },
-    footer: {
-        flexDirection: 'row',
-        marginTop: 20,
-    },
-    footerText: {
-        marginRight: 10,
-        fontFamily: 'appfont_01',
-    },
-    registerText: {
-        color: Colors.yellow,
-        fontFamily: 'appfont_01',
-    },
+    container: { flex: 1, backgroundColor: Colors.yellow },
+    scrollViewContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
+    innerContainer: { backgroundColor: Colors.while, padding: 40, paddingTop: 60, alignItems: 'center', borderRadius: 40, width: '90%' },
+    image: { width: 300, height: 250 },
+    header: { fontSize: 30, marginTop: 20, marginBottom: 40, color: Colors.yellow, fontFamily: 'appfont_02' },
+    input: { width: '100%', padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20, fontFamily: 'appfont_01' },
+    passwordContainer: { flexDirection: 'row', alignItems: 'center', width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 10, paddingRight: 15, marginBottom: 30 },
+    passwordInput: { flex: 1, padding: 20, fontFamily: 'appfont_01' },
+    eyeIcon: { padding: 10 },
+    buttonlogin: { backgroundColor: Colors.yellow, padding: 10, borderRadius: 50, width: '100%', marginTop: 20, alignItems: 'center' },
+    buttonText: { fontSize: 20, color: Colors.while, fontFamily: 'appfont_01' },
+    footer: { flexDirection: 'row', marginTop: 20 },
+    footerText: { marginRight: 10, fontFamily: 'appfont_01' },
+    registerText: { color: Colors.yellow, fontFamily: 'appfont_01' },
+    customAlertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" },
+    customAlertBox: { width: 350, padding: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F9E79F", borderColor: "#E97424", borderWidth: 6 },
+    customAlertTitle: { fontSize: 20, fontFamily: "appfont_02", marginBottom: 5 },
+    customAlertMessage: { fontSize: 16, fontFamily: "appfont_01", marginBottom: 15, textAlign: "center" },
+    customAlertButton: { backgroundColor: "#e59400", borderRadius: 25, padding: 10, alignItems: "center", width: "30%" },
+    customAlertButtonText: { fontSize: 18, textAlign: "center", color: "white", fontFamily: "appfont_02" }
 });
