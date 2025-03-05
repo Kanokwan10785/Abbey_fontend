@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView,SafeAreaView } from 'react-native'; // เพิ่ม ActivityIndicator
 import { Image, ImageBackground } from 'expo-image';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Colors from '../Shared/Colors';
 import loginImage from '../../assets/image/login.png';
 import grass from '../../assets/image/Background-Theme/gym-03.gif';
 import { login } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { fetchUserProfile, beginnerClothingItem, fetchUserOutfit } from './api';
+import { fetchUserProfile, beginnerClothingItem, fetchUserOutfit, fetchItemsData, fetchUserFoodQuantity, buyFoodItemBeginner } from './api';
 import { saveHeightUesr } from './apiExercise';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -79,6 +79,49 @@ export default function Loginpage() {
             for (const item of beginnerItems) {
                 await beginnerClothingItem(userId, item.id, item.label);
                 // console.log(`Beginner Clothing Item Response for ${item.label}:`, result);
+            }
+
+            const mapFoodNameToEnglish = (thaiName) => {
+                const foodMapping = {
+                    "แอปเปิ้ล": "apple",
+                    "แตงโม": "watermelon",
+                    "ปลาทอด": "fried fish",
+                    "เนื้อย่าง": "roast beef",
+                    "เบอร์เกอร์": "hamburger",
+                    "น่องไก่ทอด": "fried chicken"
+                };
+                return foodMapping[thaiName] || thaiName; // ถ้าไม่พบ ให้ใช้ชื่อเดิม
+            };
+            
+            // ✅ ดึงข้อมูลอาหารที่ผู้ใช้มี
+            const userFoodData = await fetchUserFoodQuantity(userId);
+            const userFoodNames = userFoodData.map(f => f.buy_food); // เป็นชื่อภาษาอังกฤษ
+            
+            console.log("📌 รายการอาหารที่ผู้ใช้มีอยู่แล้ว (EN):", userFoodNames);
+            
+            // ✅ ดึงข้อมูลสินค้าหมวดหมู่อาหารทั้งหมด
+            const foodItems = await fetchItemsData();
+            const foodCategoryItems = foodItems.filter(item => item.attributes.category === 'Food-item');
+            
+            // ✅ ค้นหาสินค้าที่ผู้ใช้ไม่มี โดยแปลงชื่อเป็นภาษาอังกฤษก่อนเปรียบเทียบ
+            const missingFoodItems = foodCategoryItems.filter(item => {
+                const englishFoodName = mapFoodNameToEnglish(item.attributes.name);
+                return !userFoodNames.includes(englishFoodName);
+            });
+            
+            console.log("🚨 รายการอาหารที่ผู้ใช้ยังไม่มี (ต้องเพิ่ม):", missingFoodItems.map(item => item.attributes.name));
+            
+            // ✅ POST เพิ่มสินค้าหมวดอาหารที่ขาด
+            for (const foodItem of missingFoodItems) {
+                const englishFoodName = mapFoodNameToEnglish(foodItem.attributes.name);
+
+                console.log(`📤 กำลังเพิ่มอาหาร: ${foodItem.attributes.name} (${englishFoodName})`);
+
+                const result = await buyFoodItemBeginner(userId, foodItem.id, englishFoodName, 0);
+
+                if (result.success === false) { // ✅ ตรวจสอบว่ามี success = false เท่านั้น
+                    console.error(`❌ เพิ่มสินค้าอาหารไม่สำเร็จ: ${englishFoodName}`);
+                }
             }
 
             // แสดงหน้ารอดาวน์โหลดข้อมูล

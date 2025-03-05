@@ -562,6 +562,49 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
   }
 };
 
+const mapFoodNameToEnglish = (thaiName) => {
+  const foodMapping = {
+      "แอปเปิ้ล": "apple",
+      "แตงโม": "watermelon",
+      "ปลาทอด": "fried fish",
+      "เนื้อย่าง": "roast beef",
+      "เบอร์เกอร์": "hamburger",
+      "น่องไก่ทอด": "fried chicken"
+  };
+  return foodMapping[thaiName] || thaiName; // ถ้าไม่พบ ให้ใช้ชื่อเดิม
+};
+
+export const buyFoodItemBeginner = async (userId, foodId, foodName, quantity = 0) => {
+  try {
+      const englishFoodName = mapFoodNameToEnglish(foodName); // ✅ แปลงชื่อก่อนส่งไป API
+
+      const payload = {
+          data: {
+              user: userId,
+              buy_food: englishFoodName, // ✅ ใช้ชื่อภาษาอังกฤษ
+              quantity: quantity,
+              choose_food: foodId
+          }
+      };
+
+      // console.log("📤 กำลังส่งข้อมูลไปยัง API:", JSON.stringify(payload, null, 2));
+
+      const response = await axios.post(`${API_URL}/api/pet-food-items`, payload);
+
+      // ✅ ตรวจสอบว่า API ส่งข้อมูลกลับมา
+      if (response.data && response.data.data) {
+          console.log(`✅ เพิ่มสินค้าอาหารสำเร็จ: ${englishFoodName} (0)`);
+          return { success: true, data: response.data };
+      } else {
+          console.error(`❌ API ปฏิเสธคำขอ: ${JSON.stringify(response.data)}`);
+          return { success: false, message: "API ปฏิเสธคำขอ" };
+      }
+  } catch (error) {
+      console.error(`❌ Error adding food item (${foodName} -> ${englishFoodName}):`, 
+                    error.response ? error.response.data : error.message);
+      return { success: false, message: error.message };
+  }
+};
 
 // ฟังก์ชันซื้อสินค้าเสื้อผ้า
 export const buyClothingItem = async (userId, shopItemId, clothingLabel, isSinglePurchase = false) => {
