@@ -528,7 +528,7 @@ export const buyFoodItem = async (userId, shopItemId, foodName) => {
         // console.log("Creating a new pet food item.");
 
         const foodNameMap = {
-          "แอปเปิล": "apple",
+          "แอปเปิ้ล": "apple",
           "แตงโม": "watermelon",
           "น่องไก่ทอด": "fried chicken",
           "เบอร์เกอร์": "hamburger",
