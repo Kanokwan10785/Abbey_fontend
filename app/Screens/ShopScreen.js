@@ -280,7 +280,8 @@ export default function ShopScreen() {
 
     if (balance < itemPrice) {
         console.error("Insufficient balance. Required:", itemPrice, "Available:", balance);
-        alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+        setAlertMessage("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+        setIsAlertVisible(true);
         return;
     }
 
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
   alertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   alertBox: { width: 350, padding: 20, borderRadius: 10, backgroundColor: "#FFF", alignItems: "center" },
   alertTitle: { fontSize: 20, marginBottom: 10, fontFamily: "appfont_02"  },
-  alertMessage: { fontSize: 16, marginBottom: 20, textAlign: "center", fontFamily: "appfont_03"  },
+  alertMessage: { fontSize: 16, marginBottom: 20, textAlign: "center", fontFamily: "appfont_02"  },
   alertButton: { backgroundColor: "#e59400", paddingVertical: 10, paddingHorizontal: 30, borderRadius: 5 },
   alertButtonText: { color: "#FFF", fontSize: 16, fontFamily: "appfont_02" },
   foodQuantityText: { fontSize: 14, bottom: 55, right: 14, textAlign: "center",  fontFamily: "appfont_02", position: 'absolute' },
