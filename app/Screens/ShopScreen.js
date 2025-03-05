@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Image, ImageBackground } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter, ScrollView, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
@@ -28,6 +28,8 @@ export default function ShopScreen() {
   });
   const [purchasedItems, setPurchasedItems] = useState({});
   const [sortedItems, setSortedItems] = useState([]);
+  const [isAlertVisible, setIsAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const getUserId = async () => {
     try {
@@ -314,7 +316,8 @@ export default function ShopScreen() {
     }
 
     if (balance < itemPrice) {
-      alert("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+      setAlertMessage("ยอดเงินของคุณไม่เพียงพอสำหรับการซื้อสินค้า");
+      setIsAlertVisible(true);
       return;
     }
 
@@ -338,7 +341,8 @@ export default function ShopScreen() {
         alert(`การซื้อสินค้าล้มเหลว: ${result.message}`);
       }
     } catch (error) {
-      alert("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
+      setAlertMessage("เกิดข้อผิดพลาดระหว่างการซื้อสินค้า");
+      setIsAlertVisible(true);
     }
   };
 
@@ -431,6 +435,22 @@ const renderItems = () => {
           <DollarIcon />
         </View>
       </ImageBackground>
+
+    {/* 🔹 Custom Alert Modal */}
+      <Modal animationType="fade" transparent={true} visible={isAlertVisible}>
+        <View style={styles.alertContainer}>
+          <View style={styles.alertBox}>
+            <Text style={styles.alertTitle}>แจ้งเตือน</Text>
+            <Text style={styles.alertMessage}>{alertMessage}</Text>
+            <TouchableOpacity
+              style={styles.alertButton}
+              onPress={() => setIsAlertVisible(false)}>
+              <Text style={styles.alertButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.categoryMenu}>
         <TouchableOpacity style={styles.categoryButton} onPress={() => setSelectedCategory("ShirtItem")}>
           <View style={selectedCategory === "ShirtItem" ? styles.afterinsidecategory : styles.beforeinsidecategory}>
@@ -486,4 +506,10 @@ const styles = StyleSheet.create({
   itemButtonText: { fontSize: 14, color: "#000", fontFamily: "appfont_02" },
   lockedButton: { backgroundColor: '#444', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center', top: '-16%' },
   lockedButtonText: { color: '#FFF', fontSize: 14, fontFamily: 'appfont_01', textAlign: 'center' },
+  alertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
+  alertBox: { width: 350, padding: 20, borderRadius: 10, backgroundColor: "#FFF", alignItems: "center" },
+  alertTitle: { fontSize: 20, marginBottom: 10, fontFamily: "appfont_02"  },
+  alertMessage: { fontSize: 16, marginBottom: 20, textAlign: "center", fontFamily: "appfont_03"  },
+  alertButton: { backgroundColor: "#e59400", paddingVertical: 10, paddingHorizontal: 30, borderRadius: 5 },
+  alertButtonText: { color: "#FFF", fontSize: 16, fontFamily: "appfont_02" },
 });
