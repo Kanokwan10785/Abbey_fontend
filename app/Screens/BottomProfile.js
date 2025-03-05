@@ -115,7 +115,7 @@ const ProfileButton = () => {
           return;
         }
         
-        console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
+        // console.log(`📥 โหลดข้อมูลสำเร็จ: EXP สะสม ${exp}, Level ${level}`);
         setExp(exp);
   
         if (!levelUpTriggered.current) {
@@ -190,7 +190,7 @@ const ProfileButton = () => {
             expInCurrentLevel = totalExp;
         }
 
-        console.log(`🔄 Updated EXP Debug: TotalEXP=${totalExp}, CurrentLevel=${currentLevel}, EXP In Level=${expInCurrentLevel}, EXP Required=${expRequiredForCurrentLevel}`);
+        // console.log(`🔄 Updated EXP Debug: TotalEXP=${totalExp}, CurrentLevel=${currentLevel}, EXP In Level=${expInCurrentLevel}, EXP Required=${expRequiredForCurrentLevel}`);
 
         // ✅ อัปเดตค่าลงใน State
         setExp(totalExp);
