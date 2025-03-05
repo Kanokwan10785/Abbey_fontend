@@ -75,7 +75,7 @@ const CustomAlertsaveProfile = ({ visible, onClose }) => (
 
 const ProfileButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [profileImage, setProfileImage] = useState(require("../../assets/image/profile02.png"));
+  const [profileImage, setProfileImage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);  // สถานะใหม่สำหรับการบันทึก
   const [username, setUsername] = useState("");
@@ -230,11 +230,28 @@ const ProfileButton = () => {
       setGender(transformGenderToThai(userData.selectedGender));
       setLevel(userData.level);
 
-      const profileImageUrl = userData.picture?.formats?.medium?.url;
-      if (profileImageUrl) {
-        setProfileImage({ uri: profileImageUrl });
-        setOriginalProfileImage({ uri: profileImageUrl });
+      // ✅ ตรวจสอบว่าผู้ใช้อัปโหลดรูปโปรไฟล์เองหรือไม่
+      const uploadedProfileImage = userData.picture?.url;
+
+      if (uploadedProfileImage) {
+        // ถ้ามีรูปที่อัปโหลด → ใช้รูปที่อัปโหลด
+        setProfileImage({ uri: uploadedProfileImage });
+      } else {
+        // ถ้าไม่มีรูปที่อัปโหลด → ใช้ค่าเริ่มต้นตามเพศ
+        if (userData.selectedGender === 'male') {
+          setProfileImage(require("../../assets/image/profile01.jpg"));
+        } else if (userData.selectedGender === 'female') {
+          setProfileImage(require("../../assets/image/profile02.jpg"));
+        } else {
+          setProfileImage(require("../../assets/image/profile02.jpg")); // ค่าเริ่มต้นกรณีไม่มีเพศ
+        }
       }
+
+      // const profileImageUrl = userData.picture?.formats?.medium?.url;
+      // if (profileImageUrl) {
+      //   setProfileImage({ uri: profileImageUrl });
+      //   setOriginalProfileImage({ uri: profileImageUrl });
+      // }
 
       setOriginalData({
         username: userData.username,
@@ -249,8 +266,8 @@ const ProfileButton = () => {
       // บันทึกข้อมูลล่าสุดลงใน AsyncStorage
       await AsyncStorage.setItem('username', userData.username);
       await AsyncStorage.setItem('level', JSON.stringify(userData.level)); // บันทึก level เป็น string
-      if (profileImageUrl) {
-        await AsyncStorage.setItem('profileImage', profileImageUrl);
+      if (uploadedProfileImage) {
+        await AsyncStorage.setItem('profileImage', uploadedProfileImage);
       }
 
     } catch (error) {
@@ -479,6 +496,7 @@ const ProfileButton = () => {
         await AsyncStorage.setItem('profileImage', profileImage.uri);
       }
 
+      loadUserProfileFromAPI()
       DeviceEventEmitter.emit('profileUpdated'); // แจ้งเตือนให้ BottomProfile โหลดข้อมูลใหม่
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile.');
