@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   lockedButton: { backgroundColor: '#444', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center', top: '-16%' },
   lockedButtonText: { color: '#FFF', fontSize: 14, fontFamily: 'appfont_01', textAlign: 'center' },
   alertContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
-  alertBox: { width: 350, padding: 20, borderRadius: 10, backgroundColor: "#FFF", alignItems: "center" },
+  alertBox: { width: 350, padding: 10, borderRadius: 10, backgroundColor: "#F9E79F", alignItems: "center", borderColor: "#E97400", borderWidth: 6, },
   alertTitle: { fontSize: 20, marginBottom: 10, fontFamily: "appfont_02"  },
   alertMessage: { fontSize: 16, marginBottom: 20, textAlign: "center", fontFamily: "appfont_02"  },
   alertButton: { backgroundColor: "#e59400", paddingVertical: 10, paddingHorizontal: 30, borderRadius: 5 },
