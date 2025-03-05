@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from './BottomBar';
 import ProfileButton from './BottomProfile.js';
 import DollarIcon from './Dollar.js';
-import { buyFoodItem, fetchPurchasedItems, fetchUserClothingData, fetchUserProfile, fetchItemsData, buyClothingItem, beginnerClothingItem } from './api'; // นำเข้า beginnerClothingItem
+import { buyFoodItem, fetchPurchasedItems, fetchUserClothingData, fetchUserProfile, fetchItemsData, buyClothingItem, beginnerClothingItem, fetchUserFoodQuantity } from './api'; // นำเข้า beginnerClothingItem
 import { BalanceContext } from './BalanceContext'; // Import BalanceContext
 import gym from '../../assets/image/Background-Theme/gym-02.gif';
 import shirtIcon from '../../assets/image/Clothing-Icon/Shirt/shirt-icon-02.png';
@@ -30,6 +30,7 @@ export default function ShopScreen() {
   const [sortedItems, setSortedItems] = useState([]);
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [foodQuantities, setFoodQuantities] = useState([]);
 
   const getUserId = async () => {
     try {
@@ -43,6 +44,25 @@ export default function ShopScreen() {
         return null;
     }
   };
+
+  // โหลดข้อมูลจำนวนอาหารที่ผู้ใช้มี
+  const loadUserFoodQuantity = async () => {
+    if (!userId) return;
+  
+    try {
+      const data = await fetchUserFoodQuantity(userId);
+      setFoodQuantities(data);
+  
+      // console.log("🎯 API Updated - Food Items:", data);
+    } catch (error) {
+      // console.error("❌ Failed to load food quantity:", error);
+    }
+  };
+  
+  // โหลดข้อมูลอาหารเมื่อเปิดหน้าร้านค้า
+  useEffect(() => {
+    loadUserFoodQuantity();
+  }, [userId]);  
 
   // ดึงรหัสผู้ใช้จาก AsyncStorage
   useEffect(() => {
@@ -328,6 +348,9 @@ export default function ShopScreen() {
         const newBalance = balance - itemPrice;
         setBalance(newBalance); // อัปเดตยอดเงินใน BalanceContext
 
+        //โหลดข้อมูลอาหารใหม่หลังจากซื้อสำเร็จ
+        loadUserFoodQuantity();
+
         // ตรวจสอบว่าหมวดหมู่เป็น FoodItem ก่อนอัปเดต
         if (selectedCategory === 'FoodItem') {
           setSelectedItems(prevState => ({
@@ -356,6 +379,19 @@ export default function ShopScreen() {
       await handleBuyClothingItem(item);
     }
   };
+
+  const translateFoodName = (englishName) => {
+    const translations = {
+      "apple": "แอปเปิ้ล",
+      "watermelon": "แตงโม",
+      "fried fish": "ปลาทอด",
+      "roast beef": "เนื้อย่าง",
+      "hamburger": "เบอร์เกอร์",
+      "fried chicken": "น่องไก่ทอด"
+    };
+    return translations[englishName] || englishName;
+  };
+  
 
 // ฟังก์ชันสำหรับเรียงลำดับสินค้า
 const sortItems = () => {
@@ -392,8 +428,11 @@ const renderItems = () => {
   return sortedItems.map((item, index) => {
       const isHidden = item.label === 'Z00' || item.label === 'S00' || item.label === 'P00';
       const alreadyOwned = purchasedItems[item.label] === true || purchasedItems[item.label] === "true";
-
       const canPurchase = userLevel >= item.level;
+
+      // ค้นหาว่าผู้ใช้มีอาหารนี้อยู่หรือไม่
+      const foodItem = foodQuantities.find(f => f.buy_food === item.name || translateFoodName(f.buy_food) === item.name);
+      const foodQuantity = foodItem ? foodItem.quantity : 0; // ถ้ามีอาหารให้แสดงจำนวน
 
       return (
           <View key={index} style={[styles.item, !canPurchase && { backgroundColor: "#FAA828" }]}>
@@ -407,6 +446,11 @@ const renderItems = () => {
                           <Text style={styles.itemPrice}>{item.price}</Text>
                           <Image source={dollar} style={styles.currencyIcon} />
                       </View>
+
+                       {/*  แสดงจำนวนอาหารที่ผู้ใช้มี */}
+                      {selectedCategory === 'FoodItem' && (
+                        <Text style={styles.foodQuantityText}>{foodQuantity}</Text>
+                      )}
                       {alreadyOwned ? (
                           <TouchableOpacity style={[styles.itemButton]} disabled={true}>
                               <Text style={styles.itemButtonText}>มีแล้ว</Text>
@@ -512,4 +556,6 @@ const styles = StyleSheet.create({
   alertMessage: { fontSize: 16, marginBottom: 20, textAlign: "center", fontFamily: "appfont_03"  },
   alertButton: { backgroundColor: "#e59400", paddingVertical: 10, paddingHorizontal: 30, borderRadius: 5 },
   alertButtonText: { color: "#FFF", fontSize: 16, fontFamily: "appfont_02" },
+  foodQuantityText: { fontSize: 14, bottom: 55, right: 14, textAlign: "center",  fontFamily: "appfont_02", position: 'absolute' },
+  
 });

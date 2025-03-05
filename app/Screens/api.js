@@ -770,3 +770,22 @@ export const fetchUserOutfit = async (userId, jwt) => {
   }
 };
 
+// ฟังก์ชันดึงจำนวนอาหารที่ผู้ใช้มี
+export const fetchUserFoodQuantity = async (userId) => {
+  try {
+    const response = await api.get(
+      `/api/users/${userId}?populate[pet_food_items][fields][0]=quantity&populate[pet_food_items][fields][1]=buy_food`
+    );
+    const foodData = response.data.pet_food_items || [];
+    
+    return foodData.map(item => ({
+      buy_food: item.buy_food,
+      quantity: item.quantity
+    }));
+  } catch (error) {
+    console.error('Error fetching user food quantity:', error);
+    return [];
+  }
+};
+
+
